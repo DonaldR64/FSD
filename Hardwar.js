@@ -547,7 +547,10 @@ const CC = (() => {
             this.elevation = 0;
             this.terrainheight = 0;
             this.road = false;
-            this.edges = [];
+            this.edges = {};
+            _.each(DIRECTIONS,a => {
+                this.edges[a] = "Open";
+            })
             this.name = "Open";
 
 
@@ -857,11 +860,12 @@ const CC = (() => {
 
     const AddEdges = () => {
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
-
+log(paths)
         _.each(paths,path => {
             let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge"};
             let type = types[path.get("stroke").toLowerCase()];
             if (type) {
+log(type)
                 let vertices = translatePoly(path);
                 //work through pairs of vertices
                 for (let i=0;i<(vertices.length -1);i++) {
@@ -874,15 +878,19 @@ const CC = (() => {
                     let hex1 = HexMap[hexLabel];
                     if (!hex1) {continue}
                     let pt3 = hex1.centre;
+log(hexLabel)
                     let neighbourCubes = hex1.cube.neighbours();
                     for (let j=0;j<neighbourCubes.length;j++) {
                         let k = j+3;
                         if (k> 5) {k-=6};
-                        let hex2 = HexMap[neighbourCubes[j].label()];
+                        let hl2 = neighbourCubes[j].label();
+log("N: " + hl2)
+                        let hex2 = HexMap[hl2];
                         if (!hex2) {continue}
                         let pt4 = hex2.centre;
                         let intersect = lineLine(pt1,pt2,pt3,pt4);
                         if (intersect) {
+log("Intersects to " + DIRECTIONS[j])
                             if (hex1.edges[DIRECTIONS[j]] !== "Bridge") {
                                 hex1.edges[DIRECTIONS[j]] = type;
                             }
@@ -1139,7 +1147,21 @@ const CC = (() => {
     }
 
 
-
+    //line line collision where line1 is pt1 and 2, line2 is pt 3 and 4
+    const lineLine = (pt1,pt2,pt3,pt4) => {
+        //calculate the direction of the lines
+        uA = ( ((pt4.x-pt3.x)*(pt1.y-pt3.y)) - ((pt4.y-pt3.y)*(pt1.x-pt3.x)) ) / ( ((pt4.y-pt3.y)*(pt2.x-pt1.x)) - ((pt4.x-pt3.x)*(pt2.y-pt1.y)) );
+        uB = ( ((pt2.x-pt1.x)*(pt1.y-pt3.y)) - ((pt2.y-pt1.y)*(pt1.x-pt3.x)) ) / ( ((pt4.y-pt3.y)*(pt2.x-pt1.x)) - ((pt4.x-pt3.x)*(pt2.y-pt1.y)) );
+        if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
+            intersection = {
+                x: (pt1.x + (uA * (pt2.x-pt1.x))),
+                y: (pt1.y + (uA * (pt2.y-pt1.y)))
+            }
+            return intersection;
+        }
+        return;
+    }
+   
 
 
     const changeGraphic = (obj,prev) => {
