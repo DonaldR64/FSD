@@ -548,6 +548,7 @@ const CC = (() => {
             this.terrainheight = 0;
             this.road = false;
             this.edges = [];
+            this.name = "Open";
 
 
             HexMap[this.label] = this;
@@ -838,17 +839,7 @@ const CC = (() => {
         let tokens = findObjs({_pageid: Campaign().get("playerpageid"),_type: "graphic",_subtype: "token",layer: "map",});
         _.each(tokens,token => {
             let name = token.get("name");
-            if (name === "Smoke" || name === "Dispersed Smoke") {
-                let centre = new Point(token.get("left"),token.get('top'));
-                let centreLabel = centre.toCube().label();
-                let hex = HexMap[centreLabel];
-                if (name === "Smoke") {
-                    hex.smoke = true;
-                } else {
-                    hex.smoke = "Dispersed";
-                }
-                hex.smokeID = token.id;
-            }
+            
             let terrain = TerrainInfo[name];
             if (terrain) {
                 let centre = new Point(token.get("left"),token.get('top'));
@@ -1074,8 +1065,10 @@ const CC = (() => {
         let id = msg.selected[0]._id;
         let token = findObjs({_type:"graphic", id: id})[0];
         log(token)
-
-
+        let point = new Point(token.get("left"),token.get("top"));
+        let label = point.label();
+        let hex = HexMap[label];
+        log(hex);
     }
 
 
