@@ -137,13 +137,25 @@ const CC = (() => {
     //elevation is 0 by default
     const TerrainInfo = {
         "Woods": {name: "Woods",height: 2, mobility: 2, los: 1},
+
+        "Brush": {name: "Brush",height: 1, mobility: 1, los: 1},
+
         "Building 1": {name: "Building",height: 1, mobility: 3, los: 2},
         "Rough": {name: "Rough Ground",height: 0, mobility: 1, los: 0},
         "Ruins": {name: "Ruins",height: 1, mobility: 2, los: 1},
-        "Clear Hill 1": {name: "Clear/Hill",height: 1, mobility: 0, los: 0,elevation: 1},
-        "Wooded Hill 1": {name: "Woods/Hill",height: 3, mobility: 2, los: 1, elevation: 1},
 
 
+        "Hill 1": {name: "Clear/Hill 1",height: 0, mobility: 0, los: 0,elevation: 1},
+        "Hill 2": {name: "Clear/Hill 2",height: 0, mobility: 0, los: 0,elevation: 2},
+        "Hill 3": {name: "Clear/Hill 3",height: 0, mobility: 0, los: 0,elevation: 3},
+
+
+        "Woods/Hill 1": {name: "Woods/Hill 1",height: 2, mobility: 2, los: 1, elevation: 1},
+
+        "Brush/Hill 1": {name: "Brush/Hill 1",height: 1, mobility: 1, los: 1, elevation: 1},
+        "Brush/Hill 2": {name: "Brush/Hill 2",height: 1, mobility: 1, los: 1, elevation: 2},
+
+        "Rough/Hill 1": {name: "Rough/Hill 1",height: 0, mobility: 1, los: 1, elevation: 1},
 
 
 
@@ -1072,11 +1084,17 @@ log("Intersects to " + DIRECTIONS[j])
     const TokenInfo = (msg) => {
         let id = msg.selected[0]._id;
         let token = findObjs({_type:"graphic", id: id})[0];
-        log(token)
         let point = new Point(token.get("left"),token.get("top"));
         let label = point.label();
         let hex = HexMap[label];
-        log(hex);
+        SetupCard("Info","","Neutral");
+        outputCard.body.push("Terrain: " + hex.name);
+        outputCard.body.push("Elevation: " + hex.elevation);
+        outputCard.body.push("Terrain Height: " + hex.terrainheight);
+        outputCard.body.push("Road: " + hex.road);
+        outputCard.body.push("LOS: " + hex.los);
+        outputCard.body.push("Mobility: " + hex.mobility);
+        PrintCard();
     }
 
 
