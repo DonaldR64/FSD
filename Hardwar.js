@@ -1109,11 +1109,6 @@ const CC = (() => {
 
     const changeGraphic = (obj,prev) => {
         RemoveLines();
-        let cardID = obj.get("cardid");
-        let ci = MasterCardList[cardID];
-        if (ci && currentCardIDs.includes(cardID) === false) {
-            playedCard(obj);
-        }
 
         let id = obj.get("id");
         let unit = UnitArray[id];
@@ -1149,18 +1144,6 @@ const CC = (() => {
     const addGraphic = (obj) => {
         log(obj)
         RemoveLines();
-        let cardID = obj.get("cardid");
-        let ci = MasterCardList[cardID];
-        if (ci && currentCardIDs.includes(cardID) === false) {
-            playedCard(obj);
-        }
-        let id = obj.get("id");
-        if (!UnitArray[id]) {
-            let character = getObj("character", obj.get("represents"));      
-            if (character) {
-                let unit = new Unit(obj);
-            }
-        }
 
 
 
