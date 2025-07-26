@@ -132,6 +132,40 @@ const CC = (() => {
 
     };
 
+    //height is height of terrain element, mobility is 0/nil, 1/rough, 2/difficult, 3/impassable to vehicles/walkers, 4/impassable to non-flyers
+    //los is 0/clear, 1/partial -1 per hex, 2/solid/blocks LOS
+    //elevation is 0 by default
+    const TerrainInfo = {
+        "Woods": {name: "Woods",height: 2, mobility: 2, los: 1},
+        "Building 1": {name: "Building",height: 1, mobility: 3, los: 2},
+        "Rough": {name: "Rough Ground",height: 0, mobility: 1, los: 0},
+        "Ruins": {name: "Ruins",height: 1, mobility: 2, los: 1},
+        "Clear Hill 1": {name: "Clear/Hill",height: 1, mobility: 0, los: 0,elevation: 1},
+        "Wooded Hill 1": {name: "Woods/Hill",height: 3, mobility: 2, los: 1, elevation: 1},
+
+
+
+
+
+
+    }
+
+    const EdgeInfo = {
+        "Hedge": {name: "Hedge",height: 0, mobility: 1, los: 0},
+        "Low Wall": {name: "Low Wall",height: 0, mobility: 1, los: 0},
+        "Stream": {name: "Steam",height: 0, mobility: 1, los: 0},
+
+
+
+
+    }
+
+
+
+
+
+
+
 
     const simpleObj = (o) => {
         let p = JSON.parse(JSON.stringify(o));
@@ -193,6 +227,16 @@ const CC = (() => {
         })
         return vertices;
     }
+
+
+
+
+
+
+
+
+
+
 
 
     //Retrieve Values from character Sheet Attributes
@@ -497,6 +541,15 @@ const CC = (() => {
             this.tokenIDs = [];
             this.cube = offset.toCube();
             this.label = offset.label();
+
+            this.mobility = 0;
+            this.los = 0;
+            this.elevation = 0;
+            this.terrainheight = 0;
+            this.road = false;
+            this.edges = [];
+
+
             HexMap[this.label] = this;
         }
     }
@@ -743,20 +796,6 @@ const CC = (() => {
         let startTime = Date.now();
         HexMap = {};
 
-        //define areas with lines
-        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
-        _.each(paths,path => {
-            let colour = path.get("stroke").toLowerCase();
-            let type = areaColours[colour];
-            if (type) {
-                let centre = new Point(Math.round(path.get("x")), Math.round(path.get("y")));
-                let vertices = translatePoly(path);
-                MapAreas[type] = {'vertices': vertices, 'centre': centre};
-            }
-        });
-
-
-
         let startX = HexInfo.pixelStart.x;
         let startY = HexInfo.pixelStart.y;
         let halfToggleX = HexInfo.halfToggleX;
@@ -780,8 +819,12 @@ const CC = (() => {
                 halfToggleY = -halfToggleY;
             }
         }
+        AddTerrain();    
+        //AddEdges();
+        //AddRoads();
+
+
         //AddTokens();        
-        //AddTerrain();    
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
@@ -817,8 +860,7 @@ const CC = (() => {
                 })        
             }
         })
-        AddEdges();
-        AddRoads();
+
     }
 
 
