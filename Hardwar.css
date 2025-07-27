@@ -147,7 +147,7 @@ input[type="hidden"][name="attr_faction"]:is([value="Canada"]) ~ .header :is(h1,
   grid-gap: 2px;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr;
-  background-color: white;
+  background-color: lightgray;
   text-align: center;
   align-items: center;
 }
@@ -178,7 +178,7 @@ input[type="hidden"][name="attr_faction"]:is([value="Canada"]) ~ .header :is(h1,
 
 .specials {
   grid-area: specials;
-  background-color: white;
+  background-color: lightgray;
 }
 
 .spheader {
@@ -207,7 +207,7 @@ input[type="hidden"][name="attr_nation"]:is([value="Canada"]) ~ .spbody {
 }
 
 .spbody {
-  color: white;
+  color: lightgray;
   align-items: center;
   text-align: center;
   padding: 0px 0px 0px 20px;
