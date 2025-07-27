@@ -24,7 +24,7 @@
 }
 
 input[type="hidden"][name="attr_nation"] ~ .mysheet {
-    background-color: lightgray;
+    background-color: white;
 }
 input[type="hidden"][name="attr_nation"][value="Syndicate"] ~ .mysheet {
     background-color: darkgreen;
@@ -131,13 +131,12 @@ section {
   color: black;
 }
 
-input[type="hidden"][name="attr_faction"]:is([value="Canada"]) ~ .header :is(h1,h3) {
-  color: black;
-}
 
 .attr {
   grid-area: attr;
-  background-color: lightgray;
+  background-color: white;
+    border-style: none;
+
 }
 .attr h4 {
   text-align: center;
@@ -149,8 +148,8 @@ input[type="hidden"][name="attr_faction"]:is([value="Canada"]) ~ .header :is(h1,
   display: grid;
   grid-gap: 2px;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr;
-  background-color: lightgray;
+  grid-template-rows: auto;
+  background-color: white;
   text-align: center;
   align-items: center;
 }
@@ -158,6 +157,8 @@ input[type="hidden"][name="attr_faction"]:is([value="Canada"]) ~ .header :is(h1,
 .common {
   grid-area: common;
   background-color: white;
+    border-style: none;
+
 }
 
 .common > img {
@@ -170,7 +171,9 @@ input[type="hidden"][name="attr_faction"]:is([value="Canada"]) ~ .header :is(h1,
 
 .ab {
   grid-area: ab;
-  background-color: lightgray;
+  background-color: white;
+    border-style: none;
+
 }
 .ab h4 {
   text-align: center;
@@ -181,7 +184,7 @@ input[type="hidden"][name="attr_faction"]:is([value="Canada"]) ~ .header :is(h1,
 
 .specials {
   grid-area: specials;
-  background-color: lightgray;
+  background-color: white;
 }
 
 .spheader {
@@ -210,7 +213,7 @@ input[type="hidden"][name="attr_nation"]:is([value="Canada"]) ~ .spbody {
 }
 
 .spbody {
-  color: lightgray;
+  color: white;
   align-items: center;
   text-align: center;
   padding: 0px 0px 0px 20px;
