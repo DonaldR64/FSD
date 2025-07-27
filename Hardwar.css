@@ -17,26 +17,16 @@
 
 .mysheet {
     width: 830px;
-    height: 630px;
+    height: 530px;
 }
 .bits {
     padding: 15px 0px 0px 15px;
 }
 
-input[type="hidden"][name="attr_nation"] ~ .mysheet {
-    background-color: white;
-}
-input[type="hidden"][name="attr_nation"][value="Syndicate"] ~ .mysheet {
-    background-color: darkgreen;
-}
-input[type="hidden"][name="attr_nation"][value="Consortium"] ~ .mysheet {
-    background-color: darkblue;
-}
-
 main {
   display: grid;
   width: 800px;
-  height: 600px;
+  height: 500px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
@@ -55,7 +45,6 @@ main {
 
 section {
     padding: 5px;
-    border-style: solid;
 }
 
 /* CSS Flexbox styling, used for adjusting how content inside section behaves */
