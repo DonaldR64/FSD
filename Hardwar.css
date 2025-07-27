@@ -81,7 +81,7 @@ section {
   
   .charsheet h1{
     text-align: center;
-    color: white;
+    color: black;
   }
   .charsheet h2{
     text-align: center;
@@ -111,14 +111,23 @@ section {
   flex-direction: center;
   border-style: none;
 }
-.header h1{
-  text-align: center;
-  color: black;
-}
 .header h3{
   text-align: center;
   color: black;
 }
+
+.class {
+  grid-area: header;
+  flex-direction: center;
+  border-style: none;
+}
+.class h3{
+  text-align: center;
+  color: black;
+}
+
+
+
 
 
 .attr {
