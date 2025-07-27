@@ -40,7 +40,7 @@ main {
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"header   common  common  common"
+  grid-template-areas:"header   header  header  class"
                       "attr     common  common  common"
                       "attr     common  common  common"
                       "ab       ab      ab      ab"
