@@ -109,7 +109,6 @@ section {
 .header {
   grid-area: header;
   flex-direction: center;
-  border-style: none;
 }
 .header h3{
   text-align: center;
@@ -119,7 +118,6 @@ section {
 .class {
   grid-area: header;
   flex-direction: center;
-  border-style: none;
 }
 .class h3{
   text-align: center;
@@ -133,7 +131,6 @@ section {
 .attr {
   grid-area: attr;
   background-color: white;
-    border-style: none;
 
 }
 .attr h4 {
@@ -155,7 +152,6 @@ section {
 .common {
   grid-area: common;
   background-color: white;
-    border-style: none;
 
 }
 
@@ -170,8 +166,6 @@ section {
 .ab {
   grid-area: ab;
   background-color: white;
-    border-style: none;
-
 }
 .ab h4 {
   text-align: center;
