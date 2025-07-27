@@ -837,7 +837,7 @@ const CC = (() => {
         }
         AddTerrain();    
         AddEdges();
-        //AddRoads();
+        AddRoads();
 
 
         //AddTokens();        
@@ -872,12 +872,10 @@ const CC = (() => {
 
     const AddEdges = () => {
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
-log(paths)
         _.each(paths,path => {
             let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge"};
             let type = types[path.get("stroke").toLowerCase()];
             if (type) {
-log(type)
                 let vertices = translatePoly(path);
                 //work through pairs of vertices
                 for (let i=0;i<(vertices.length -1);i++) {
@@ -890,19 +888,16 @@ log(type)
                     let hex1 = HexMap[hexLabel];
                     if (!hex1) {continue}
                     let pt3 = hex1.centre;
-log(hexLabel)
                     let neighbourCubes = hex1.cube.neighbours();
                     for (let j=0;j<neighbourCubes.length;j++) {
                         let k = j+3;
                         if (k> 5) {k-=6};
                         let hl2 = neighbourCubes[j].label();
-log("N: " + hl2)
                         let hex2 = HexMap[hl2];
                         if (!hex2) {continue}
                         let pt4 = hex2.centre;
                         let intersect = lineLine(pt1,pt2,pt3,pt4);
                         if (intersect) {
-log("Intersects to " + DIRECTIONS[j])
                             if (hex1.edges[DIRECTIONS[j]] !== "Bridge") {
                                 hex1.edges[DIRECTIONS[j]] = type;
                             }
@@ -918,7 +913,7 @@ log("Intersects to " + DIRECTIONS[j])
     
     const AddRoads = () => {
         let roads = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",}).filter(el => {
-            return el.get("stroke").toLowerCase() === "#ffffff";
+            return el.get("stroke").toLowerCase() === "#ffff00";
         });
         _.each(roads,road => {
             let vertices = translatePoly(road);
