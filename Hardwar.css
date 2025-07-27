@@ -110,19 +110,6 @@ section {
   grid-area: header;
   flex-direction: center;
 }
-.header h3{
-  text-align: center;
-  color: black;
-}
-
-.class {
-  grid-area: header;
-  flex-direction: center;
-}
-.class h3{
-  text-align: center;
-  color: black;
-}
 
 
 
