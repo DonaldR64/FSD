@@ -122,10 +122,13 @@ section {
   flex-direction: center;
   border-style: none;
 }
-
+.header h1{
+  text-align: center;
+  color: black;
+}
 .header h3{
   text-align: center;
-  color: white;
+  color: black;
 }
 
 input[type="hidden"][name="attr_faction"]:is([value="Canada"]) ~ .header :is(h1,h3) {
