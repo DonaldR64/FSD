@@ -21,7 +21,17 @@
             </select>
             <br>
             <label>Class:</label><input type="number" name="attr_class">
-            <br>  
+            <br>
+            <label for="attr_faction">Faction:</label>
+            <select name="attr_faction">
+                <option value="" selected disabled hidden>Choose here</option>
+                <option value="Syndicate">Syndicate</option>
+                <option value="Consortium">Consortium</option>
+               
+            </select>
+
+
+
         </div>
         <div class="col">
             <h3>Attributes</h3>
@@ -48,6 +58,7 @@
 
 
 <div class="sheet-display">
+    <input type="hidden" name="attr_nation"/>
     <div class="mysheet">
       <div class="bits">
         <main>

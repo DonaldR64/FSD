@@ -23,6 +23,22 @@
     padding: 15px 0px 0px 15px;
 }
 
+input[type="hidden"][name="attr_faction"] ~ .mysheet {
+    background-color: lightgray;
+}
+input[type="hidden"][name="attr_faction"][value="Syndicate"] ~ .mysheet {
+    background-color: red;
+}
+input[type="hidden"][name="attr_faction"][value="Consortium"] ~ .mysheet {
+    background-color: yellow;
+}
+
+
+
+
+
+
+
 main {
   display: grid;
   width: 800px;
