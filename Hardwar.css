@@ -130,19 +130,11 @@ section {
 }
 
 .faction {
-  grid-area: blank;
+  grid-area: faction;
   align-items: center;
   justify-content: center;
   background-color: white;
 }
-
-.blank2 {
-  grid-area: blank2;
-  align-items: center;
-  justify-content: center;
-  background-color: white;
-}
-
 
 .attr {
   grid-area: attr;
