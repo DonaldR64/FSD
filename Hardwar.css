@@ -47,8 +47,7 @@ main {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"header   common"
-                      "header   common"
-                      "attr   common"
+                      "faction   common"
                       "attr     ab"
                       "attr     weap";
 }
@@ -130,7 +129,7 @@ section {
 
 }
 
-.blank {
+.faction {
   grid-area: blank;
   align-items: center;
   justify-content: center;
