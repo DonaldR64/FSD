@@ -46,7 +46,7 @@ main {
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr;
-  grid-template-areas:"faction   common"
+  grid-template-areas:"header   common"
                       "header   common"
                       "attr     ab"
                       "attr     weap";
@@ -131,12 +131,6 @@ section {
 
 }
 
-.faction {
-  grid-area: faction;
-  align-items: center;
-  justify-content: center;
-  background-color: white;
-}
 
 .attr {
   grid-area: attr;
