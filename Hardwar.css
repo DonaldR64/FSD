@@ -29,9 +29,10 @@ main {
   height: 500px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr;
-  grid-template-areas:"header   common"
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-areas:"blank   common"
                       "header   common"
+                      "blank   common"
                       "attr     ab"
                       "attr     weap";
 }
