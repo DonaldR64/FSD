@@ -46,8 +46,8 @@ main {
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr;
-  grid-template-areas:"header   common"
-                      "faction   common"
+  grid-template-areas:"faction   common"
+                      "header   common"
                       "attr     ab"
                       "attr     weap";
 }
