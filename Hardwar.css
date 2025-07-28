@@ -60,6 +60,8 @@ main {
 
 section {
     padding: 5px;
+      align-items: center;
+
 }
 
 /* CSS Flexbox styling, used for adjusting how content inside section behaves */
