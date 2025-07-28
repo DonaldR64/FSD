@@ -163,8 +163,8 @@ section {
   grid-area: attrinfo;
   display: grid;
   grid-gap: 2px;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
   background-color: white;
   text-align: center;
   align-items: center;
