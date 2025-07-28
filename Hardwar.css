@@ -46,9 +46,9 @@ main {
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"blank   common"
+  grid-template-areas:"header   common"
                       "header   common"
-                      "blank2   common"
+                      "attr   common"
                       "attr     ab"
                       "attr     weap";
 }
