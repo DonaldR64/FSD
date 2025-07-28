@@ -28,7 +28,7 @@ main {
   width: 800px;
   height: 500px;
   grid-gap: 4px;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr;
   grid-template-areas:"header   common"
                       "header   common"
@@ -166,19 +166,13 @@ section {
   grid-area: ab;
   background-color: white;
 }
-.ab h4 {
-  text-align: center;
-  color: black;
-}
+
 
 .weap {
   grid-area: weap;
   background-color: white;
 }
-. h4 {
-  text-align: center;
-  color: black;
-}
+
 
 
 
