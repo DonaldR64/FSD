@@ -132,6 +132,17 @@ const CC = (() => {
 
     };
 
+    const SM = {
+        "alert": "status_blue", //temp ?
+
+
+
+    }
+
+
+
+
+
     //height is height of terrain element, mobility is 0/nil, 1/rough, 2/difficult, 3/impassable to vehicles/walkers, 4/impassable to non-flyers
     //los is 0/clear, 1/partial -1 per hex, 2/solid/blocks LOS
     //elevation is 0 by default
@@ -590,6 +601,7 @@ const CC = (() => {
 
             this.faction = aa.faction || "Neutral";
             this.class = parseInt(aa.class);
+            this.type = aa.type;
 
             this.mobility = parseInt(aa.mobility) || 0;
             this.mobilityMax = parseInt(aa.mobility_max) || 0;
@@ -1288,6 +1300,107 @@ const CC = (() => {
     }
 
 
+    const TargetAngle = (shooter,target) => {
+        let shooterHex = HexMap[shooter.hexLabel];
+        let targetHex = HexMap[target.hexLabel];
+
+        //angle from shooter's hex to target's hex
+        let phi = Angle(shooterHex.cube.angle(targetHex.cube));
+        let theta = Angle(shooter.token.get("rotation"));
+        let gamma = Angle(phi - theta);
+        return gamma;
+    }
+
+    const CheckLOS = (msg) => {
+        let Tag = msg.content.split(";");
+        let shooterID = Tag[1];
+        let targetID = Tag[2];
+        let shooter = UnitArray[shooterID];
+        if (!shooter) {
+            sendChat("","Not valid shooter");
+            return;
+        }
+        let target = UnitArray[targetID];
+        if (!target) {
+            sendChat("","Not valid target");
+            return;
+        }
+
+        let losResult = LOS(shooter,target);
+//? indirect and such
+
+        SetupCard(shooter.name,"LOS",shooter.faction);
+        outputCard.body.push("Distance: " + losResult.distance);
+        if (losResult.los === false) {
+            outputCard.body.push("No LOS To Target: " + losResult.losReason);
+        } else if (losResult.los === true && losResult.lof === false) {
+            outputCard.body.push("In LOS but not in LOF: " + losResult.lofReason);
+        } else if (losResult.los === true && losResult.lof === true) {
+            outputCard.body.push("Target is in LOS and LOF");
+            outputCard.body.push("Cover is " + losResult.cover);
+            outputCard.body.push("Net Distance is " + (losResult.distance + losResult.cover));
+        }
+        PrintCard();
+    }
+
+
+    const LOS = (shooter,target) => {
+
+        let los = true;
+        let losReason = "";
+        let lof = true;
+        let lofReason = "";
+
+        let cover = 0;
+        let shooterHex = HexMap[shooter.hexLabel];
+        let targetHex = HexMap[target.hexLabel];
+        let distance = shooterHex.cube.distance(targetHex.cube);
+        let angle = TargetAngle(shooter,target);
+        let aov = 180;
+
+        let aof = 180;
+        if (shooter.type === "Air") {
+            aof = 90;
+        }
+        if (shooter.abilities.includes("Alert") || shooter.token.get(SM.alert) === true) {
+            aov = 360;
+        }
+
+//indirect and such
+
+        if (angle > aov/2 && angle < (360-aov)/2) {
+            losReason = "Out of Arc of Vision";
+            los = false;
+        }
+        if (angle > aof/2 && angle < (360-aof)/2) {
+            lofReason = "Out of Arc of Fire";
+            lof = false;
+        }
+
+        //check los now incl cover
+
+
+
+
+
+        let result = {
+            los: los,
+            losReason: losReason,
+            lof: lof,
+            lofReason: lofReason,
+            distance: distance,
+            angle: angle,
+            cover: cover,
+        }
+        return result;
+    }
+
+
+
+
+
+
+
 
 
 
@@ -1322,8 +1435,8 @@ const CC = (() => {
             case '!TokenInfo':
                 TokenInfo(msg);
                 break;
-            case '!LOS':
-                LOS(msg);
+            case '!CheckLOS':
+                CheckLOS(msg);
                 break;
             case '!RemoveLines':
                 RemoveLines();
