@@ -582,6 +582,7 @@ const CC = (() => {
             let aa = AttributeArray(charID);
   
 
+            this.token = token;
             this.name = token.get("name");
             this.charName = char.get("name");
             this.id = id;
@@ -590,22 +591,14 @@ const CC = (() => {
             this.faction = aa.faction || "Neutral";
             this.class = parseInt(aa.class);
 
-            let tooltip = token.get("tooltip") || " ";
-            let mobility = parseInt(aa.mobility);
-            let firepower = parseInt(aa.fp);
-            let armour = parseInt(aa.armour);
-            let defence = parseInt(aa.defence);
-
-            //modify based on tooltip
-
-
-            this.token = token;
-            this.mobility = mobility;
-            this.firepower = firepower;
-            this.armour = armour;
-            this.defence = defence;
-
-
+            this.mobility = parseInt(aa.mobility) || 0;
+            this.mobilityMax = parseInt(aa.mobility_max) || 0;
+            this.firepower = parseInt(aa.fp) || 0;
+            this.firepowerMax = parseInt(aa.fp_max) || 0;
+            this.armour = parseInt(aa.armour) || 0;
+            this.armourMax = parseInt(aa.armour_max) || 0;
+            this.defence = parseInt(aa.defence) || 0;
+            this.defenceMax = parseInt(aa.defence_max) || 0;
 
             this.weapons =  aa.weapons || "Cannon";
             this.abilities = aa.abilities || " ";
@@ -1205,10 +1198,18 @@ const CC = (() => {
             })
 
             let unit = new Unit(id);           
-            let hp = unit.class * 2; 
+            //reset stats
+            unit.firepower = unit.firepowerMax;
+            unit.mobility = unit.mobilityMax;
+            unit.armour = unit.armourMax;
+            unit.defence = unit.defenceMax;
+            //set hp and activations
             token.set({
-                bar1_value: hp,
-                bar1_max: hp,
+                bar1_value: 2,//mayneed to change based on units activations
+                bar1_max: "",
+                bar3_value: (unit.class * 2), 
+                bar3_max: (unit.class * 2),
+                bar_location: "overlap_bottom",
             })
         })
 
