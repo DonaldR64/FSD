@@ -1332,11 +1332,11 @@ const CC = (() => {
         SetupCard(shooter.name,"LOS",shooter.faction);
         outputCard.body.push("Distance: " + losResult.distance);
         if (losResult.los === false) {
-            outputCard.body.push("No LOS To Target: " + losResult.losReason);
+            outputCard.body.push(losResult.losReason);
         } else if (losResult.los === true && losResult.lof === false) {
-            outputCard.body.push("In LOS but not in LOF: " + losResult.lofReason);
+            outputCard.body.push("In LOS but " + losResult.lofReason);
         } else if (losResult.los === true && losResult.lof === true) {
-            outputCard.body.push("Target is in LOS and LOF");
+            outputCard.body.push("In LOS and LOF");
             outputCard.body.push("Cover is " + losResult.cover);
             outputCard.body.push("Net Distance is " + (losResult.distance + losResult.cover));
         }
@@ -1367,12 +1367,15 @@ const CC = (() => {
         }
 
 //indirect and such
+log("AOV: " + aov)
+log("AOF: " + aof)
+log("Angle: " + angle)
 
-        if (angle > aov/2 && angle < (360-aov)/2) {
+        if (angle > aov/2 && angle < (360-(aov/2))) {
             losReason = "Out of Arc of Vision";
             los = false;
         }
-        if (angle > aof/2 && angle < (360-aof)/2) {
+        if (angle > aof/2 && angle < (360-(aof/2))) {
             lofReason = "Out of Arc of Fire";
             lof = false;
         }
