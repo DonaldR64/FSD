@@ -571,22 +571,39 @@ const CC = (() => {
     }
 
     class Unit {
-        constructor(token) {
-            let id = token.get("id");
+        constructor(id) {
+            let token = findObjs({_type:"graphic", id: id})[0];
             let location = new Point(token.get("left"),token.get("top"));
             let cube = location.toCube();
             let label = cube.label();
             let charID = token.get("represents");
             let char = getObj("character", charID); 
-            let faction = Attribute(char,"faction") || "Neutral";
+
+            let aa = AttributeArray(charID);
+  
 
             this.name = token.get("name");
             this.charName = char.get("name");
             this.id = id;
             this.hexLabel = label;
-            this.faction = faction;
+
+            this.faction = aa.faction || "Neutral";
+            this.class = aa.class;
+            this.mobility = [aa.mobility,aa.mobility_max];
+            this.firepower = [aa.fp,aa.fp_max];
+            this.armour = [aa.armour,aa.armour_max];
+            this.defence = [aa.defence,aa.defence_max];
+            this.weapons =  aa.weapons || "Cannon";
+            this.abilities = aa.abilities || " ";
+
             UnitArray[id] = this;
             HexMap[label].tokenIDs.push(id);
+
+
+
+
+
+
         }
     }
 
@@ -838,9 +855,7 @@ const CC = (() => {
         AddTerrain();    
         AddEdges();
         AddRoads();
-
-
-        //AddTokens();        
+        AddTokens();        
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
@@ -950,7 +965,7 @@ const CC = (() => {
         tokens.forEach((token) => {
             let character = getObj("character", token.get("represents"));   
             if (character) {
-                let unit = new Unit(token);
+                let unit = new Unit(token.id);
             }   
         });
 
@@ -959,8 +974,6 @@ const CC = (() => {
 
         let elapsed = Date.now()-start;
         log(`${c} token${s} checked in ${elapsed/1000} seconds - ` + Object.keys(UnitArray).length + " placed in Unit Array");
-
-
 
     }
 
@@ -1159,6 +1172,25 @@ const CC = (() => {
         sendChat("","Cleared State/Arrays, rebuilt and shuffled Decks");
     }
 
+    const AddUnits = (msg) => {
+        if (!msg.selected) {
+            sendChat("","No Tokens Selected");
+            return
+        }
+        _.each(msg.selected,element => {
+            let id = element._id;
+            let unit = new Unit(id);            
+
+
+
+        })
+
+
+    }
+
+
+
+
 
     //line line collision where line1 is pt1 and 2, line2 is pt 3 and 4
     const lineLine = (pt1,pt2,pt3,pt4) => {
@@ -1268,6 +1300,11 @@ const CC = (() => {
             case '!RemoveLines':
                 RemoveLines();
                 break;
+            case '!AddUnits':
+                AddUnits(msg);
+                break;
+
+
         }
     };
 
