@@ -109,8 +109,8 @@ const CC = (() => {
             "borderStyle": "5px groove",
         },
         "Consortium": {
-            "image": "https://s3.amazonaws.com/files.d20.io/images/329415788/ypEgv2eFi-BKX3YK6q_uOQ/thumb.png?1677173028",
-            "backgroundColour": "#000000",
+            "image": "https://files.d20.io/images/450605832/fYnsnux8MJaOVMog-SXcmA/thumb.png?1753805707",
+            "backgroundColour": "#123293",
             "titlefont": "Bokor",
             "fontColour": "#FFFFFF",
             "borderColour": "#000000",
@@ -1385,7 +1385,7 @@ log("Angle: " + angle)
 
 
 
-        
+
 
 
 
