@@ -30,7 +30,7 @@ input[type="hidden"][name="attr_faction"][value="Syndicate"] ~ .mysheet {
     background-color: red;
 }
 input[type="hidden"][name="attr_faction"][value="Consortium"] ~ .mysheet {
-    background-color: gold;
+    background-color: #123293;
 }
 
 
