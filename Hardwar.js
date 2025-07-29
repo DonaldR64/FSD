@@ -588,11 +588,25 @@ const CC = (() => {
             this.hexLabel = label;
 
             this.faction = aa.faction || "Neutral";
-            this.class = aa.class;
-            this.mobility = [aa.mobility,aa.mobility_max];
-            this.firepower = [aa.fp,aa.fp_max];
-            this.armour = [aa.armour,aa.armour_max];
-            this.defence = [aa.defence,aa.defence_max];
+            this.class = parseInt(aa.class);
+
+            let tooltip = token.get("tooltip") || " ";
+            let mobility = parseInt(aa.mobility);
+            let firepower = parseInt(aa.fp);
+            let armour = parseInt(aa.armour);
+            let defence = parseInt(aa.defence);
+
+            //modify based on tooltip
+
+
+            this.token = token;
+            this.mobility = mobility;
+            this.firepower = firepower;
+            this.armour = armour;
+            this.defence = defence;
+
+
+
             this.weapons =  aa.weapons || "Cannon";
             this.abilities = aa.abilities || " ";
 
@@ -1179,10 +1193,23 @@ const CC = (() => {
         }
         _.each(msg.selected,element => {
             let id = element._id;
-            let unit = new Unit(id);            
+            let token = findObjs({_type:"graphic", id: id})[0];
+            token.set({
+                tooltip: "",
+                aura1_color: "#00FF00",
+                aura1_radius: 0.1,
+                tint_color: "transparent",
+                statusmarkers: "",
+                gmnotes: "",
+                rotation: 0,
+            })
 
-
-
+            let unit = new Unit(id);           
+            let hp = unit.class * 2; 
+            token.set({
+                bar1_value: hp,
+                bar1_max: hp,
+            })
         })
 
 
