@@ -172,7 +172,7 @@ const CC = (() => {
     const EdgeInfo = {
         "Hedge": {name: "Hedge",height: 0.5, traits: ["Difficult","Foliage","Flammable"]},
         "Burning Hedge": {name: "Burning Hedge",height: 1.5, traits: ["Dangerous","Smoke"]},
-        "Wall": {name: "Wall",height: 0.5, traits: ["Difficult, Low Structure"]},
+        "Wall": {name: "Wall",height: 0.5, traits: ["Difficult","Low Structure"]},
         "Stream": {name: "Stream",height: 0, traits: ["Water","Difficult"]},
 
 
@@ -1137,6 +1137,12 @@ const CC = (() => {
         outputCard.body.push("Elevation: " + hex.elevation);
         outputCard.body.push("Height of Terrain: " + hex.terrainHeight);
         outputCard.body.push("Traits: " + hex.traits);
+        for (let i=0;i<6;i++) {
+            let edge = hex.edges[DIRECTIONS[i]];
+            if (edge !== "Open") {
+                outputCard.body.push(edge + " on " + DIRECTIONS[i] + " Edge");
+            }
+        }
         PrintCard();
     }
 
@@ -1452,10 +1458,19 @@ log("Angle: " + angle)
                 }
             }            
             let edge = interHex.edges[dir];
+    log(dir)
+    log(edge)
             if (edge !== "Open") {
                 let terrain = EdgeInfo[edge];
-                if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
-                    cover++;
+            log(terrain)
+                pt3 = new Point(i,terrain.elevation);
+                pt4 = new Point(i,terrain.elevation + terrain.terrainHeight);
+                pt5 = lineLine(pt1,pt2,pt3,pt4);
+                if (pt5) {
+            log("Intersects")
+                    if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
+                        cover++;
+                    }
                 }
             }
 
@@ -1480,8 +1495,12 @@ log("Angle: " + angle)
             }
         }     
         let edge = targetHex.edges[dir];
+    log("Target Hex")
+    log(dir)
+    log(edge)
         if (edge !== "Open") {
             let terrain = EdgeInfo[edge];
+    log(terrain)
             if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
                 cover++;
             }
