@@ -143,40 +143,37 @@ const CC = (() => {
 
 
 
-    //height is height of terrain element, mobility is 0/nil, 1/rough, 2/difficult, 3/impassable to vehicles/walkers, 4/impassable to non-flyers
-    //los is 0/clear, 1/partial -1 per hex, 2/solid/blocks LOS
+    //height is height of terrain element
+
+
     //elevation is 0 by default
     const TerrainInfo = {
-        "Woods": {name: "Woods",height: 2, mobility: 2, los: 1},
+        "Woods": {name: "Woods",height: 2, traits: "Difficult,Foliage,Flammable"},
+        "Burning Woods": {name: "Burning Woods",height: 3, traits: "Dangerous,Smoke (sustained)"},
+        "Scrub": {name: "Scrub",height: 1, traits: "Rough,Foliage,Flammable"},
+        "Burning Scrub": {name: "Burning Scrub",height: 2, traits: "Dangerous, Smoke"},
 
-        "Brush": {name: "Brush",height: 1, mobility: 1, los: 1},
+        "Building 1": {name: "Building", height: 1, traits: "Building,"},
 
-        "Building 1": {name: "Building",height: 1, mobility: 3, los: 2},
-        "Rough": {name: "Rough Ground",height: 0, mobility: 1, los: 0},
-        "Ruins": {name: "Ruins",height: 1, mobility: 2, los: 1},
+        "Rubble": {name: "Rubble",height: 0, traits: "Rough"},
 
-
-        "Hill 1": {name: "Clear/Hill 1",height: 0, mobility: 0, los: 0,elevation: 1},
-        "Hill 2": {name: "Clear/Hill 2",height: 0, mobility: 0, los: 0,elevation: 2},
-        "Hill 3": {name: "Clear/Hill 3",height: 0, mobility: 0, los: 0,elevation: 3},
+        "Ruins": {name: "Ruins",height: 1, traits: "Hazardous, Open Structure"},
 
 
-        "Woods/Hill 1": {name: "Woods/Hill 1",height: 2, mobility: 2, los: 1, elevation: 1},
+        "Hill 1": {name: "Clear/Hill 1",height: 0,elevation:1},
+        "Hill 2": {name: "Clear/Hill 2",height: 0, elevation:2},
+        "Hill 3": {name: "Clear/Hill 3",height: 0, elevation:3},
 
-        "Brush/Hill 1": {name: "Brush/Hill 1",height: 1, mobility: 1, los: 1, elevation: 1},
-        "Brush/Hill 2": {name: "Brush/Hill 2",height: 1, mobility: 1, los: 1, elevation: 2},
-
-        "Rough/Hill 1": {name: "Rough/Hill 1",height: 0, mobility: 1, los: 1, elevation: 1},
-
-
+        "Water": {name: "Water",height: 0, traits: "Hazardous, Water"},
 
 
     }
 
     const EdgeInfo = {
-        "Hedge": {name: "Hedge",height: 0, mobility: 1, los: 0},
-        "Low Wall": {name: "Low Wall",height: 0, mobility: 1, los: 0},
-        "Stream": {name: "Steam",height: 0, mobility: 1, los: 0},
+        "Hedge": {name: "Hedge",height: 0, traits: "Difficult,Foliage,Flammable"},
+        "Burning Hedge": {name: "Burning Hedge",height: 1, traits: "Dangerous, Smoke"},
+        "Wall": {name: "Low Wall",height: 0, traits: "Difficult"},
+        "Stream": {name: "Stream",height: 0, traits: "Water, Difficult"},
 
 
 
@@ -565,8 +562,7 @@ const CC = (() => {
             this.cube = offset.toCube();
             this.label = offset.label();
 
-            this.mobility = 0;
-            this.los = 0;
+            this.traits = "Plain";
             this.elevation = 0;
             this.terrainheight = 0;
             this.road = false;
@@ -574,7 +570,7 @@ const CC = (() => {
             _.each(DIRECTIONS,a => {
                 this.edges[a] = "Open";
             })
-            this.name = "Open";
+            this.terrain = ["Open"]
 
 
             HexMap[this.label] = this;
@@ -891,13 +887,22 @@ const CC = (() => {
             
             let terrain = TerrainInfo[name];
             if (terrain) {
+                if (!terrain.elevation) {terrain.elevation = 0};
                 let centre = new Point(token.get("left"),token.get('top'));
                 let centreLabel = centre.toCube().label();
                 let hex = HexMap[centreLabel];
-                let keys = Object.keys(terrain);
-                _.each(keys,key => {
-                    hex[key] = terrain[key];
-                })        
+                if (hex.terrain.includes("Open")) {
+                    hex.terrain = [];
+                }
+                if (hex.terrain.includes(terrain.name) === false) {
+                    hex.terrain.push(terrain.name);
+                }
+                hex.elevation = Math.max(hex.elevation,terrain.elevation);
+                hex.terrainheight = Math.max(hex.elevation + terrain.height, hex.terrainheight);
+                if (terrain.traits) {
+                    hex.traits.replace("Plain","");
+                    hex.traits = hex.traits + terrain.traits;
+                }
             }
         })
 
@@ -905,6 +910,9 @@ const CC = (() => {
 
 
     const AddEdges = () => {
+
+ //add other types from edgeinfo
+        
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
         _.each(paths,path => {
             let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge"};
