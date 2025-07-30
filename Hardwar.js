@@ -1358,15 +1358,23 @@ const CC = (() => {
         } else if (losResult.los === true && losResult.lof === false) {
             outputCard.body.push("In LOS but Out of Arc of Fire");
         } else if (losResult.los === true && losResult.lof === true) {
-            outputCard.body.push("In LOS and LOF");
-            outputCard.body.push("Cover is " + losResult.cover);
-            outputCard.body.push("Net Distance is " + (losResult.distance + losResult.cover));
+            if (losResult.cover < 6) {
+                outputCard.body.push("In LOS and LOF");
+                outputCard.body.push("Cover is " + losResult.cover);
+            } else {
+                if (shooter.weapons.includes("Smart")) {
+                    outputCard.body.push("Only Smart Weapons can fire at the Target, at -1 F");
+                } else {
+                    outputCard.body.push("Target is obscured by Cover and is not eligible");
+                }
+                outputCard.body.push("Cover is " + losResult.cover);
+            }
         }
         PrintCard();
     }
 
 
-    const LOS = (shooter,target,weapon) => {
+    const LOS = (shooter,target) => {
 
         let los = true;
         let losReason = "";
@@ -1473,14 +1481,6 @@ log("Angle: " + angle)
                     }
                 }
             }
-
-            if (cover > 5) {
-                los = false;
-                losReason = 'Obscured by Cover';
-                break;
-            }
-
-
         }
 
 
@@ -1520,12 +1520,6 @@ log("Angle: " + angle)
         if (target.token.get(SM.digin) === true) {
             cover += 3;
         }
-
-        if (cover > 5) {
-            los = false;
-            losReason = 'Obscured by Cover';
-        }
-
 
         let result = {
             los: los,
