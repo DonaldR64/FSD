@@ -167,7 +167,7 @@ const CC = (() => {
         "Water 0": {name: "Water 0",height: 0, traits: ["Hazardous","Water","Depth 0"]},
         "Water 1": {name: "Water 1",height: 0, traits: ["Hazardous","Water","Depth 1"]},
         "Water 2": {name: "Water 2",height: 0, traits: ["Hazardous","Water","Depth 2"]},
-
+        "Water 3": {name: "Water 3",height: 0, traits: ["Hazardous","Water","Depth 3"]},
 
     }
 
