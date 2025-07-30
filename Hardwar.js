@@ -164,8 +164,10 @@ const CC = (() => {
         "Hill 2": {name: "Hill 2",height: 0, elevation:2},
         "Hill 3": {name: "Hill 3",height: 0, elevation:3},
 
-        "Water": {name: "Water",height: 0, traits: ["Hazardous","Water"]},
-
+        "Water 0": {name: "Water 0",height: 0, traits: ["Hazardous","Water","Depth 0"]},
+        "Water 1": {name: "Water 1",height: 0, traits: ["Hazardous","Water","Depth 1"]},
+        "Water 2": {name: "Water 2",height: 0, traits: ["Hazardous","Water","Depth 2"]},
+        "Water 3": {name: "Water 3",height: 0, traits: ["Hazardous","Water","Depth 3"]},
 
     }
 
@@ -965,16 +967,16 @@ const CC = (() => {
                 _.each(interCubes, cube => {
                     let interHex = HexMap[cube.label()];
                     if (interHex.traits.includes("Road") === false) {
-                        interHex.traits.push("Road");
+                        interHex.traits.push("Paved");
                         interHex.terrain.push("Road");
                     }
                 })
                 if (HexMap[cube1.label()].traits.includes("Road") === false) {
-                    HexMap[cube1.label()].traits.push("Road");
+                    HexMap[cube1.label()].traits.push("Paved");
                     HexMap[cube1.label()].terrain.push("Road");
                 }
                 if (HexMap[cube2.label()].traits.includes("Road") === false) {
-                    HexMap[cube2.label()].traits.push("Road");
+                    HexMap[cube2.label()].traits.push("Paved");
                     HexMap[cube2.label()].terrain.push("Road");
                 }
             }
@@ -1379,7 +1381,7 @@ const CC = (() => {
         let los = true;
         let losReason = "";
         let lof = true;
-
+        let water = "";
         let cover = 0;
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
@@ -1513,7 +1515,11 @@ log("Angle: " + angle)
 //add in smart, indirect here
 
         if (targetHex.traits.includes("Water")) {
-
+            //partially submerged or fully submerged
+            //partially = +1 cover 
+            //fully = +2 cover / depth - only for submersible units
+            //water will also have a depth, most units can't go in unless depth is 0
+            //pass back something also for things like exploding dice, flamethrowers, laser etc which have different effects
 
 
         }
@@ -1528,6 +1534,7 @@ log("Angle: " + angle)
             distance: distance,
             angle: angle,
             cover: cover,
+            water: water,
         }
         return result;
     }
