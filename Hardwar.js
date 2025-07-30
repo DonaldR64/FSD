@@ -170,9 +170,9 @@ const CC = (() => {
     }
 
     const EdgeInfo = {
-        "Hedge": {name: "Hedge",height: 0, traits: ["Difficult","Foliage","Flammable"]},
-        "Burning Hedge": {name: "Burning Hedge",height: 1, traits: ["Dangerous","Smoke"]},
-        "Wall": {name: "Wall",height: 0, traits: ["Difficult, Low Structure"]},
+        "Hedge": {name: "Hedge",height: 0.5, traits: ["Difficult","Foliage","Flammable"]},
+        "Burning Hedge": {name: "Burning Hedge",height: 1.5, traits: ["Dangerous","Smoke"]},
+        "Wall": {name: "Wall",height: 0.5, traits: ["Difficult, Low Structure"]},
         "Stream": {name: "Stream",height: 0, traits: ["Water","Difficult"]},
 
 
