@@ -133,8 +133,8 @@ const CC = (() => {
     };
 
     const SM = {
-        "alert": "status_blue", //temp ?
-
+        "alert": "status_blue", //temp
+        "digin": "status_brown", //temp
 
 
     }
@@ -172,7 +172,7 @@ const CC = (() => {
     const EdgeInfo = {
         "Hedge": {name: "Hedge",height: 0, traits: ["Difficult","Foliage","Flammable"]},
         "Burning Hedge": {name: "Burning Hedge",height: 1, traits: ["Dangerous","Smoke"]},
-        "Wall": {name: "Low Wall",height: 0, traits: ["Difficult"]},
+        "Wall": {name: "Wall",height: 0, traits: ["Difficult, Low Structure"]},
         "Stream": {name: "Stream",height: 0, traits: ["Water","Difficult"]},
 
 
@@ -1410,6 +1410,7 @@ log("Angle: " + angle)
         
         for (let i=1;i<interCubes.length;i++) {
             let label = interCubes[i].label();
+    log(label)
             let interHex = HexMap[label];
 
             //check for hills
@@ -1424,7 +1425,7 @@ log("Angle: " + angle)
                 losReason = "Blocked by Elevation at " + label;
                 break;
             }
-            //check for terrain
+            //check for terrain in hex
             pt3 = new Point(i,interHex.elevation);
             pt4 = new Point(i,interHex.elevation + interHex.terrainHeight);
             pt5 = lineLine(pt1,pt2,pt3,pt4);
@@ -1433,11 +1434,6 @@ log("Angle: " + angle)
                 if (interHex.traits.includes("Smoke")) {cover += 2};
                 if (interHex.traits.includes("Open Structure")) {cover += 3};
 //add in smart, indirect here
-                if (cover > 5) {
-                    los = false;
-                    losReason = 'Too Much Cover';
-                    break;
-                }
                 if (interHex.traits.includes("Solid")) {
                     los = false;
                     losReason = "Blocked by Terrain at " + label;
@@ -1445,12 +1441,71 @@ log("Angle: " + angle)
                 }
             }
 
+            //check for terrain on hex side
+            let delta = interCubes[i-1].subtract(interCubes[i]);
+            let dir;
+            for (let i=0;i<6;i++) {
+                let d = HexInfo.directions[DIRECTIONS[i]];
+                if (delta.q === d.q && delta.r === d.r) {
+                    dir = DIRECTIONS[i];
+                    break;
+                }
+            }            
+            let edge = interHex.edges[dir];
+            if (edge !== "Open") {
+                let terrain = EdgeInfo[edge];
+                if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
+                    cover++;
+                }
+            }
+
+            if (cover > 5) {
+                los = false;
+                losReason = 'Obscured by Cover';
+                break;
+            }
 
 
         }
 
 
+        //target hexside
+        let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
+        let dir;
+        for (let i=0;i<6;i++) {
+            let d = HexInfo.directions[DIRECTIONS[i]];
+            if (delta.q === d.q && delta.r === d.r) {
+                dir = DIRECTIONS[i];
+                break;
+            }
+        }     
+        let edge = targetHex.edges[dir];
+        if (edge !== "Open") {
+            let terrain = EdgeInfo[edge];
+            if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
+                cover++;
+            }
+        }
 
+        //target hex
+        if (targetHex.traits.includes("Foliage")) {cover++};
+        if (targetHex.traits.includes("Smoke")) {cover += 2};
+        if (targetHex.traits.includes("Open Structure") || targetHex.traits.includes("Solid")) {cover += 3};
+//add in smart, indirect here
+
+        if (targetHex.traits.includes("Water")) {
+
+
+
+        }
+        if (target.token.get(SM.digin) === true) {
+            cover += 3;
+        }
+
+        if (cover > 5) {
+            los = false;
+            losReason = 'Obscured by Cover';
+        }
 
 
         let result = {
