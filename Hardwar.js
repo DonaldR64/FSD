@@ -153,7 +153,7 @@ const CC = (() => {
         "Scrub": {name: "Scrub",height: 1, traits: ["Rough","Foliage","Flammable"]},
         "Burning Scrub": {name: "Burning Scrub",height: 2, traits: ["Dangerous","Smoke"]},
 
-        "Building 1": {name: "Building", height: 1, traits: ["Building"]},
+        "Building 1": {name: "Building", height: 1, traits: ["Building","Solid"]},
 
         "Rubble": {name: "Rubble",height: 0, traits: ["Rough"]},
 
@@ -564,7 +564,7 @@ const CC = (() => {
 
             this.traits = ["Plain"];
             this.elevation = 0;
-            this.terrainheight = 0;
+            this.terrainHeight = 0;
             this.edges = {};
             _.each(DIRECTIONS,a => {
                 this.edges[a] = "Open";
@@ -898,7 +898,7 @@ const CC = (() => {
                     hex.terrain.push(terrain.name);
                 }
                 hex.elevation = Math.max(hex.elevation,terrain.elevation);
-                hex.terrainheight = Math.max(hex.elevation + terrain.height, hex.terrainheight);
+                hex.terrainHeight = Math.max(terrain.height, hex.terrainHeight);
                 if (terrain.traits) {
                     hex.traits = hex.traits.concat(terrain.traits);
                 }
@@ -1135,7 +1135,7 @@ const CC = (() => {
         SetupCard("Info","","Neutral");
         outputCard.body.push("Terrain: " + hex.terrain);
         outputCard.body.push("Elevation: " + hex.elevation);
-        outputCard.body.push("Terrain Height: " + hex.terrainheight);
+        outputCard.body.push("Height of Terrain: " + hex.terrainHeight);
         outputCard.body.push("Traits: " + hex.traits);
         PrintCard();
     }
@@ -1395,27 +1395,59 @@ log("Angle: " + angle)
         }
 
         //check los now incl cover
+        let sH = shooter.type === "Walker" ? shooter.class/2:shooter.class/5;
+        let tH = target.type === "Walker" ? shooter.class/2:shooter.class/5;
+        // ? crouching if used
 
-        //for below ? unit heights themselves also?
-        let pt1 = new Point(0,shooterHex.elevation);
-        let pt2 = new Point(distance,targetHex.elevation);
+        if (shooter.type === "Air") {
+            ///different air units at different heights ???
+        }
+
+        let pt1 = new Point(0,shooterHex.elevation + sH);
+        let pt2 = new Point(distance,targetHex.elevation + tH);
 
         let interCubes = shooterHex.cube.linedraw(targetHex.cube);
         
         for (let i=1;i<interCubes.length;i++) {
-            let interHex = HexMap[interCubes[i].label()];
-            
-            //smoke
-            //terrain
-            //units
+            let label = interCubes[i].label();
+            let interHex = HexMap[label];
+
+            //check for hills
+            let pt3 = new Point(i,0);
+            let pt4 = new Point(i,interHex.elevation)
+            let pt5 = lineLine(pt1,pt2,pt3,pt4);
+//add in smart, indirect here
 
 
-
+            if (pt5) {
+                los = false;
+                losReason = "Blocked by Elevation at " + label;
+                break;
+            }
+            //check for terrain
+            pt3 = new Point(i,interHex.elevation);
+            pt4 = new Point(i,interHex.elevation + interHex.terrainHeight);
+            pt5 = lineLine(pt1,pt2,pt3,pt4);
+            if (pt5) {
+                if (interHex.traits.includes("Foliage")) {cover++};
+                if (interHex.traits.includes("Smoke")) {cover += 2};
+                if (interHex.traits.includes("Open Structure")) {cover += 3};
+//add in smart, indirect here
+                if (cover > 5) {
+                    los = false;
+                    losReason = 'Too Much Cover';
+                    break;
+                }
+                if (interHex.traits.includes("Solid")) {
+                    los = false;
+                    losReason = "Blocked by Terrain at " + label;
+                    break;
+                }
+            }
 
 
 
         }
-
 
 
 
