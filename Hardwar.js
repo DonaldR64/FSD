@@ -884,8 +884,13 @@ const CC = (() => {
         let tokens = findObjs({_pageid: Campaign().get("playerpageid"),_type: "graphic",_subtype: "token",layer: "map",});
         _.each(tokens,token => {
             let name = token.get("name");
-            
+    log(name)
             let terrain = TerrainInfo[name];
+            let BTF = ["Woods","Scrub","Rubble"];
+            if (BTF.includes(name)) {
+    log("To Front")
+                toFront(token);
+            }
             if (terrain) {
                 if (!terrain.elevation) {terrain.elevation = 0};
                 let centre = new Point(token.get("left"),token.get('top'));
@@ -912,7 +917,7 @@ const CC = (() => {
     const AddEdges = () => {
 
  //add other types from edgeinfo
-        
+
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
         _.each(paths,path => {
             let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge"};
