@@ -144,9 +144,9 @@ const CC = (() => {
 
 
     //height is height of terrain element
-
-
     //elevation is 0 by default
+    //traits pull out mobility or Los features
+
     const TerrainInfo = {
         "Woods": {name: "Woods",height: 2, traits: "Difficult,Foliage,Flammable"},
         "Burning Woods": {name: "Burning Woods",height: 3, traits: "Dangerous,Smoke (sustained)"},
