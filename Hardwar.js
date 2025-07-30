@@ -914,7 +914,7 @@ const CC = (() => {
 
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
         _.each(paths,path => {
-            let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge"};
+            let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge","#980000": "Wall"};
             let type = types[path.get("stroke").toLowerCase()];
             if (type) {
                 let vertices = translatePoly(path);
