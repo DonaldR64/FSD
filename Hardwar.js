@@ -1334,7 +1334,7 @@ const CC = (() => {
         if (losResult.los === false) {
             outputCard.body.push(losResult.losReason);
         } else if (losResult.los === true && losResult.lof === false) {
-            outputCard.body.push("In LOS but " + losResult.lofReason);
+            outputCard.body.push("In LOS but Out of Arc of Fire");
         } else if (losResult.los === true && losResult.lof === true) {
             outputCard.body.push("In LOS and LOF");
             outputCard.body.push("Cover is " + losResult.cover);
@@ -1344,12 +1344,11 @@ const CC = (() => {
     }
 
 
-    const LOS = (shooter,target) => {
+    const LOS = (shooter,target,weapon) => {
 
         let los = true;
         let losReason = "";
         let lof = true;
-        let lofReason = "";
 
         let cover = 0;
         let shooterHex = HexMap[shooter.hexLabel];
@@ -1376,14 +1375,30 @@ log("Angle: " + angle)
             los = false;
         }
         if (angle > aof/2 && angle < (360-(aof/2))) {
-            lofReason = "Out of Arc of Fire";
             lof = false;
         }
 
         //check los now incl cover
 
+        //for below ? unit heights themselves also?
+        let pt1 = new Point(0,shooterHex.elevation);
+        let pt2 = new Point(distance,targetHex.elevation);
+
+        let interCubes = shooterHex.cube.linedraw(targetHex.cube);
+        
+        for (let i=1;i<interCubes.length;i++) {
+            let interHex = HexMap[interCubes[i].label()];
+            
+            //smoke
+            //terrain
+            //units
 
 
+
+
+
+
+        }
 
 
 
@@ -1394,7 +1409,6 @@ log("Angle: " + angle)
             los: los,
             losReason: losReason,
             lof: lof,
-            lofReason: lofReason,
             distance: distance,
             angle: angle,
             cover: cover,
