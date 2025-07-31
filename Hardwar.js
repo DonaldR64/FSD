@@ -596,6 +596,7 @@ const CC = (() => {
             this.charName = char.get("name");
             this.id = id;
             this.hexLabel = label;
+            this.chargeHexLabel = label; //used to track movement for charge
 
             this.faction = aa.faction || "Neutral";
             this.class = parseInt(aa.class);
@@ -608,13 +609,9 @@ const CC = (() => {
             this.armour = parseInt(aa.armour) || 0;
             this.armourMax = parseInt(aa.armour_max) || 0;
             this.defence = parseInt(aa.defence) || 0;
-            this.defenceMax = parseInt(aa.defence_max) || 0;
+            this.defenceMax = parseInt(aa.defence_max) || 0;           
 
-            weapons = aa.weapons || "Cannon";
-            weapons = weapons.split(",").map((x) => x.trim());
-           
-
-            this.weapons =  weapons;
+            this.weapons =  (aa.weapons || "Cannon").split(",").map((x) => x.trim());;
             this.abilities = aa.abilities || " ";
 
             this.order = "";
@@ -1586,14 +1583,39 @@ log("Angle: " + angle)
             'Charge': "The Unit may charge an enemy Unit",
         }
         outputCard.body.push(text[order]);
+        let mobility = unit.mobility;
+
         actions--;
-        if (order === "Aimed Shot") {
+        if (action === "Advance") {
+            outputCard.body.push("The Unit may Move and Fire in either Order.");
+            outputCard.body.push("Cautious Move: " + mobility + " MP, gaining Alert");
+            outputCard.body.push("Patrol Move: " + (mobility * 2) + " MP");
+        }
+        if (action === "Rapid") {
+            outputCard.body.push("The Unit may Rapid Move but not Fire");
+            outputCard.body.push((mobility * 3) + " MP, only one turn at beginning or end of movement");
+        }
+        if (action === "Stand and Fire") {
+            outputCard.body.push("The Unit Stands and Fires");
+        }
+        if (action === "Aimed Shot") {
+            outputCard.body.push("The Unit takes one action to aim and a 2nd to Fire. Other Units may React before it fires");
             actions--;
         }
-        if (order === "Guard") {
+        if (action === "Guard") {
+            outputCard.body.push("The Unit goes on Overwatch and ends its Turn");
             actions = 0;
             order.token.set("aura1_color","#800080");
         }
+        if (action === "Charge") {
+            outputCard.body.push("The Unit may charge an enemy Unit");
+            outputCard.body.push("The Unit may turn at the beginning of its turn, then must charge in a straight line at the target");
+            outputCard.body.push("Cautious Move: " + mobility + " MP, gaining Alert");
+            outputCard.body.push("Patrol Move: " + (mobility * 2) + " MP");
+            outputCard.body.push("Rapid Move: " + (mobility * 3) + " MP");
+            unit.chargeHexLabel = unit.hexLabel; //track distance
+        }
+
         actions = Math.max(0,actions);
         unit.token.set("bar1_value",actions);
         PrintCard();
