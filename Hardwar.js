@@ -76,6 +76,7 @@ const CC = (() => {
     let UnitArray = {};
     let PlayerInfo = {};
     let currentPlayer = 0;
+    let currentUnitID = "";
 
 
     let outputCard = {title: "",subtitle: "",side: "",body: [],buttons: [],};
@@ -611,6 +612,9 @@ const CC = (() => {
 
             this.weapons =  aa.weapons || "Cannon";
             this.abilities = aa.abilities || " ";
+
+            this.order = "";
+
 
             UnitArray[id] = this;
             HexMap[label].tokenIDs.push(id);
@@ -1357,7 +1361,7 @@ const CC = (() => {
             delete UnitArray[obj.get("id")];
         }
 
-        
+
     }
 
 
@@ -1597,7 +1601,53 @@ log("Angle: " + angle)
     }
 
 
+    const Activate = (msg) => {
+        let id = msg.selected[0]._id;
+        if (!id) {return};
+        let order = msg.content.split(";")[1];
+        let unit = UnitArray[id];
+        SetupCard(unit.name,order,unit.faction);
+        let errorMsg = [];
+        let actions = parseInt(unit.token.get("bar1_value"));
+        if (actions === 0) {
+            errorMsg.push("Unit has no further actions left");
+        }
+        if (actions === 1 && order === "Aimed Shot") {
+            errorMsg.push("Unit needs 2 orders to take an Aimed Shot");
+        }
 
+
+        if (errorMsg.length > 0) {
+            _.each(errorMsg,msg => {
+                outputCard.body.push(msg);
+            })
+            PrintCard();
+            return;
+        }
+
+        currentUnitID = id;
+        unit.order = order;
+        let text = {
+            Advance: "The Unit may Move and Fire in either Order.",
+            Rapid: "The Unit may Rapid Move but not Fire",
+            'Stand and Fire': "The Unit Stands and Fires",
+            'Aimed Shot': "The Unit takes one action to aim and a 2nd to Fire. Other Units may React before it fires",
+            'Guard': "The Unit goes on Overwatch and ends its Turn",
+            'Charge': "The Unit may charge an enemy Unit",
+        }
+        outputCard.body.push(text[order]);
+        actions--;
+        if (order === "Aimed Shot") {
+            actions--;
+        }
+        if (order === "Guard") {
+            actions = 0;
+            order.token.set("aura1_color","#800080");
+        }
+        actions = Math.max(0,actions);
+        unit.token.set("bar1_value",actions);
+        PrintCard();
+    }
 
 
 
@@ -1647,6 +1697,9 @@ log("Angle: " + angle)
                 break;
             case '!NextTurn':
                 NextTurn();
+                break;
+            case '!Activate':
+                Activate();
                 break;
 
         }
