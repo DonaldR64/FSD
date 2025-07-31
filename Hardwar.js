@@ -1574,15 +1574,6 @@ log("Angle: " + angle)
 
         currentUnitID = id;
         unit.order = order;
-        let text = {
-            Advance: "The Unit may Move and Fire in either Order.",
-            Rapid: "The Unit may Rapid Move but not Fire",
-            'Stand and Fire': "The Unit Stands and Fires",
-            'Aimed Shot': "The Unit takes one action to aim and a 2nd to Fire. Other Units may React before it fires",
-            'Guard': "The Unit goes on Overwatch and ends its Turn",
-            'Charge': "The Unit may charge an enemy Unit",
-        }
-        outputCard.body.push(text[order]);
         let mobility = unit.mobility;
 
         actions--;
@@ -1603,7 +1594,7 @@ log("Angle: " + angle)
             actions--;
         }
         if (action === "Guard") {
-            outputCard.body.push("The Unit goes on Overwatch and ends its Turn");
+            outputCard.body.push("The Unit goes on Guard and ends its Turn");
             actions = 0;
             order.token.set("aura1_color","#800080");
         }
