@@ -1404,10 +1404,6 @@ const CC = (() => {
             aov = 360;
         }
 
-//indirect and such
-log("AOV: " + aov)
-log("AOF: " + aof)
-log("Angle: " + angle)
 
         if (angle > aov/2 && angle < (360-(aov/2))) {
             losReason = "Out of Arc of Vision";
@@ -1433,7 +1429,6 @@ log("Angle: " + angle)
         
         for (let i=1;i<interCubes.length;i++) {
             let label = interCubes[i].label();
-    log(label)
             let interHex = HexMap[label];
 
             //check for hills
@@ -1482,8 +1477,6 @@ log("Angle: " + angle)
                 }
             }            
             let edge = interHex.edges[dir];
-    log(dir)
-    log(edge)
             if (edge !== "Open") {
                 let terrain = EdgeInfo[edge];
             log(terrain)
@@ -1514,12 +1507,8 @@ log("Angle: " + angle)
             }
         }     
         let edge = targetHex.edges[dir];
-    log("Target Hex")
-    log(dir)
-    log(edge)
         if (edge !== "Open") {
             let terrain = EdgeInfo[edge];
-    log(terrain)
             if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
                 cover++;
                 if (cover > 5 && losBlock === "") {
@@ -1532,7 +1521,6 @@ log("Angle: " + angle)
         if (targetHex.traits.includes("Foliage")) {cover++};
         if (targetHex.traits.includes("Smoke")) {cover += 2};
         if (targetHex.traits.includes("Open Structure") || targetHex.traits.includes("Solid")) {cover += 3};
-//add in smart, indirect here
 
         if (targetHex.traits.includes("Water")) {
             //partially submerged or fully submerged
