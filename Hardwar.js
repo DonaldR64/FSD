@@ -1206,13 +1206,14 @@ const CC = (() => {
             players: {},
             factions: ["",""],
             lines: [],
+            turn: 0,
         }
 
 
 
 
 
-        sendChat("","Cleared State/Arrays, rebuilt and shuffled Decks");
+        sendChat("","Cleared State/Arrays");
     }
 
     const AddUnits = (msg) => {
@@ -1380,6 +1381,7 @@ const CC = (() => {
 
         let los = true;
         let losReason = "";
+        let losBlock = "";
         let lof = true;
         let water = "";
         let cover = 0;
@@ -1433,12 +1435,13 @@ log("Angle: " + angle)
             let pt3 = new Point(i,0);
             let pt4 = new Point(i,interHex.elevation)
             let pt5 = lineLine(pt1,pt2,pt3,pt4);
-//add in smart, indirect here
+//add in indirect here ?
 
 
             if (pt5) {
                 los = false;
                 losReason = "Blocked by Elevation at " + label;
+                losBlock = label;
                 break;
             }
             //check for terrain in hex
@@ -1449,12 +1452,18 @@ log("Angle: " + angle)
                 if (interHex.traits.includes("Foliage")) {cover++};
                 if (interHex.traits.includes("Smoke")) {cover += 2};
                 if (interHex.traits.includes("Open Structure")) {cover += 3};
-//add in smart, indirect here
                 if (interHex.traits.includes("Solid")) {
                     los = false;
                     losReason = "Blocked by Terrain at " + label;
+                    losBlock = label;
                     break;
                 }
+                if (cover > 5 && losBlock === "") {
+                    losBlock = label;
+                }
+
+
+
             }
 
             //check for terrain on hex side
@@ -1480,6 +1489,9 @@ log("Angle: " + angle)
             log("Intersects")
                     if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
                         cover++;
+                        if (cover > 5 && losBlock === "") {
+                            losBlock = label;
+                        }                        
                     }
                 }
             }
@@ -1505,6 +1517,9 @@ log("Angle: " + angle)
     log(terrain)
             if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
                 cover++;
+                if (cover > 5 && losBlock === "") {
+                    losBlock = label;
+                }
             }
         }
 
@@ -1527,9 +1542,15 @@ log("Angle: " + angle)
             cover += 3;
         }
 
+        if (cover > 5 && losBlock === "") {
+            losBlock = targetHex.label;
+        }
+
+
         let result = {
             los: los,
             losReason: losReason,
+            losBlock: losBlock,
             lof: lof,
             distance: distance,
             angle: angle,
