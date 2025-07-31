@@ -1311,60 +1311,6 @@ const CC = (() => {
    
 
 
-    const changeGraphic = (obj,prev) => {
-        RemoveLines();
-
-        let id = obj.get("id");
-        let unit = UnitArray[id];
-
-        if (unit) {
-            let location = new Point(obj.get("left"),obj.get("top"));
-            let newHexLabel = location.toCube().label();
-            if (newHexLabel !== unit.hexLabel) {
-                let index = HexMap[unit.hexLabel].tokenIDs.indexOf(id);
-                if (index > -1) {
-                    HexMap[unit.hexLabel].tokenIDs.splice(index,1);
-                }
-                HexMap[newHexLabel].tokenIDs.push(id);
-                unit.hexLabel = newHexLabel;
-            }
-        }
-
-
-
-        //fix the token size in case accidentally changed while game running - need check that game is running
-        return
-        if (state.Hardwar.turn === 0) {return};
-        let name = obj.get("name");
-        if (obj.get("width") !== prev.width || obj.get("height") !== prev.height) {
-            obj.set({
-                width: prev.width,
-                height: prev.height,
-            })
-        }
-
-    }
-
-    const addGraphic = (obj) => {
-        log(obj)
-        RemoveLines();
-
-
-
-
-    }
-    
-    const destroyGraphic = (obj) => {
-        let name = obj.get("name");
-        log(name + " Destroyed")
-        if (UnitArray[obj.get("id")]) {
-            delete UnitArray[obj.get("id")];
-        }
-
-
-    }
-
-
     const TargetAngle = (shooter,target) => {
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
@@ -1651,6 +1597,68 @@ log("Angle: " + angle)
 
 
 
+
+
+
+    const changeGraphic = (obj,prev) => {
+        RemoveLines();
+
+        let id = obj.get("id");
+        let unit = UnitArray[id];
+
+        if (unit) {
+            let location = new Point(obj.get("left"),obj.get("top"));
+            let newHexLabel = location.toCube().label();
+            if (newHexLabel !== unit.hexLabel) {
+                let index = HexMap[unit.hexLabel].tokenIDs.indexOf(id);
+                if (index > -1) {
+                    HexMap[unit.hexLabel].tokenIDs.splice(index,1);
+                }
+                HexMap[newHexLabel].tokenIDs.push(id);
+                unit.hexLabel = newHexLabel;
+            }
+        }
+
+
+
+        //fix the token size in case accidentally changed while game running - need check that game is running
+        if (state.Hardwar.turn === 0) {return};
+        let name = obj.get("name");
+        if (obj.get("width") !== prev.width || obj.get("height") !== prev.height) {
+            obj.set({
+                width: prev.width,
+                height: prev.height,
+            })
+        }
+
+        //MOvement routine
+        
+
+
+
+
+
+
+    }
+
+    const addGraphic = (obj) => {
+        log(obj)
+        RemoveLines();
+
+
+
+
+    }
+    
+    const destroyGraphic = (obj) => {
+        let name = obj.get("name");
+        log(name + " Destroyed")
+        if (UnitArray[obj.get("id")]) {
+            delete UnitArray[obj.get("id")];
+        }
+
+
+    }
 
 
 
