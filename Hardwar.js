@@ -1621,6 +1621,29 @@ const CC = (() => {
         PrintCard();
     }
 
+    const Fire = (msg) => {
+        let Tag = msg.content.split(";");
+        let shooterID = Tag[1];
+        let shooter = UnitArray[shooterID];
+        let targetID = Tag[2];
+        let target = UnitArray[targetID];
+        let weaponNum = Tag[3];
+        let weapon = shooter.weapons[weaponNum];
+        let order = shooter.order;
+
+        
+
+
+
+
+
+
+
+
+    }
+
+
+
 
 
 
@@ -1734,6 +1757,9 @@ const CC = (() => {
                 break;
             case '!Activate':
                 Activate(msg);
+                break;
+            case '!Fire':
+                Fire(msg);
                 break;
 
         }
