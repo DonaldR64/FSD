@@ -1190,6 +1190,34 @@ const CC = (() => {
         })
     }
 
+    const NextTurn = () => {
+        let turn = state.Hardwar.turn;
+        turn++;
+
+//turn change things here
+
+        let unitNumbers = [0,0];
+        _.each(UnitArray,unit => {
+            if (unit.faction === state.Hardwar.factions[0]) {
+                unitNumbers[0]++;
+            } else if (unit.faction === state.Hardwar.factions[1]) {
+                unitNumbers[1]++;
+            }
+        })
+        SetupCard("Turn " + turn,"","Neutral");
+        if (unitNumbers[0] < unitNumbers[1]) {
+            outputCard.body.push(state.Hardwar.factions[0] + " has the Initiative");
+        } else if (unitNumbers[1] < unitNumbers[0]) {
+            outputCard.body.push(state.Hardwar.factions[1] + " has the Initiative");
+        } else {
+            outputCard.body.push("Roll for Initiative");
+        }
+        PrintCard();
+        state.Hardwar.turn = turn;
+    }
+
+
+
 
 
 
@@ -1235,6 +1263,11 @@ const CC = (() => {
             })
 
             let unit = new Unit(id);           
+            if (state.Hardwar.factions[0] === "") {
+                state.Hardwar.factions[0] = unit.faction;
+            } else if (state.Hardwar.factions[0] !== unit.faction && state.Hardwar.factions[1] === "") {
+                state.Hardwar.factions[1] = unit.faction;
+            }
             //reset stats
             unit.firepower = unit.firepowerMax;
             unit.mobility = unit.mobilityMax;
@@ -1320,8 +1353,11 @@ const CC = (() => {
     const destroyGraphic = (obj) => {
         let name = obj.get("name");
         log(name + " Destroyed")
+        if (UnitArray[obj.get("id")]) {
+            delete UnitArray[obj.get("id")];
+        }
 
-
+        
     }
 
 
@@ -1609,7 +1645,9 @@ log("Angle: " + angle)
             case '!AddUnits':
                 AddUnits(msg);
                 break;
-
+            case '!NextTurn':
+                NextTurn();
+                break;
 
         }
     };
