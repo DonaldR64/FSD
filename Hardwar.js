@@ -610,7 +610,11 @@ const CC = (() => {
             this.defence = parseInt(aa.defence) || 0;
             this.defenceMax = parseInt(aa.defence_max) || 0;
 
-            this.weapons =  aa.weapons || "Cannon";
+            weapons = aa.weapons || "Cannon";
+            weapons = weapons.split(",").map((x) => x.trim());
+           
+
+            this.weapons =  weapons;
             this.abilities = aa.abilities || " ";
 
             this.order = "";
@@ -1632,7 +1636,7 @@ log("Angle: " + angle)
         }
 
         //MOvement routine
-        
+
 
 
 
