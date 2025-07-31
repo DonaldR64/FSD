@@ -1198,14 +1198,14 @@ const CC = (() => {
     const NextTurn = () => {
         let turn = state.Hardwar.turn;
         turn++;
-        //reset unit info/stuff
+        //reset unit activations, clear alert
         _.each(UnitArray,unit => {
             let actions = 2; // ? adjust
-            unit.set({
+            unit.token.set({
                 aura1_color: "#00FF00",
                 bar1_value: actions,
             })
-            unit.set(SM.alert,false);   
+            unit.token.set(SM.alert,false);   
 
 
         })
@@ -1351,7 +1351,6 @@ const CC = (() => {
         }
 
         let losResult = LOS(shooter,target);
-//? indirect and such
 
         SetupCard(shooter.name,"LOS",shooter.faction);
         outputCard.body.push("Distance: " + losResult.distance);
@@ -1364,10 +1363,17 @@ const CC = (() => {
                 outputCard.body.push("In LOS and LOF");
                 outputCard.body.push("Cover is " + losResult.cover);
             } else {
-                if (shooter.weapons.includes("Smart")) {
-                    outputCard.body.push("Only Smart Weapons can fire at the Target, at -1 F");
-                } else {
-                    outputCard.body.push("Target is obscured by Cover and is not eligible");
+                //cover 6+
+                let noWeapon = true;
+                _.each(shooter.weapons,weapon => {
+                    if (weapon.includes("Smart")) {
+                        outputCard.body.push("Only " + weapon + " can fire at the Target, at -1 F");
+                        noWeapon = false;
+                    } 
+                    //indirect ?
+                })
+                if (noWeapon === true) {
+                    outputCard.body.push("Target is obscured by Cover, no LOS");
                 }
                 outputCard.body.push("Cover is " + losResult.cover);
             }
