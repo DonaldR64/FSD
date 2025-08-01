@@ -1206,7 +1206,7 @@ const CC = (() => {
                 bar1_value: actions,
             })
             unit.token.set(SM.alert,false);   
-
+            unit.order = "";
 
         })
 
@@ -1631,8 +1631,41 @@ const CC = (() => {
         let weapon = shooter.weapons[weaponNum];
         let order = shooter.order;
 
-        
+        let losResult = LOS(shooter,target);
+        let firepower = shooter.firepower;
+        let tip = "FP: " + firepower;
 
+
+        SetupCard(shooter.name,"Fire",shooter.faction);
+        let errorMsg = [];
+
+        if (order === "Rapid Move" || order === "Charge") {
+            errorMsg.push("Cannot Fire while on " + order);
+        }
+
+        if (losResult.los === false) {
+            errorMsg.push("No LOS To Target");
+            errorMsg.push(losResult.losReason);
+        } else if (losResult.los === true && losResult.lof === false) {
+            errorMsg.push("In LOS but Out of Arc of Fire");
+        } else if (losResult.los === true && losResult.lof === true && losResult.cover > 5) {
+            if (weapon.includes("Smart") === false) {
+                errorMsg.push("Target is obscured by Cover, no LOS");
+            } else {
+                firepower--;
+                tip += "<br>-1 F Smart Weapon/Cover";
+            }
+        }
+
+        if (errorMsg.length > 0) {
+            _.each(errorMsg,msg => {
+                outputCard.body.push(msg);
+            })
+            PrintCard();
+            return;
+        }
+        
+        let needed = losResult.distance + losResult.cover
 
 
 
