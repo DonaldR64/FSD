@@ -1694,6 +1694,7 @@ const Test = () => {
     let defence = 2;
     let attackRolls = {};
     let defenceRolls = {};
+    let groups = [];
     for (let i=1;i<13;i++) {
         attackRolls[i] = 0;
         defenceRolls[i] = 0;
@@ -1718,6 +1719,7 @@ const Test = () => {
         defenceRolls[roll.toString()]++
         displayDR.push(roll);
     }
+    
 log(attackRolls)
 log(displayAR)
 log(defenceRolls)
