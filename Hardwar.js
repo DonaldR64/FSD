@@ -1690,20 +1690,18 @@ const CC = (() => {
 
 
 const Test = () => {
-    let fp = 3;
-    let defence = 2;
+    let fp = 8;
+    let defence = 3;
     let attackRolls = {};
     let defenceRolls = {};
-    let groups = [];
     for (let i=1;i<13;i++) {
         attackRolls[i] = 0;
         defenceRolls[i] = 0;
     }
 
-    let sum = 0;
     let displayAR = [];
     let displayDR = [];
-    let target = 10;
+    let target = 15;
     let hits = 0;
     let criticals = 0;
     let roll;
@@ -1719,7 +1717,7 @@ const Test = () => {
         defenceRolls[roll.toString()]++
         displayDR.push(roll);
     }
-    
+
 log(attackRolls)
 log(displayAR)
 log(defenceRolls)
@@ -1749,29 +1747,6 @@ log(displayDR)
         while (roll === 12);
     }
 
-    //sum up rolls
-    for (let i=1;i<13;i++) {
-        sum += attackRolls[i] * i;
-    }
-
-    if (sum < target) {
-        criticals = 0;
-        hits = 0;
-    } else {
-        //organize groups of rolls
-
-
-
-
-
-
-
-    }
-
-    
-
-
-
 
 
 
@@ -1782,7 +1757,7 @@ log(displayDR)
     SetupCard("Test","","Neutral");
     outputCard.body.push("Attack Rolls: " + displayAR.toString());
     outputCard.body.push("Defence Rolls: " + displayDR.toString());
-    outputCard.body.push("Hits: " + sum);
+    outputCard.body.push("Hits: " + hits);
     outputCard.body.push("Criticals: " + criticals);
     PrintCard();
 
