@@ -1825,6 +1825,7 @@ const Test = () => {
     let criticals = 0;
     let hits = 0;
     _.each(groups,group => {
+log(group)
         group.reverse();
         let sum = 0;
         let poscrit = 0;
