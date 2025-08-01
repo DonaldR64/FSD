@@ -1717,11 +1717,6 @@ const Test = () => {
         displayDR.push(roll);
     }
 
-log(attackRolls)
-log(displayAR)
-log(defenceRolls)
-log(displayDR)
-
     //cancel dice
     for (let i=1;i<13;i++) {
         attackRolls[i] = Math.max(0,attackRolls[i] - defenceRolls[i]);
@@ -1815,15 +1810,6 @@ log(displayDR)
             criticals += poscrit;
         }
     })
-
-
-
-
-
-
-
-
-
 
     SetupCard("Test","","Neutral");
     outputCard.body.push("Attack Rolls: " + displayAR.toString());
