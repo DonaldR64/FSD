@@ -1751,12 +1751,18 @@ log(displayDR)
     for (let i=1;i<13;i++) {
         sum += attackRolls[i] * i;
     }
-    //identify potential criticals
-    _.each(attackRolls,roll => {
-        criticals += Math.floor(roll/2);
-    })
+
     if (sum < target) {
         criticals = 0;
+        hits = 0;
+    } else {
+        //organize groups of rolls
+
+
+
+
+
+
     }
 
     
@@ -1764,12 +1770,17 @@ log(displayDR)
 
 
 
+
+
+
+
+
+
     SetupCard("Test","","Neutral");
     outputCard.body.push("Attack Rolls: " + displayAR.toString());
     outputCard.body.push("Defence Rolls: " + displayDR.toString());
-    outputCard.body.push("Possible Criticals: " + criticals);
-    outputCard.body.push("Sum of Rolls: " + sum);
-
+    outputCard.body.push("Hits: " + sum);
+    outputCard.body.push("Criticals: " + criticals);
     PrintCard();
 
 
