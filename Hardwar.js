@@ -1767,26 +1767,58 @@ const Test = () => {
             }
         }
     }
-    unassignedRolls.sort(); //lowest rolls first
-    //run through unassigned and add to group if < target or start new group
-    for (let i=0;i<unassignedRolls.length;i++) {
-        let assigned = false;
-        for (let j=0;j<groups.length;j++) {
-            let group = groups[j];
-            let sum = 0;
-            _.each(group,number => {
-                sum += number;
-            })
-            if (sum < target) {
-                groups[j].push(unassignedRolls[i]);
-                assigned = true;
-                break;
+    unassignedRolls.sort();
+    //run through groups and see if have needed numbers in unassignedRolls
+    //if they dont have exact number, starting at lowest, add those in until reaches needed #
+    for (let g=0;g<groups.length;g++) {
+        let group = groups[g];
+        let sum = 0;
+        for (let i=0;i<group.length;i++) {
+            sum += group[i];
+        }
+        let needed = target - sum;
+        if (needed <= 0) {continue};
+        do {
+            let pos = unassignedRolls.indexOf(needed);
+            if (pos > -1) {
+                group.push(unassignedRolls[pos]);
+                unassignedRolls.splice(pos,1);
+                needed = 0;
+            } else {
+                let roll = unassignedRolls.shift();
+                group.push(roll);
+                needed -= roll;
             }
-        }
-        if (assigned === false) {
-            groups.push([unassignedRolls[i]]);
-        }
+        } while (needed > 0 && unassignedRolls.length > 0);
     }
+    //now work with remaining unassigned to create groups
+    unassignedRolls.sort();
+    if (unassignedRolls.length > 0) {
+        do {
+            let roll = unassignedRolls.pop();
+            let group = [roll];
+            let needed = target - roll;
+            if (needed > 0) {
+                do {
+                    let pos = unassignedRolls.indexOf(needed);
+                    if (pos > -1) {
+                        group.push(unassignedRolls[pos]);
+                        unassignedRolls.splice(pos,1);
+                        needed = 0;
+                    } else {
+                        let roll = unassignedRolls.shift();
+                        group.push(roll);
+                        needed -= roll;
+                    }
+                } while (needed > 0 && unassignedRolls.length > 0);
+            }
+            groups.push(group);
+        } while (unassignedRolls.length > 0);
+    }
+
+
+
+
 
 
     //now total up criticals and hits
