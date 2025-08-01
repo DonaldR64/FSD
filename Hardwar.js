@@ -1702,8 +1702,7 @@ const Test = () => {
     let displayAR = [];
     let displayDR = [];
     let target = 15;
-    let hits = 0;
-    let criticals = 0;
+
     let roll;
 
     for (let i=0;i<fp;i++) {
@@ -1747,14 +1746,81 @@ log(displayDR)
         while (roll === 12);
     }
 
-    let finalAttackRolls = [];
-    for (let i=1;i<13;i++) {
-        let num = attackRolls[i];
-        for (let j=0;j<num;j++) {
-            finalAttackRolls.push(i);
+    let finalAR = [];
+    for (let i=12;i>0;i--) {
+        for (let j=0;j<attackRolls[i];j++) {
+            finalAR.push(i);
         }
     }
-    finalAttackRolls.sort((a,b) => b-a);
+
+    let groups = [];
+    let unassignedRolls = [];
+    //assign criticals to their own groups initially
+    for (let i=12;i>0;i--) {
+        let num = attackRolls[i];
+        if (num === 0) {
+            continue;
+        } else if (num === 1) {
+            unassignedRolls.push(i);
+        } else if (num > 1) {
+            do {
+                groups.push([i,i]);
+                num -= 2;
+            } while (num > 1) ;
+            if (num === 1) {
+                unassignedRolls.push(i);
+            }
+        }
+    }
+    unassignedRolls.sort(); //lowest rolls first
+    //run through unassigned and add to group if < target or start new group
+    for (let i=0;i<unassignedRolls.length;i++) {
+        let assigned = false;
+        for (let j=0;j<groups.length;j++) {
+            let group = groups[j];
+            let sum = 0;
+            _.each(group,number => {
+                sum += number;
+            })
+            if (sum < target) {
+                groups[j].push(unassignedRolls[i]);
+                assigned = true;
+                break;
+            }
+        }
+        if (assigned === false) {
+            groups.push([unassignedRolls[i]]);
+        }
+    }
+
+
+    //now total up criticals and hits
+    let criticals = 0;
+    let hits = 0;
+    _.each(groups,group => {
+        group.reverse();
+        let sum = 0;
+        let poscrit = 0;
+        for (let i=0;i<group.length;i++) {
+            let roll = group[i];
+            sum += roll;
+            if (i > 0) {
+                if (roll === group[i-1]) {
+                    poscrit++;
+                }
+            }
+        }
+        if (sum >= target) {
+            hits++;
+            criticals += poscrit;
+        }
+    })
+
+
+
+
+
+
 
 
 
@@ -1762,9 +1828,15 @@ log(displayDR)
     SetupCard("Test","","Neutral");
     outputCard.body.push("Attack Rolls: " + displayAR.toString());
     outputCard.body.push("Defence Rolls: " + displayDR.toString());
-    outputCard.body.push("Final Attack Rolls: " + finalAttackRolls.toString());
+    outputCard.body.push("Attack Rolls after Defence: " + finalAR.toString());
+
+    _.each(groups,group => {
+        outputCard.body.push("Group: " + group.toString());
+    })
+
     outputCard.body.push("Hits: " + hits);
     outputCard.body.push("Criticals: " + criticals);
+
     PrintCard();
 
 
