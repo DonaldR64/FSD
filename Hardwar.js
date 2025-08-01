@@ -1759,7 +1759,7 @@ log(displayDR)
         criticals = 0;
     }
 
-    a
+    
 
 
 
