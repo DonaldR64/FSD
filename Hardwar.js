@@ -1747,9 +1747,14 @@ log(displayDR)
         while (roll === 12);
     }
 
-
-
-
+    let finalAttackRolls = [];
+    for (let i=1;i<13;i++) {
+        let num = attackRolls[i];
+        for (let j=0;j<num;j++) {
+            finalAttackRolls.push(i);
+        }
+    }
+    finalAttackRolls.sort((a,b) => b-a);
 
 
 
@@ -1757,6 +1762,7 @@ log(displayDR)
     SetupCard("Test","","Neutral");
     outputCard.body.push("Attack Rolls: " + displayAR.toString());
     outputCard.body.push("Defence Rolls: " + displayDR.toString());
+    outputCard.body.push("Final Attack Rolls: " + finalAttackRolls.toString());
     outputCard.body.push("Hits: " + hits);
     outputCard.body.push("Criticals: " + criticals);
     PrintCard();
