@@ -1634,6 +1634,19 @@ const CC = (() => {
         let losResult = LOS(shooter,target);
         let firepower = shooter.firepower;
         let tip = "FP: " + firepower;
+        if (order === "Advance" && shooter.abilities.includes("Bracing Mass") === false) {
+            firepower = Math.floor(firepower/2);
+            tip += "<br>Advance = 1/2 FP";
+        } else if (order === "Aimed Shot") {
+            firepower++;
+            tip += "<br>Aimed Shot";
+        }
+
+        let defence = target.defence;
+        if (weapon.includes("XMG")) {
+            defence--;
+            tip += "<br>XMG -1 D";
+        }
 
 
         SetupCard(shooter.name,"Fire",shooter.faction);
@@ -1665,7 +1678,7 @@ const CC = (() => {
             return;
         }
         
-        let needed = losResult.distance + losResult.cover
+        let needed = losResult.distance + losResult.cover + target.armour;
 
 
 
