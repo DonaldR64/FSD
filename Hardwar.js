@@ -1586,6 +1586,7 @@ const CC = (() => {
         actions--;
         if (order === "Advance") {
             outputCard.body.push("The Unit may Move and Fire in either Order.");
+            outputCard.body.push("The Target must be in LOS from the starting position");
             outputCard.body.push("Cautious Move: " + mobility + " MP, gaining Alert");
             outputCard.body.push("Patrol Move: " + (mobility * 2) + " MP");
         }
