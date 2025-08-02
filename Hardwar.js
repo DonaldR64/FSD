@@ -1834,19 +1834,22 @@ const Test = () => {
 log(group)
         group.reverse();
         let sum = 0;
-        let poscrit = 0;
+        let poscrit = false;
         for (let i=0;i<group.length;i++) {
             let roll = group[i];
             sum += roll;
             if (i > 0) {
                 if (roll === group[i-1]) {
-                    poscrit++;
+                    poscrit = true;
                 }
             }
         }
         if (sum >= target) {
             hits++;
-            criticals += poscrit;
+            if (poscrit === true) {
+                hits++;
+                criticals++;
+            }
         }
     })
 
