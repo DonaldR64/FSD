@@ -1686,9 +1686,9 @@ const CC = (() => {
         let needed = losResult.distance + losResult.cover + defender.armour;
         let nTip = "Distance: " + losResult.distance + "<br>Cover: " + losResult.cover + "<br>Armour: " + defender.armour;
 
-        fpTip = '[🎲](#" class="showtip" title="' + fpTip + ')';
-        nTip = '[🎲](#" class="showtip" title="' + nTip + ')';
-        dTip = '[🎲](#" class="showtip" title="' + dTip + ')';
+        fpTip = '[⚔️](#" class="showtip" title="' + fpTip + ')';
+        nTip = '[◎](#" class="showtip" title="' + nTip + ')';
+        dTip = '[🛡️](#" class="showtip" title="' + dTip + ')';
 
         outputCard.body.push(fpTip + " Firepower: " + firepower + " Dice");
         outputCard.body.push(nTip + " Target: " + needed + "+");
@@ -1708,7 +1708,7 @@ const CC = (() => {
 
 
         let results = AttackDice(firepower,defence,needed,attacker.abilities,defender.abilities,weapon);
-        //fp, defence, needed - feed into dice roll routine and get back hits, criticals, tips
+
         
 
 
@@ -1917,43 +1917,54 @@ const AttackDice = () => {
 
     }
 
-    let line1 = "Attack Rolls: " + originalAttackRolls.toString();
+
+    let tip = "Attack Rolls<br>" + originalAttackRolls.toString();
     if (explodingAttackRolls.length > 0) {
-        line1 += " + " + explodingAttackRolls.toString();
+        tip += " + " + explodingAttackRolls.toString();
     }
-    let line2 = "Defence Rolls: " + originalDefenceRolls.toString();
+    tip += aTip;
+    tip += "<br>--------------------------";
+    tip += "<br>Defence Rolls<br>" + originalDefenceRolls.toString();
     if (explodingDefenceRolls.length > 0) {
         line2 += " + " + explodingDefenceRolls.toString();
     }
-    outputCard.body.push(line1);
-    outputCard.body.push(line2);
+    tip += dTip;
+    tip += "<br>--------------------------";
     if (finalAttackRolls.length > 0) {
-        outputCard.body.push("Final Attack Rolls: " + finalAttackRolls.toString());
-    } else {
-        outputCard.body.push("All Attacks Defeated by Defences");
+        tip += "<br>Final Attack Rolls: " + finalAttackRolls.toString();
     }
+    tip = '[Hits](#" class="showtip" title="' + tip + ')';
+
+
     outputCard.body.push("[hr]");
-    let noncriticals = 0;
-    let criticals = 0;
+    let noncriticals = [];
+    let criticals = [];
     let totalHits = 0;
     _.each(groups,group => {
-        let line = group.rolls.sort((a,b) => b-a).toString() + " : "
+        let rolls = "[" + group.rolls.sort((a,b) => b-a).toString() + "]";
         if (group.needed === 0) {
             if (group.critical === true) {
-                criticals++;
-                line += "Critical Hit";
+                criticals.push(rolls);
             } else {
-                noncriticals++;
-                line += "Hit";
+                noncriticals.push(rolls);
             }
-        } else {
-            line += " Miss";
         }
-        outputCard.body.push(line);
     })
-    totalHits = noncriticals + (2*criticals);
-    outputCard.body.push("[hr]");
-    outputCard.body.push("Total Hits: " + totalHits);
+    totalHits = noncriticals.length + (2*criticals.length);
+    outputCard.body.push("[U]" + tip + "[/u]");
+    let s;
+    if (criticals.length > 0) {
+        s = (criticals.length > 1) ? "s":"";
+        let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+        outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+    }
+    if (noncriticals.length > 0) {
+        s = (noncriticals.length > 1) ? "s":"";
+        let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+        outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+    }
+    outputCard.body.push("Total: " + totalHits);
+    //stat damage
 
     PrintCard();
 
