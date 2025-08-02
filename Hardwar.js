@@ -1823,9 +1823,10 @@ const AttackDice = () => {
                 let nextRoll = attackRolls[0];
                 if (nextRoll && roll === nextRoll) {
                     roll = attackRolls.shift();
-                    let sum = roll * 2;
-                    let needed = Math.max(target - sum)
                     let info = {
+                        sum: roll * 2,
+                        critical: true,
+                        needed: Math.max(0,target - (roll * 2)),
                         rolls: [roll,roll],
                     }
                     groups.push(info);
@@ -1834,33 +1835,9 @@ const AttackDice = () => {
                 }
             }
         } while (attackRolls.length > 0);
+        groups.sort((a,b) => a.needed - b.needed);
         unassignedRolls.sort((a,b) => a - b);
 
-        //run through critical groups and see if have exact needed numbers in unassignedRolls
-        //note down info on the group's math also
-        for (let i=0;i<groups.length;i++) {
-            let rolls = groups[i].rolls;
-            let sum = SumArray(rolls);
-            let needed = Math.max(target - sum,0);
-            if (needed > 0) {
-                let pos = unassignedRolls.indexOf(needed);
-                if (pos > -1) {
-                    rolls.push(unassignedRolls[pos]);
-                    unassignedRolls.splice(pos,1);
-                    needed = 0;
-                    sum = needed;
-                }
-            }
-            let info = {
-                sum: sum,
-                needed: needed,
-                rolls: rolls,
-                critical: true,
-            }
-            groups[i] = info;
-        }
-        //sort critical groups based on needed, 
-        groups.sort((a,b) => a.needed - b.needed);
         //fill with unassigned, searching for best # (exact or higher) or using lowest and re-searching
         for (let i=0;i<groups.length;i++) {
             let group = groups[i];
@@ -1874,19 +1851,20 @@ const AttackDice = () => {
                             break;
                         } 
                     }
-                    roll = unassignedRolls.splice(pos,1);
+                    roll = parseInt(unassignedRolls.splice(pos,1));
                     group.rolls.push(roll);
-                    group.sum = SumArray[group.rolls];
+                    group.sum += roll;
                     group.needed = Math.max(0,target - group.sum);
                 } while (group.needed > 0 && unassignedRolls.length > 0);
             }
         }
+
         //critical groups now filled or no more unassignedRolls
         //if further unassignedRolls, assign these to groups
         //start with highest # as a group, searching for best # (exact or higher) or using lowest and re-searching
         if (unassignedRolls.length > 0) {
             do {
-                roll = unassignedRolls.pop();
+                roll = parseInt(unassignedRolls.pop());
                 let info = {
                     sum: roll,
                     needed: Math.max(0,target - roll),
@@ -1903,19 +1881,22 @@ const AttackDice = () => {
                                 break;
                             } 
                         }
-                        roll = unassignedRolls.splice(pos,1);
+                        roll = parseInt(unassignedRolls.splice(pos,1));
                         info.rolls.push(roll);
-                        info.sum = SumArray[info.rolls];
+                        info.sum += roll;
                         info.needed = Math.max(0,target - info.sum);
                     } while (info.needed > 0 && unassignedRolls.length > 0);
                 }
                 groups.push(info);
             } while (unassignedRolls.length > 0);
         }
+
     }
 
 
     SetupCard("Test","","Neutral");
+    outputCard.body.push("Firepower: " + fp + " vs. Defence: " + defence);
+    outputCard.body.push("Target: " + target);
     let line1 = "Attack Rolls: " + originalAttackRolls.toString();
     if (explodingAttackRolls.length > 0) {
         line1 += " + " + explodingAttackRolls.toString();
@@ -1936,7 +1917,7 @@ const AttackDice = () => {
     let criticals = 0;
     let totalHits = 0;
     _.each(groups,group => {
-        let line = group.rolls.toString() + " : "
+        let line = group.rolls.sort((a,b) => b-a).toString() + " : "
         if (group.needed === 0) {
             if (group.critical === true) {
                 criticals++;
