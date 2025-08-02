@@ -1682,12 +1682,28 @@ const CC = (() => {
             return;
         }
         
-        
-
-
-
 
         let needed = losResult.distance + losResult.cover + defender.armour;
+        let nTip = "Distance: " + losResult.distance + "<br>Cover: " + losResult.cover + "<br>Armour: " + defender.armour;
+
+        fpTip = '[🎲](#" class="showtip" title="' + fTip + ')';
+        nTip = '[🎲](#" class="showtip" title="' + nTip + ')';
+        dTip = '[🎲](#" class="showtip" title="' + dTip + ')';
+
+        outputCard.body.push(fpTip + " Firepower: " + firepower + " vs. " + nTip + " Target: " + needed + "+");
+        outputCard.body.push(dTip + " Defence: " + defence);
+
+        combatArray = {
+            attacker: attacker,
+            defender: defender,
+            weapon: weapon,
+            firepower: firepower,
+            defence: defence,
+        };
+
+
+
+
 
         let results = AttackDice(firepower,defence,needed,attacker.abilities,defender.abilities,weapon);
         //fp, defence, needed - feed into dice roll routine and get back hits, criticals, tips
@@ -1699,13 +1715,19 @@ const CC = (() => {
 
     }
 
-const AttackDice = (fp,defence,target,aAbilities,dAbilities,weapon) => {
+const AttackDice = () => {
+
+    let attacker = combatArray.attacker;
+    let defender = combatArray.defender;
+    let weapon = combatArray.weapon;
+    let fp = combatArray.firepower;
+    let defence = combatArray.defence;
+
+
 
     let augment = 12;    
     //others, eg weapon stats
     if (weapon.includes("Laser")) {augment = 11};
-
-
 
     let aTip = "";
     let dTip = "";
@@ -1732,7 +1754,7 @@ const AttackDice = (fp,defence,target,aAbilities,dAbilities,weapon) => {
             attackRolls.sort();
         }
     }
-    if (dAbilities.includes("Point Defence")) {
+    if (defender.abilities.includes("Point Defence")) {
         for (let i=0;i<defenceRolls.length;i++) {
             let test = defenceRolls[i];
             if (attackRolls.includes(test) === false) {
@@ -1744,7 +1766,7 @@ const AttackDice = (fp,defence,target,aAbilities,dAbilities,weapon) => {
             }
         }
     }
-    if (aAbilities.includes("Assisted Targetting")) {
+    if (attacker.abilities.includes("Assisted Targetting")) {
         for (let i=0;i<attackRolls.length;i++) {
             let test = attackRolls[i];
             if (defenceRolls.includes(test) === true) {
