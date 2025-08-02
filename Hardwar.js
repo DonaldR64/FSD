@@ -1686,12 +1686,13 @@ const CC = (() => {
         let needed = losResult.distance + losResult.cover + defender.armour;
         let nTip = "Distance: " + losResult.distance + "<br>Cover: " + losResult.cover + "<br>Armour: " + defender.armour;
 
-        fpTip = '[🎲](#" class="showtip" title="' + fTip + ')';
+        fpTip = '[🎲](#" class="showtip" title="' + fpTip + ')';
         nTip = '[🎲](#" class="showtip" title="' + nTip + ')';
         dTip = '[🎲](#" class="showtip" title="' + dTip + ')';
 
-        outputCard.body.push(fpTip + " Firepower: " + firepower + " vs. " + nTip + " Target: " + needed + "+");
-        outputCard.body.push(dTip + " Defence: " + defence);
+        outputCard.body.push(fpTip + " Firepower: " + firepower + " Dice");
+        outputCard.body.push(nTip + " Target: " + needed + "+");
+        outputCard.body.push(dTip + " Defence: " + defence + " Dice");
 
         combatArray = {
             attacker: attacker,
@@ -1699,6 +1700,7 @@ const CC = (() => {
             weapon: weapon,
             firepower: firepower,
             defence: defence,
+            needed: needed,
         };
 
 
@@ -1722,7 +1724,7 @@ const AttackDice = () => {
     let weapon = combatArray.weapon;
     let fp = combatArray.firepower;
     let defence = combatArray.defence;
-
+    let target = combatArray.needed;
 
 
     let augment = 12;    
@@ -1915,10 +1917,6 @@ const AttackDice = () => {
 
     }
 
-
-    SetupCard("Test","","Neutral");
-    outputCard.body.push("Firepower: " + fp + " vs. Defence: " + defence);
-    outputCard.body.push("Target: " + target);
     let line1 = "Attack Rolls: " + originalAttackRolls.toString();
     if (explodingAttackRolls.length > 0) {
         line1 += " + " + explodingAttackRolls.toString();
