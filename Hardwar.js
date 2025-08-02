@@ -1757,10 +1757,10 @@ const AttackDice = () => {
         }
     }
 
-    let originalAttackRolls = deepCopy(attackRolls); //used for output
-    let originalDefenceRolls = deepCopy(defenceRolls); //used for output
-    let explodingAttackRolls = [];
-    let explodingDefenceRolls = [];
+    let originalAttackRolls = DeepCopy(attackRolls).sort((a,b) => b-a); //used for output
+    let originalDefenceRolls = DeepCopy(defenceRolls).sort((a,b) => b-a); //used for output
+    let explodingAttackRolls = []; //output
+    let explodingDefenceRolls = []; //output
 
 
     //cancel out any 12s before exploding - only done on initial rolls
@@ -1777,6 +1777,8 @@ const AttackDice = () => {
             defenceRolls.splice(pos,1);
         }
     }
+    a12count -= min;
+    d12count -= min;
 
     //explode any remaining 12s, and cancel out any matching for defence
     for (let i=0;i<a12count;i++) {
@@ -1797,8 +1799,8 @@ const AttackDice = () => {
     }
     attackRolls.sort();
     defenceRolls.sort();
-    explodingAttackRolls.sort();
-    explodingDefenceRolls.sort();
+    explodingAttackRolls.sort((a,b) => b-a);
+    explodingDefenceRolls.sort((a,b) => b-a);
 
     //cancel out rolls now
     _.each(defenceRolls,roll => {
@@ -1812,6 +1814,7 @@ const AttackDice = () => {
     let unassignedRolls = [];
     attackRolls.sort((a,b) => b - a); //sort highest to lowest for this
 
+    let finalAttackRolls = DeepCopy(attackRolls); //display again
     if (attackRolls.length > 0) {
         //assign criticals to their own groups initially
         do {
@@ -1858,30 +1861,30 @@ const AttackDice = () => {
         }
         //sort critical groups based on needed, 
         groups.sort((a,b) => a.needed - b.needed);
-        //fill with unassigned, searching for exacts or using lowest
+        //fill with unassigned, searching for best # (exact or higher) or using lowest and re-searching
         for (let i=0;i<groups.length;i++) {
             let group = groups[i];
             if (group.needed > 0 && unassignedRolls.length > 0) {
                 do {
-                    let pos = unassignedRolls.indexOf(group.needed);
-                    if (pos > -1) {
-                        roll = unassignedRolls[pos];
-                        unassignedRolls.splice(pos,1);
-                    } else {
-                        roll = unassignedRolls.shift();
+                    let pos = 0;
+                    //defaults to lowest roll unless finds exact match or higher in unassigned rolls
+                    for (let p=0;p<unassignedRolls.length;p++) {
+                        if (unassignedRolls[p] >= group.needed) {
+                            pos = p;
+                            break;
+                        } 
                     }
+                    roll = unassignedRolls.splice(pos,1);
                     group.rolls.push(roll);
-                    if (roll >= group.needed) {
-                        group.needed = 0;
-                        group.sum = SumArray(group.rolls);
-                    }
+                    group.sum = SumArray[group.rolls];
+                    group.needed = Math.max(0,target - group.sum);
                 } while (group.needed > 0 && unassignedRolls.length > 0);
             }
         }
         //critical groups now filled or no more unassignedRolls
         //if further unassignedRolls, assign these to groups
-        //start with highest #, search for exact and if not, fill with lowest
-        if (unassignedRolls > 0) {
+        //start with highest # as a group, searching for best # (exact or higher) or using lowest and re-searching
+        if (unassignedRolls.length > 0) {
             do {
                 roll = unassignedRolls.pop();
                 let info = {
@@ -1892,18 +1895,18 @@ const AttackDice = () => {
                 }
                 if (info.needed > 0 && unassignedRolls.length > 0) {
                     do {
-                        let pos = unassignedRolls.indexOf(info.needed);
-                        if (pos > -1) {
-                            roll = unassignedRolls[pos];
-                            unassignedRolls.splice(pos,1);
-                        } else {
-                            roll = unassignedRolls.shift();
+                        let pos = 0;
+                        //defaults to lowest roll unless finds exact match or higher in unassigned rolls
+                        for (let p=0;p<unassignedRolls.length;p++) {
+                            if (unassignedRolls[p] >= info.needed) {
+                                pos = p;
+                                break;
+                            } 
                         }
+                        roll = unassignedRolls.splice(pos,1);
                         info.rolls.push(roll);
-                        if (roll >= info.needed) {
-                            info.needed = 0;
-                            info.sum = SumArray(info.rolls);
-                        }
+                        info.sum = SumArray[info.rolls];
+                        info.needed = Math.max(0,target - info.sum);
                     } while (info.needed > 0 && unassignedRolls.length > 0);
                 }
                 groups.push(info);
@@ -1923,8 +1926,8 @@ const AttackDice = () => {
     }
     outputCard.body.push(line1);
     outputCard.body.push(line2);
-    if (attackRolls.length > 0) {
-        outputCard.body.push("Final Attack Rolls: " + attackRolls.toString());
+    if (finalAttackRolls.length > 0) {
+        outputCard.body.push("Final Attack Rolls: " + finalAttackRolls.toString());
     } else {
         outputCard.body.push("All Attacks Defeated by Defences");
     }
@@ -1945,6 +1948,7 @@ const AttackDice = () => {
         } else {
             line += " Miss";
         }
+        outputCard.body.push(line);
     })
     totalHits = noncriticals + (2*criticals);
     outputCard.body.push("[hr]");
