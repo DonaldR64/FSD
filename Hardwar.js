@@ -1680,7 +1680,8 @@ const CC = (() => {
         
         let needed = losResult.distance + losResult.cover + target.armour;
 
-
+        //fp, defence, needed - feed into dice roll routine and get back hits, criticals, tips
+        
 
 
 
