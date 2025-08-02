@@ -77,7 +77,7 @@ const CC = (() => {
     let PlayerInfo = {};
     let currentPlayer = 0;
     let currentUnitID = "";
-
+    let combatArray = {};
 
     let outputCard = {title: "",subtitle: "",side: "",body: [],buttons: [],};
 
@@ -1624,33 +1624,36 @@ const CC = (() => {
 
     const Fire = (msg) => {
         let Tag = msg.content.split(";");
-        let shooterID = Tag[1];
-        let shooter = UnitArray[shooterID];
-        let targetID = Tag[2];
-        let target = UnitArray[targetID];
+        let attackerID = Tag[1];
+        let attacker = UnitArray[attackerID];
+        let defenderID = Tag[2];
+        let defender = UnitArray[defenderID];
         let weaponNum = Tag[3];
-        let weapon = shooter.weapons[weaponNum];
-        let order = shooter.order;
+        let weapon = attacker.weapons[weaponNum];
+        let order = attacker.order;
 
-        let losResult = LOS(shooter,target);
-        let firepower = shooter.firepower;
-        let tip = "FP: " + firepower;
-        if (order === "Advance" && shooter.abilities.includes("Bracing Mass") === false) {
+
+
+        let losResult = LOS(attacker,defender);
+        let firepower = attacker.firepower;
+        let fpTip = "FP: " + firepower;
+        if (order === "Advance" && attacker.abilities.includes("Bracing Mass") === false) {
             firepower = Math.floor(firepower/2);
-            tip += "<br>Advance = 1/2 FP";
+            fpTip += "<br>Advance = 1/2 FP";
         } else if (order === "Aimed Shot") {
             firepower++;
-            tip += "<br>Aimed Shot";
+            fpTip += "<br>Aimed Shot";
         }
 
-        let defence = target.defence;
+        let defence = defender.defence;
+        let dTip = "Defence: " + defence;
         if (weapon.includes("XMG")) {
             defence--;
-            tip += "<br>XMG -1 D";
+            dTip += "<br>XMG -1 D";
         }
 
 
-        SetupCard(shooter.name,"Fire",shooter.faction);
+        SetupCard(attacker.name,weapon,attacker.faction);
         let errorMsg = [];
 
         if (order === "Rapid Move" || order === "Charge") {
@@ -1667,7 +1670,7 @@ const CC = (() => {
                 errorMsg.push("Target is obscured by Cover, no LOS");
             } else {
                 firepower--;
-                tip += "<br>-1 F Smart Weapon/Cover";
+                fpTip += "<br>-1 F Smart Weapon/Cover";
             }
         }
 
@@ -1679,8 +1682,14 @@ const CC = (() => {
             return;
         }
         
-        let needed = losResult.distance + losResult.cover + target.armour;
+        
 
+
+
+
+        let needed = losResult.distance + losResult.cover + defender.armour;
+
+        let results = AttackDice(firepower,defence,needed,attacker.abilities,defender.abilities,weapon);
         //fp, defence, needed - feed into dice roll routine and get back hits, criticals, tips
         
 
@@ -1690,19 +1699,10 @@ const CC = (() => {
 
     }
 
-const AttackDice = () => {
+const AttackDice = (fp,defence,target,aAbilities,dAbilities,weapon) => {
 
-//change variables to be fed in
-
-    let fp = 8;
-    let defence = 3;
-    let target = 15;
-    let augment = 12;
-    
+    let augment = 12;    
     //others, eg weapon stats
-    let aAbilities = " ";
-    let dAbilities = " ";
-    let weapon = " ";
     if (weapon.includes("Laser")) {augment = 11};
 
 
