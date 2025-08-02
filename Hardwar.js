@@ -1695,8 +1695,8 @@ const Test = () => {
     let attackRolls = {};
     let defenceRolls = {};
     for (let i=1;i<13;i++) {
-        attackRolls[i] = 0;
-        defenceRolls[i] = 0;
+        attackRolls[i.toString()] = 0;
+        defenceRolls[i.toString()] = 0;
     }
 
     let displayAR = [];
@@ -1719,23 +1719,23 @@ const Test = () => {
 
     //cancel dice
     for (let i=1;i<13;i++) {
-        attackRolls[i] = Math.max(0,attackRolls[i] - defenceRolls[i]);
+        attackRolls[i.toString()] = Math.max(0,attackRolls[i.toString()] - defenceRolls[i.toString()]);
     }
     //explode any remaining 12s and in defence case cancel any dice from these
-    for (let i=0;i<attackRolls[12];i++) {
+    for (let i=0;i<attackRolls["12"];i++) {
         do {
             roll = randomInteger(12);
-            attackRolls[roll]++;
+            attackRolls[roll.toString()]++;
             displayAR.push(roll);
         }
         while (roll === 12);
     }
-    for (let i=0;i<defenceRolls[12];i++) {
+    for (let i=0;i<defenceRolls["12"];i++) {
         do {
             roll = randomInteger(12);
             displayDR.push(roll);
-            if (attackRolls[roll] > 0) {
-                attackRolls[roll]--;
+            if (attackRolls[roll.toString()] > 0) {
+                attackRolls[roll.toString()]--;
             }
         }
         while (roll === 12);
@@ -1743,31 +1743,31 @@ const Test = () => {
 
     let finalAR = [];
     for (let i=12;i>0;i--) {
-        for (let j=0;j<attackRolls[i];j++) {
+        for (let j=0;j<attackRolls[i.toString()];j++) {
             finalAR.push(i);
         }
     }
+
+
 
     let groups = [];
     let unassignedRolls = [];
     //assign criticals to their own groups initially
     for (let i=12;i>0;i--) {
-        let num = attackRolls[i];
+        let num = attackRolls[i.toString()];
         if (num === 0) {
             continue;
-        } else if (num === 1) {
-            unassignedRolls.push(i);
         } else if (num > 1) {
             do {
                 groups.push([i,i]);
                 num -= 2;
             } while (num > 1) ;
-            if (num === 1) {
-                unassignedRolls.push(i);
-            }
+        }
+        if (num === 1) {
+            unassignedRolls.push(i);
         }
     }
-    unassignedRolls.sort();
+    unassignedRolls.sort((a,b) => a - b);
     //run through groups and see if have needed numbers in unassignedRolls
     //if they dont have exact number, starting at lowest, add those in until reaches needed #
     for (let g=0;g<groups.length;g++) {
@@ -1792,10 +1792,11 @@ const Test = () => {
         } while (needed > 0 && unassignedRolls.length > 0);
     }
     //now work with remaining unassigned to create groups
-    unassignedRolls.sort();
+    unassignedRolls.sort((a,b) => a - b);
     if (unassignedRolls.length > 0) {
         do {
             let roll = unassignedRolls.pop();
+            if (!roll || roll === null) {break};
             let group = [roll];
             let needed = target - roll;
             if (needed > 0) {
@@ -1807,6 +1808,9 @@ const Test = () => {
                         needed = 0;
                     } else {
                         let roll = unassignedRolls.shift();
+                        if (roll === null || !roll) {
+                            break;
+                        }
                         group.push(roll);
                         needed -= roll;
                     }
