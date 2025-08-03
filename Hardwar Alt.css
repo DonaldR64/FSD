@@ -231,24 +231,3 @@ input[type="hidden"][name="attr_nation"]:is([value="Canada"]) ~ .spbody {
   margin-bottom: 1em;
 }
 
-.radiocontainer{
-  /* style the layout and whatnot of the radio container as you need to */
-  display: flex;
-  gap: 0.5rem;
-}
-.radiobox{
-  /* appearance none allows us to style radios and checkboxes as if they were divs */
-  appearance: none;
-  /* Style the radio as you want for it's unchecked state */
-  border-radius: 50%;
-  border: 1px solid black;
-  width: 10px;
-  height: 10px;
-  display: block;
-}
-/* If the radiobox is checked, or if it has a checked radiobox after it, style it as if it was checked */
-.radiobox:checked,
-.radiobox:has(~ .radiobox:checked){
-  /* Style the check state as you want */
-  background-color: black;
-}
