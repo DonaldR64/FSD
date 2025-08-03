@@ -196,25 +196,6 @@ section {
 }
 
 
-
-
-
-.weaponinfo {
-  display: grid;
-  grid-gap: 1px;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-  background-color: white;
-  text-align: left;
-  padding: 3px;
-}
-
-.weaponinfo h3 {
-    color: black;
-}
-
-
-
 /* Weapon 1 */
 input[type="hidden"][value="Off"].weapon1-status ~ .weapon1{
     display: none;
