@@ -196,10 +196,15 @@ section {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr;
   background-color: white;
-  text-align: center;
-  align-items: center;
+  text-align: left;
+  align-items: left;
   padding: 3px;
 }
+
+.weaponinfo h3 {
+    color: black;
+}
+
 
 
 /* Weapon 1 */
