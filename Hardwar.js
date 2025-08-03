@@ -1730,342 +1730,362 @@ const CC = (() => {
 
     }
 
-const AttackDice = () => {
+    const AttackDice = () => {
 
-    let attacker = combatArray.attacker;
-    let defender = combatArray.defender;
-    let weapon = combatArray.weapon;
-    let fp = combatArray.firepower;
-    let defence = combatArray.defence;
-    let target = combatArray.needed;
+        let attacker = combatArray.attacker;
+        let defender = combatArray.defender;
+        let weapon = combatArray.weapon;
+        let fp = combatArray.firepower;
+        let defence = combatArray.defence;
+        let target = combatArray.needed;
 
-    let aTip = "";
-    let dTip = "";
-    let roll;
-    let attackRolls = [];
-    let defenceRolls = [];
+        let aTip = "";
+        let dTip = "";
+        let roll;
+        let attackRolls = [];
+        let defenceRolls = [];
 
-    for (let i=0;i<fp;i++) {
-        roll = randomInteger(12);
-        attackRolls.push(roll);
-    }
-    for (let i=0;i<defence;i++) {
-        roll = randomInteger(12);
-        defenceRolls.push(roll);
-    }
-    attackRolls.sort();
-    defenceRolls.sort();
-
-    if (weapon.includes("Dual")) {
-        if (attackRolls[0] < 7) {
-            aTip += "<br>Dual: " + attackRolls[0];
-            attackRolls[0] = randomInteger(12);
-            aTip += "->" + attackRolls[0];
-            attackRolls.sort();
+        for (let i=0;i<fp;i++) {
+            roll = randomInteger(12);
+            attackRolls.push(roll);
         }
-    }
-    if (defender.abilities.includes("Point Defence")) {
-        for (let i=0;i<defenceRolls.length;i++) {
-            let test = defenceRolls[i];
-            if (attackRolls.includes(test) === false) {
-                dTip += "<br>Point Defence: " + test;
-                defenceRolls[i] = randomInteger(12);
-                dTip += "->" + defenceRolls[i];
-                defenceRolls.sort();
-                break;
-            }
+        for (let i=0;i<defence;i++) {
+            roll = randomInteger(12);
+            defenceRolls.push(roll);
         }
-    }
-    if (attacker.abilities.includes("Assisted Targetting")) {
-        for (let i=0;i<attackRolls.length;i++) {
-            let test = attackRolls[i];
-            if (defenceRolls.includes(test) === true) {
-                aTip += "<br>Assisted Targetting: " + test;
-                attackRolls[i] = randomInteger(12);
-                aTip += "->" + attackRolls[i];
+        attackRolls.sort();
+        defenceRolls.sort();
+
+        if (weapon.includes("Dual")) {
+            if (attackRolls[0] < 7) {
+                aTip += "<br>Dual: " + attackRolls[0];
+                attackRolls[0] = randomInteger(12);
+                aTip += "->" + attackRolls[0];
                 attackRolls.sort();
-                break;
             }
         }
-    }
-
-    let originalAttackRolls = DeepCopy(attackRolls).sort((a,b) => b-a); //used for output
-    let originalDefenceRolls = DeepCopy(defenceRolls).sort((a,b) => b-a); //used for output
-    let explodingAttackRolls = []; //output
-    let explodingDefenceRolls = []; //output
-
-    //cancel out any augments before exploding - only done on initial rolls
-    let a12count = attackRolls.filter(num => num === 12).length;
-    let d12count = defenceRolls.filter(num => num === 12).length;
-    let a11count = 0;
-    let d11count = 0;
-    let min = Math.min(a12count,d12count);
-    for (let i=0;i<min;i++) {
-        let pos = attackRolls.indexOf(12);
-        if (pos > -1) {
-            attackRolls.splice(pos,1);
+        if (defender.abilities.includes("Point Defence")) {
+            for (let i=0;i<defenceRolls.length;i++) {
+                let test = defenceRolls[i];
+                if (attackRolls.includes(test) === false) {
+                    dTip += "<br>Point Defence: " + test;
+                    defenceRolls[i] = randomInteger(12);
+                    dTip += "->" + defenceRolls[i];
+                    defenceRolls.sort();
+                    break;
+                }
+            }
         }
-        pos = defenceRolls.indexOf(12);
-        if (pos > -1) {
-            defenceRolls.splice(pos,1);
+        if (attacker.abilities.includes("Assisted Targetting")) {
+            for (let i=0;i<attackRolls.length;i++) {
+                let test = attackRolls[i];
+                if (defenceRolls.includes(test) === true) {
+                    aTip += "<br>Assisted Targetting: " + test;
+                    attackRolls[i] = randomInteger(12);
+                    aTip += "->" + attackRolls[i];
+                    attackRolls.sort();
+                    break;
+                }
+            }
         }
-    }
-    a12count -= min;
-    d12count -= min;
-    
-    if (weapon.includes("Laser")) {
-        aTip += "<br>Laser: Augments on 11 or 12";
-        a11count = attackRolls.filter(num => num === 11).length;
-        d11count = defenceRolls.filter(num => num === 11).length
-        min = Math.min(a11count,d11count);
+
+        let originalAttackRolls = DeepCopy(attackRolls).sort((a,b) => b-a); //used for output
+        let originalDefenceRolls = DeepCopy(defenceRolls).sort((a,b) => b-a); //used for output
+        let explodingAttackRolls = []; //output
+        let explodingDefenceRolls = []; //output
+
+        //cancel out any augments before exploding - only done on initial rolls
+        let a12count = attackRolls.filter(num => num === 12).length;
+        let d12count = defenceRolls.filter(num => num === 12).length;
+        let a11count = 0;
+        let d11count = 0;
+        let min = Math.min(a12count,d12count);
         for (let i=0;i<min;i++) {
-            let pos = attackRolls.indexOf(11);
+            let pos = attackRolls.indexOf(12);
             if (pos > -1) {
                 attackRolls.splice(pos,1);
             }
-            pos = defenceRolls.indexOf(11);
+            pos = defenceRolls.indexOf(12);
             if (pos > -1) {
                 defenceRolls.splice(pos,1);
             }
         }
-        a11count -= min;
-        d11count -= min;
-    }
-
-    let attAugment = a12count + a11count;
-    let defAugment = d12count + d11count;
-
-    //explode any augment dice, and cancel out any matching for defence
-    for (let i=0;i<attAugment;i++) {
-        do {
-            roll = randomInteger(12);
-            attackRolls.push(roll);
-            explodingAttackRolls.push(roll);
-        }
-        while (roll === 12);
-    }
-    for (let i=0;i<defAugment;i++) {
-        do {
-            roll = randomInteger(12);
-            defenceRolls.push(roll);
-            explodingDefenceRolls.push(roll);
-        }
-        while (roll === 12);
-    }
-    attackRolls.sort();
-    defenceRolls.sort();
-    explodingAttackRolls.sort((a,b) => b-a);
-    explodingDefenceRolls.sort((a,b) => b-a);
-
-    //cancel out rolls now
-    _.each(defenceRolls,roll => {
-        let pos = attackRolls.indexOf(roll);
-        if (pos > -1) {
-            attackRolls.splice(pos,1);
-        }
-    })
-
-    let groups = [];
-    let unassignedRolls = [];
-    attackRolls.sort((a,b) => b - a); //sort highest to lowest for this
-
-    let finalAttackRolls = DeepCopy(attackRolls); //display again
-    if (attackRolls.length > 0) {
-        //assign criticals to their own groups initially
-        do {
-            roll = attackRolls.shift();
-            if (roll) {
-                let nextRoll = attackRolls[0];
-                if (nextRoll && roll === nextRoll) {
-                    roll = attackRolls.shift();
-                    let info = {
-                        sum: roll * 2,
-                        critical: true,
-                        needed: Math.max(0,target - (roll * 2)),
-                        rolls: [roll,roll],
-                    }
-                    groups.push(info);
-                } else {
-                    unassignedRolls.push(roll);
+        a12count -= min;
+        d12count -= min;
+        
+        if (weapon.includes("Laser")) {
+            aTip += "<br>Laser: Augments on 11 or 12";
+            a11count = attackRolls.filter(num => num === 11).length;
+            d11count = defenceRolls.filter(num => num === 11).length
+            min = Math.min(a11count,d11count);
+            for (let i=0;i<min;i++) {
+                let pos = attackRolls.indexOf(11);
+                if (pos > -1) {
+                    attackRolls.splice(pos,1);
+                }
+                pos = defenceRolls.indexOf(11);
+                if (pos > -1) {
+                    defenceRolls.splice(pos,1);
                 }
             }
-        } while (attackRolls.length > 0);
-        groups.sort((a,b) => a.needed - b.needed);
-        unassignedRolls.sort((a,b) => a - b);
-
-        //fill with unassigned, searching for best # (exact or higher) or using lowest and re-searching
-        for (let i=0;i<groups.length;i++) {
-            let group = groups[i];
-            if (group.needed > 0 && unassignedRolls.length > 0) {
-                do {
-                    let pos = 0;
-                    //defaults to lowest roll unless finds exact match or higher in unassigned rolls
-                    for (let p=0;p<unassignedRolls.length;p++) {
-                        if (unassignedRolls[p] >= group.needed) {
-                            pos = p;
-                            break;
-                        } 
-                    }
-                    roll = parseInt(unassignedRolls.splice(pos,1));
-                    group.rolls.push(roll);
-                    group.sum += roll;
-                    group.needed = Math.max(0,target - group.sum);
-                } while (group.needed > 0 && unassignedRolls.length > 0);
-            }
+            a11count -= min;
+            d11count -= min;
         }
 
-        //critical groups now filled or no more unassignedRolls
-        //if further unassignedRolls, assign these to groups
-        //start with highest # as a group, searching for best # (exact or higher) or using lowest and re-searching
-        if (unassignedRolls.length > 0) {
+        let attAugment = a12count + a11count;
+        let defAugment = d12count + d11count;
+
+        //explode any augment dice, and cancel out any matching for defence
+        for (let i=0;i<attAugment;i++) {
             do {
-                roll = parseInt(unassignedRolls.pop());
-                let info = {
-                    sum: roll,
-                    needed: Math.max(0,target - roll),
-                    rolls: [roll],
-                    critical: false,
+                roll = randomInteger(12);
+                attackRolls.push(roll);
+                explodingAttackRolls.push(roll);
+            }
+            while (roll === 12);
+        }
+        for (let i=0;i<defAugment;i++) {
+            do {
+                roll = randomInteger(12);
+                defenceRolls.push(roll);
+                explodingDefenceRolls.push(roll);
+            }
+            while (roll === 12);
+        }
+        attackRolls.sort();
+        defenceRolls.sort();
+        explodingAttackRolls.sort((a,b) => b-a);
+        explodingDefenceRolls.sort((a,b) => b-a);
+
+        //cancel out rolls now
+        _.each(defenceRolls,roll => {
+            let pos = attackRolls.indexOf(roll);
+            if (pos > -1) {
+                attackRolls.splice(pos,1);
+            }
+        })
+
+        let groups = [];
+        let unassignedRolls = [];
+        attackRolls.sort((a,b) => b - a); //sort highest to lowest for this
+
+        let finalAttackRolls = DeepCopy(attackRolls); //display again
+        if (attackRolls.length > 0) {
+            //assign criticals to their own groups initially
+            do {
+                roll = attackRolls.shift();
+                if (roll) {
+                    let nextRoll = attackRolls[0];
+                    if (nextRoll && roll === nextRoll) {
+                        roll = attackRolls.shift();
+                        let info = {
+                            sum: roll * 2,
+                            critical: true,
+                            needed: Math.max(0,target - (roll * 2)),
+                            rolls: [roll,roll],
+                        }
+                        groups.push(info);
+                    } else {
+                        unassignedRolls.push(roll);
+                    }
                 }
-                if (info.needed > 0 && unassignedRolls.length > 0) {
+            } while (attackRolls.length > 0);
+            groups.sort((a,b) => a.needed - b.needed);
+            unassignedRolls.sort((a,b) => a - b);
+
+            //fill with unassigned, searching for best # (exact or higher) or using lowest and re-searching
+            for (let i=0;i<groups.length;i++) {
+                let group = groups[i];
+                if (group.needed > 0 && unassignedRolls.length > 0) {
                     do {
                         let pos = 0;
                         //defaults to lowest roll unless finds exact match or higher in unassigned rolls
                         for (let p=0;p<unassignedRolls.length;p++) {
-                            if (unassignedRolls[p] >= info.needed) {
+                            if (unassignedRolls[p] >= group.needed) {
                                 pos = p;
                                 break;
                             } 
                         }
                         roll = parseInt(unassignedRolls.splice(pos,1));
-                        info.rolls.push(roll);
-                        info.sum += roll;
-                        info.needed = Math.max(0,target - info.sum);
-                    } while (info.needed > 0 && unassignedRolls.length > 0);
-                }
-                groups.push(info);
-            } while (unassignedRolls.length > 0);
-        }
-
-    }
-
-
-    let tip = "Attack Rolls<br>" + originalAttackRolls.toString();
-    if (explodingAttackRolls.length > 0) {
-        tip += " + " + explodingAttackRolls.toString();
-    }
-    tip += aTip;
-    tip += "<br>--------------------------";
-    tip += "<br>Defence Rolls<br>" + originalDefenceRolls.toString();
-    if (explodingDefenceRolls.length > 0) {
-        tip += " + " + explodingDefenceRolls.toString();
-    }
-    tip += dTip;
-    tip += "<br>--------------------------";
-    if (finalAttackRolls.length > 0) {
-        tip += "<br>Final Attack Rolls: " + finalAttackRolls.toString();
-    }
-    tip = '[Hits](#" class="showtip" title="' + tip + ')';
-
-
-    outputCard.body.push("[hr]");
-    let noncriticals = [];
-    let criticals = [];
-    let totalHits = 0;
-    let railgunUsed = false;
-    let stats = {
-        "Mobility": 0,
-        "Firepower": 0,
-        "Armour": 0,
-        "Defence": 0,
-    }
-    let statNames = Object.keys(stats);
-
-    _.each(groups,group => {
-        let rolls = "[" + group.rolls.sort((a,b) => b-a).toString() + "]";
-        if (group.needed === 0) {
-            if (group.critical === true) {
-                criticals.push(rolls);
-                let statRoll = randomInteger(4) - 1;
-                let statName = statNames[statRoll];
-                stats[statName]++;
-            } else {
-                if (weapon.includes("Railgun") && railgunUsed === false) {
-                    criticals.push("Railgun - " + rolls);
-                    railgunUsed = true;
-                } else {
-                    noncriticals.push(rolls);
+                        group.rolls.push(roll);
+                        group.sum += roll;
+                        group.needed = Math.max(0,target - group.sum);
+                    } while (group.needed > 0 && unassignedRolls.length > 0);
                 }
             }
-        }
-    })
 
-    if (weapon.includes("Plasma Accelerator") && noncriticals > 0) {
-        noncriticals.push("Plasma Accelerator - +1 Hit");
-    }
-
-    if (weapon.includes("Sonic Cannon") && (noncriticals > 0 || criticals > 0)) {
-        let rolls = "[" + groups[0].rolls.sort((a,b) => b-a).toString() + "]";
-        noncriticals = ["Sonic - +1 Hit"];
-        criticals = ["Sonic - " + rolls];
-        stats = {
-            "Mobility": 1,
-            "Firepower": 1,
-            "Armour": 1,
-            "Defence": 1,
-        }
-    }
-
-    totalHits = noncriticals.length + (2*criticals.length);
-    outputCard.body.push("[U]" + tip + "[/u]");
-    let s;
-    if (totalHits > 0) {
-        if (weapon.includes("Sonic Cannon")) {
-            let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
-            cTip += '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
-            outputCard.body.push(cTip + " Sonic Cannon Hit");
-        } else {
-            if (criticals.length > 0) {
-                s = (criticals.length > 1) ? "s":"";
-                let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
-                outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+            //critical groups now filled or no more unassignedRolls
+            //if further unassignedRolls, assign these to groups
+            //start with highest # as a group, searching for best # (exact or higher) or using lowest and re-searching
+            if (unassignedRolls.length > 0) {
+                do {
+                    roll = parseInt(unassignedRolls.pop());
+                    let info = {
+                        sum: roll,
+                        needed: Math.max(0,target - roll),
+                        rolls: [roll],
+                        critical: false,
+                    }
+                    if (info.needed > 0 && unassignedRolls.length > 0) {
+                        do {
+                            let pos = 0;
+                            //defaults to lowest roll unless finds exact match or higher in unassigned rolls
+                            for (let p=0;p<unassignedRolls.length;p++) {
+                                if (unassignedRolls[p] >= info.needed) {
+                                    pos = p;
+                                    break;
+                                } 
+                            }
+                            roll = parseInt(unassignedRolls.splice(pos,1));
+                            info.rolls.push(roll);
+                            info.sum += roll;
+                            info.needed = Math.max(0,target - info.sum);
+                        } while (info.needed > 0 && unassignedRolls.length > 0);
+                    }
+                    groups.push(info);
+                } while (unassignedRolls.length > 0);
             }
-            if (noncriticals.length > 0) {
-                s = (noncriticals.length > 1) ? "s":"";
-                let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
-                outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
-            }
-            outputCard.body.push("Total: " + totalHits);
+
         }
-    } else {
-        outputCard.body.push("No Hits");
-    }
-    if (criticals.length > 0) {
+
+
+        let tip = "Attack Rolls<br>" + originalAttackRolls.toString();
+        if (explodingAttackRolls.length > 0) {
+            tip += " + " + explodingAttackRolls.toString();
+        }
+        tip += aTip;
+        tip += "<br>--------------------------";
+        tip += "<br>Defence Rolls<br>" + originalDefenceRolls.toString();
+        if (explodingDefenceRolls.length > 0) {
+            tip += " + " + explodingDefenceRolls.toString();
+        }
+        tip += dTip;
+        tip += "<br>--------------------------";
+        if (finalAttackRolls.length > 0) {
+            tip += "<br>Final Attack Rolls: " + finalAttackRolls.toString();
+        }
+        tip = '[Hits](#" class="showtip" title="' + tip + ')';
+
+
         outputCard.body.push("[hr]");
-        outputCard.body.push("[U]Stat Damage[/u]");
-        _.each(statNames,name => {
-            if (stats[name] > 0) {
-                outputCard.body.push(name + ": " + stats[name] + " Damage");
+        let noncriticals = [];
+        let criticals = [];
+        let totalHits = 0;
+        let railgunUsed = false;
+
+        _.each(groups,group => {
+            let rolls = "[" + group.rolls.sort((a,b) => b-a).toString() + "]";
+            if (group.needed === 0) {
+                if (group.critical === true) {
+                    criticals.push(rolls);
+                    StatDamage(defender,true); //place damage in combat array
+                } else {
+                    if (weapon.includes("Railgun") && railgunUsed === false) {
+                        criticals.push("Railgun - " + rolls);
+                        railgunUsed = true;
+                        StatDamage(defender,true);
+                    } else {
+                        noncriticals.push(rolls);
+                        StatDamage(defender,false);
+                    }
+                }
             }
         })
+
+        if (weapon.includes("Plasma Accelerator") && noncriticals > 0) {
+            noncriticals.push("Plasma Accelerator - +1 Hit");
+            StatDamage(defender,false);
+        }
+
+        if (weapon.includes("Sonic Cannon") && (noncriticals > 0 || criticals > 0)) {
+            let rolls = "[" + groups[0].rolls.sort((a,b) => b-a).toString() + "]";
+            noncriticals = ["Sonic - +1 Hit"];
+            criticals = ["Sonic - " + rolls];
+            StatDamage(defender,"Sonic");
+        }
+
+        totalHits = noncriticals.length + criticals.length;
+        outputCard.body.push("[U]" + tip + "[/u]");
+        let s;
+        if (totalHits > 0) {
+            if (weapon.includes("Sonic Cannon")) {
+                let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+                cTip += '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+                outputCard.body.push(cTip + " Sonic Cannon Hit");
+            } else {
+                if (criticals.length > 0) {
+                    s = (criticals.length > 1) ? "s":"";
+                    let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+                    outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+                }
+                if (noncriticals.length > 0) {
+                    s = (noncriticals.length > 1) ? "s":"";
+                    let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+                    outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+                }
+                outputCard.body.push("Total: " + totalHits);
+            }
+            outputCard.body.push("[hr]");
+            outputCard.body.push("[U]Stat Damage[/u]");
+            let keys = Object.keys(combatArray.statDamage);
+            _.each(keys,key => {
+                let damage = combatArray.statDamage[key];
+                if (damage > 0) {
+                    let name = key.charAt(0).toUpperCase() + key.slice(1);
+                    outputCard.body.push(name + ": " + damage);
+                }
+            })
+        } else {
+            outputCard.body.push("No Hits");
+        }
+
+        PrintCard();
+
+
+
+
+
+
     }
-    PrintCard();
 
 
+    const SumArray = (array) => {
+        //sum an array of numbers
+        let sum = 0;
+        _.each(array,element => {
+            sum += element;
+        })
+        return sum;
+    }
 
+    const StatDamage = (defender,critical) => {
+        let highestStat;
+        let lowestStat;
+        let highest = 0
+        let lowest = Infinity
+        let names = ["armour","defence","mobility","firepower"];
+        _.each(names,name => {
+            if (defender[name] > highest) {
+                highest = defender[name];
+                highestStat = name;
+            }
+            if (defender[name] < lowest) {
+                lowest = defender[name];
+                lowestStat = name;
+            }
+        })        
+        let statDamage = combatArray.statDamage || {mobility: 0,firepower: 0,armour: 0, defence: 0};
+        if (critical === true) {
+            statDamage[lowestStat]++;
+        } else {
+            statDamage[highestStat]++;
+        }
+        combatArray.statDamage = statDamage;
 
+log("In Stat Damage")
+log(statDamage)
 
-
-}
-
-
-const SumArray = (array) => {
-    //sum an array of numbers
-    let sum = 0;
-    _.each(array,element => {
-        sum += element;
-    })
-    return sum;
-}
+    }
 
 
 
