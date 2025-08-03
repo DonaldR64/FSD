@@ -1957,7 +1957,7 @@ const AttackDice = () => {
     tip += "<br>--------------------------";
     tip += "<br>Defence Rolls<br>" + originalDefenceRolls.toString();
     if (explodingDefenceRolls.length > 0) {
-        line2 += " + " + explodingDefenceRolls.toString();
+        tip += " + " + explodingDefenceRolls.toString();
     }
     tip += dTip;
     tip += "<br>--------------------------";
@@ -1987,7 +1987,7 @@ const AttackDice = () => {
                 criticals.push(rolls);
                 let statRoll = randomInteger(4) - 1;
                 let statName = statNames[statRoll];
-                stats.statName++;
+                stats[statName]++;
             } else {
                 if (weapon.includes("Railgun") && railgunUsed === false) {
                     criticals.push("Railgun - " + rolls);
@@ -2042,10 +2042,9 @@ const AttackDice = () => {
     if (criticals.length > 0) {
         outputCard.body.push("[hr]");
         outputCard.body.push("[U]Stat Damage[/u]");
-        let keys = Object.keys(stats);
-        _.each(keys,key => {
-            if (stats[key] > 0) {
-                outputCard.body.push(key + ": " + stats[key] + " Damage");
+        _.each(statNames,name => {
+            if (stats[name] > 0) {
+                outputCard.body.push(name + ": " + stats[name] + " Damage");
             }
         })
     }
