@@ -1682,9 +1682,22 @@ const CC = (() => {
             return;
         }
         
+        let distance = losResult.distance;
+        //AA and Aircraft here
 
-        let needed = losResult.distance + losResult.cover + defender.armour;
-        let nTip = "Distance: " + losResult.distance + "<br>Cover: " + losResult.cover + "<br>Armour: " + defender.armour;
+        let cover = losResult.cover;
+        let armour = defender.armour;
+        let nTip = "Distance: " + distance + "<br>Cover: " + cover + "<br>Armour: " + armour;
+
+        let coverPlusArmour = cover + armour;
+        if (weapon.includes("Gatling")) {
+            coverPlusArmour -= 3;
+            nTip += "<br>Gatling: Cover/Armour reduced by 3"
+        }
+
+        let needed = distance + coverPlusArmour;
+
+
 
         fpTip = '[⚔️](#" class="showtip" title="' + fpTip + ')';
         nTip = '[◎](#" class="showtip" title="' + nTip + ')';
@@ -1725,11 +1738,6 @@ const AttackDice = () => {
     let fp = combatArray.firepower;
     let defence = combatArray.defence;
     let target = combatArray.needed;
-
-
-    let augment = 12;    
-    //others, eg weapon stats
-    if (weapon.includes("Laser")) {augment = 11};
 
     let aTip = "";
     let dTip = "";
@@ -1786,10 +1794,11 @@ const AttackDice = () => {
     let explodingAttackRolls = []; //output
     let explodingDefenceRolls = []; //output
 
-
-    //cancel out any 12s before exploding - only done on initial rolls
+    //cancel out any augments before exploding - only done on initial rolls
     let a12count = attackRolls.filter(num => num === 12).length;
     let d12count = defenceRolls.filter(num => num === 12).length;
+    let a11count = 0;
+    let d11count = 0;
     let min = Math.min(a12count,d12count);
     for (let i=0;i<min;i++) {
         let pos = attackRolls.indexOf(12);
@@ -1803,9 +1812,31 @@ const AttackDice = () => {
     }
     a12count -= min;
     d12count -= min;
+    
+    if (weapon.includes("Laser")) {
+        aTip += "<br>Laser: Augments on 11 or 12";
+        a11count = attackRolls.filter(num => num === 11).length;
+        d11count = defenceRolls.filter(num => num === 11).length
+        min = Math.min(a11count,d11count);
+        for (let i=0;i<min;i++) {
+            let pos = attackRolls.indexOf(11);
+            if (pos > -1) {
+                attackRolls.splice(pos,1);
+            }
+            pos = defenceRolls.indexOf(11);
+            if (pos > -1) {
+                defenceRolls.splice(pos,1);
+            }
+        }
+        a11count -= min;
+        d11count -= min;
+    }
 
-    //explode any remaining 12s, and cancel out any matching for defence
-    for (let i=0;i<a12count;i++) {
+    let attAugment = a12count + a11count;
+    let defAugment = d12count + d11count;
+
+    //explode any augment dice, and cancel out any matching for defence
+    for (let i=0;i<attAugment;i++) {
         do {
             roll = randomInteger(12);
             attackRolls.push(roll);
@@ -1813,7 +1844,7 @@ const AttackDice = () => {
         }
         while (roll === 12);
     }
-    for (let i=0;i<d12count;i++) {
+    for (let i=0;i<defAugment;i++) {
         do {
             roll = randomInteger(12);
             defenceRolls.push(roll);
@@ -1940,32 +1971,84 @@ const AttackDice = () => {
     let noncriticals = [];
     let criticals = [];
     let totalHits = 0;
+    let railgunUsed = false;
+    let stats = {
+        "Mobility": 0,
+        "Firepower": 0,
+        "Armour": 0,
+        "Defence": 0,
+    }
+    let statNames = Object.keys(stats);
+
     _.each(groups,group => {
         let rolls = "[" + group.rolls.sort((a,b) => b-a).toString() + "]";
         if (group.needed === 0) {
             if (group.critical === true) {
                 criticals.push(rolls);
+                let statRoll = randomInteger(4) - 1;
+                let statName = statNames[statRoll];
+                stats.statName++;
             } else {
-                noncriticals.push(rolls);
+                if (weapon.includes("Railgun") && railgunUsed === false) {
+                    criticals.push("Railgun - " + rolls);
+                    railgunUsed = true;
+                } else {
+                    noncriticals.push(rolls);
+                }
             }
         }
     })
+
+    if (weapon.includes("Plasma Accelerator") && noncriticals > 0) {
+        noncriticals.push("Plasma Accelerator - +1 Hit");
+    }
+
+    if (weapon.includes("Sonic Cannon") && (noncriticals > 0 || criticals > 0)) {
+        let rolls = "[" + groups[0].rolls.sort((a,b) => b-a).toString() + "]";
+        noncriticals = ["Sonic - +1 Hit"];
+        criticals = ["Sonic - " + rolls];
+        stats = {
+            "Mobility": 1,
+            "Firepower": 1,
+            "Armour": 1,
+            "Defence": 1,
+        }
+    }
+
     totalHits = noncriticals.length + (2*criticals.length);
     outputCard.body.push("[U]" + tip + "[/u]");
     let s;
+    if (totalHits > 0) {
+        if (weapon.includes("Sonic Cannon")) {
+            let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+            cTip += '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+            outputCard.body.push(cTip + " Sonic Cannon Hit");
+        } else {
+            if (criticals.length > 0) {
+                s = (criticals.length > 1) ? "s":"";
+                let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+                outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+            }
+            if (noncriticals.length > 0) {
+                s = (noncriticals.length > 1) ? "s":"";
+                let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+                outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+            }
+            outputCard.body.push("Total: " + totalHits);
+        }
+    } else {
+        outputCard.body.push("No Hits");
+    }
     if (criticals.length > 0) {
-        s = (criticals.length > 1) ? "s":"";
-        let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
-        outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+        outputCard.body.push("[hr]");
+        outputCard.body.push("[U]Stat Damage[/u]");
+        let keys = Object.keys(stats);
+        _.each(keys,key => {
+            if (stats[key] > 0) {
+                outputCard.body.push(key + ": " + stats[key] + " Damage");
+            }
+        })
     }
-    if (noncriticals.length > 0) {
-        s = (noncriticals.length > 1) ? "s":"";
-        let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
-        outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
-    }
-    outputCard.body.push("Total: " + totalHits);
-    //stat damage
-
     PrintCard();
 
 
