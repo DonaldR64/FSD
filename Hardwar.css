@@ -194,7 +194,6 @@ section {
   background-color: white;
   text-align: center;
   align-items: center;
-  border-style: solid
 }
 
 
@@ -212,7 +211,6 @@ input[type="hidden"][value="Off"].weapon1-status ~ .weapon1{
     text-align: center;
     align-items: center;
     padding: 3px;
-    border-style: solid
 
 }
 
@@ -230,7 +228,6 @@ input[type="hidden"][value="Off"].weapon2-status ~ .weapon2{
     text-align: center;
     align-items: center;
     padding: 3px;
-        border-style: solid
 
 }
 
@@ -248,7 +245,6 @@ input[type="hidden"][value="Off"].weapon3-status ~ .weapon3{
     text-align: center;
     align-items: center;
     padding: 3px;
-        border-style: solid
 
 }
 
