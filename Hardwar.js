@@ -1655,7 +1655,7 @@ const CC = (() => {
         let firepower = attacker.firepower;
         let fpTip = "FP: " + firepower;
         if (order === "Advance" && attacker.abilities.includes("Bracing Mass") === false) {
-            firepower = Math.floor(firepower/2);
+            firepower = Math.ceil(firepower/2);
             fpTip += "<br>Advance = 1/2 FP";
         } else if (order === "Aimed Shot") {
             firepower++;
