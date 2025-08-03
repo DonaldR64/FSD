@@ -1809,6 +1809,9 @@ const CC = (() => {
         let originalDefenceRolls = DeepCopy(defenceRolls).sort((a,b) => b-a); //used for output
         let explodingAttackRolls = []; //output
         let explodingDefenceRolls = []; //output
+        let cancelledRolls = []; //used for output
+
+
 
         //cancel out any augments before exploding - only done on initial rolls
         let a12count = attackRolls.filter(num => num === 12).length;
@@ -1817,6 +1820,7 @@ const CC = (() => {
         let d11count = 0;
         let min = Math.min(a12count,d12count);
         for (let i=0;i<min;i++) {
+            cancelledRolls.push(12);
             let pos = attackRolls.indexOf(12);
             if (pos > -1) {
                 attackRolls.splice(pos,1);
@@ -1835,6 +1839,7 @@ const CC = (() => {
             d11count = defenceRolls.filter(num => num === 11).length
             min = Math.min(a11count,d11count);
             for (let i=0;i<min;i++) {
+                cancelledRolls.push(11)
                 let pos = attackRolls.indexOf(11);
                 if (pos > -1) {
                     attackRolls.splice(pos,1);
@@ -1878,12 +1883,14 @@ const CC = (() => {
             let pos = attackRolls.indexOf(roll);
             if (pos > -1) {
                 attackRolls.splice(pos,1);
+                cancelledRolls.push(roll)
             }
         })
 
         let groups = [];
         let unassignedRolls = [];
         attackRolls.sort((a,b) => b - a); //sort highest to lowest for this
+        cancelledRolls.sort();
 
         let finalAttackRolls = DeepCopy(attackRolls); //display again
         if (attackRolls.length > 0) {
@@ -1977,10 +1984,18 @@ const CC = (() => {
             tip += " + " + explodingDefenceRolls.toString();
         }
         tip += dTip;
-        tip += "<br>--------------------------";
+        if (cancelledRolls.length > 0) {
+            tip += "<br>--------------------------";
+            tip += "<br>Cancelled Rolls: " + cancelledRolls.toString();
+        }
         if (finalAttackRolls.length > 0) {
+            tip += "<br>--------------------------";
             tip += "<br>Final Attack Rolls: " + finalAttackRolls.toString();
         }
+
+
+
+
         tip = '[Hits](#" class="showtip" title="' + tip + ')';
 
 
@@ -2053,7 +2068,17 @@ const CC = (() => {
                 }
             })
         } else {
-            outputCard.body.push("No Hits");
+            if (finalAttackRolls === 0) {
+                outputCard.body.push("All Attacks Defeated by Active Defences");
+            } else {
+                if (cancelledRolls.length > 0) {
+                    s = (cancelledRolls.length === 1) ? "":"s";
+                    outputCard.body.push("Active Defences Defeated " + cancelledRolls.length + " Attack" + s)
+                    outputCard.body.push("The Remainder Missed");
+                } else {
+                    outputCard.body.push("All Attacks Missed");
+                }
+            }
         }
 
         PrintCard();
