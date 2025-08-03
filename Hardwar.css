@@ -183,6 +183,8 @@ section {
 .weap {
   grid-area: weap;
   background-color: white;
+      align-items: center;
+
 }
 
 
@@ -197,7 +199,6 @@ section {
   grid-template-rows: 1fr;
   background-color: white;
   text-align: left;
-  align-items: left;
   padding: 3px;
 }
 
