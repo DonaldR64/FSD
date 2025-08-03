@@ -1832,7 +1832,7 @@ const CC = (() => {
         }
 
         let attAugment = a12count + a11count;
-        let defAugment = d12count + d11count;
+        let defAugment = d12count; //defence only explodes on 12
 
         //explode any augment dice, and cancel out any matching for defence
         for (let i=0;i<attAugment;i++) {
