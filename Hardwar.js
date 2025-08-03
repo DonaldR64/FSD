@@ -1871,11 +1871,12 @@ const CC = (() => {
         let finalAttackRolls = DeepCopy(attackRolls); //display again
         if (attackRolls.length > 0) {
             //assign criticals to their own groups initially
+            //dont place as critical if single die could generate a hit on own
             do {
                 roll = attackRolls.shift();
                 if (roll) {
                     let nextRoll = attackRolls[0];
-                    if (nextRoll && roll === nextRoll) {
+                    if (nextRoll && roll === nextRoll && roll < target) {
                         roll = attackRolls.shift();
                         let info = {
                             sum: roll * 2,
