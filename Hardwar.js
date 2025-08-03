@@ -620,10 +620,10 @@ const CC = (() => {
                 let wfx = "weapon" + w + "fx";
                 let wsound = "weapon" + w + "sound";
                 let weapon = {
-                    name: wname,
-                    abilities: wabilities,
-                    fx: wfx,
-                    sound: wsound,
+                    name: aa[wname],
+                    abilities: aa[wabilities],
+                    fx: aa[wfx],
+                    sound: aa[wsound],
                 }
                 weapons.push(weapon);
             }
@@ -1670,7 +1670,7 @@ const CC = (() => {
         }
 
 
-        SetupCard(attacker.name,weapon,attacker.faction);
+        SetupCard(attacker.name,weapon.name,attacker.faction);
         let errorMsg = [];
 
         if (order === "Rapid Move" || order === "Charge") {
