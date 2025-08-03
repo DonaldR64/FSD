@@ -611,7 +611,24 @@ const CC = (() => {
             this.defence = parseInt(aa.defence) || 0;
             this.defenceMax = parseInt(aa.defence_max) || 0;           
 
-            this.weapons =  (aa.weapons || "Cannon").split(",").map((x) => x.trim());;
+            let weapons = [];
+
+            for (let i=0;i<3;i++) {
+                let w=i+1;
+                let wname = "weapon" + w + "name";
+                let wabilities = "weapon" + w + "abilities";
+                let wfx = "weapon" + w + "fx";
+                let wsound = "weapon" + w + "sound";
+                let weapon = {
+                    name: wname,
+                    abilities: wabilities,
+                    fx: wfx,
+                    sound: wsound,
+                }
+                weapons.push(weapon);
+            }
+            this.weapons = weapons;
+
             this.abilities = aa.abilities || " ";
 
             this.order = "";
@@ -1366,8 +1383,8 @@ const CC = (() => {
                 //cover 6+
                 let noWeapon = true;
                 _.each(shooter.weapons,weapon => {
-                    if (weapon.includes("Smart")) {
-                        outputCard.body.push("Only " + weapon + " can fire at the Target, at -1 F");
+                    if (weapon.abilities.includes("Smart")) {
+                        outputCard.body.push("Only " + weapon.name + " can fire at the Target, at -1 F");
                         noWeapon = false;
                     } 
                     //indirect ?
@@ -1647,7 +1664,7 @@ const CC = (() => {
 
         let defence = defender.defence;
         let dTip = "Defence: " + defence;
-        if (weapon.includes("XMG")) {
+        if (weapon.abilities.includes("XMG")) {
             defence--;
             dTip += "<br>XMG -1 D";
         }
@@ -1666,11 +1683,11 @@ const CC = (() => {
         } else if (losResult.los === true && losResult.lof === false) {
             errorMsg.push("In LOS but Out of Arc of Fire");
         } else if (losResult.los === true && losResult.lof === true && losResult.cover > 5) {
-            if (weapon.includes("Smart") === false) {
+            if (weapon.abilities.includes("Smart") === false) {
                 errorMsg.push("Target is obscured by Cover, no LOS");
             } else {
                 firepower--;
-                fpTip += "<br>-1 F Smart Weapon/Cover";
+                fpTip += "<br>-1F Smart Weapon/Cover";
             }
         }
 
@@ -1690,7 +1707,7 @@ const CC = (() => {
         let nTip = "Distance: " + distance + "<br>Cover: " + cover + "<br>Armour: " + armour;
 
         let coverPlusArmour = cover + armour;
-        if (weapon.includes("Gatling")) {
+        if (weapon.abilities.includes("Gatling")) {
             coverPlusArmour -= 3;
             nTip += "<br>Gatling: Cover/Armour reduced by 3"
         }
@@ -1755,7 +1772,7 @@ const CC = (() => {
         attackRolls.sort();
         defenceRolls.sort();
 
-        if (weapon.includes("Dual")) {
+        if (weapon.abilities.includes("Dual")) {
             if (attackRolls[0] < 7) {
                 aTip += "<br>Dual: " + attackRolls[0];
                 attackRolls[0] = randomInteger(12);
@@ -1812,7 +1829,7 @@ const CC = (() => {
         a12count -= min;
         d12count -= min;
         
-        if (weapon.includes("Laser")) {
+        if (weapon.abilities.includes("Laser")) {
             aTip += "<br>Laser: Augments on 11 or 12";
             a11count = attackRolls.filter(num => num === 11).length;
             d11count = defenceRolls.filter(num => num === 11).length
@@ -1980,7 +1997,7 @@ const CC = (() => {
                     criticals.push(rolls);
                     StatDamage(defender,true); //place damage in combat array
                 } else {
-                    if (weapon.includes("Railgun") && railgunUsed === false) {
+                    if (weapon.abilities.includes("Railgun") && railgunUsed === false) {
                         criticals.push("Railgun - " + rolls);
                         railgunUsed = true;
                         StatDamage(defender,true);
@@ -1992,12 +2009,12 @@ const CC = (() => {
             }
         })
 
-        if (weapon.includes("Plasma Accelerator") && noncriticals > 0) {
+        if (weapon.abilities.includes("Plasma Accelerator") && noncriticals > 0) {
             noncriticals.push("Plasma Accelerator - +1 Hit");
             StatDamage(defender,false);
         }
 
-        if (weapon.includes("Sonic Cannon") && (noncriticals > 0 || criticals > 0)) {
+        if (weapon.abilities.includes("Sonic Cannon") && (noncriticals > 0 || criticals > 0)) {
             let rolls = "[" + groups[0].rolls.sort((a,b) => b-a).toString() + "]";
             noncriticals = ["Sonic - +1 Hit"];
             criticals = ["Sonic - " + rolls];
@@ -2008,7 +2025,7 @@ const CC = (() => {
         outputCard.body.push("[U]" + tip + "[/u]");
         let s;
         if (totalHits > 0) {
-            if (weapon.includes("Sonic Cannon")) {
+            if (weapon.abilities.includes("Sonic Cannon")) {
                 let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
                 cTip += '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
                 outputCard.body.push(cTip + " Sonic Cannon Hit");
