@@ -180,13 +180,20 @@ section {
 }
 
 
-.weap {
+.weap{
   grid-area: weap;
+  display: grid;
+  grid-gap: 2px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
   background-color: white;
-      align-items: center;
-
+  text-align: center;
+  align-items: center;
 }
 
+.weap h3 {
+  color: black;
+}
 
 
 
