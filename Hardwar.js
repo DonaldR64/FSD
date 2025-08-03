@@ -1719,8 +1719,7 @@ const CC = (() => {
 
 
 
-
-        let results = AttackDice(firepower,defence,needed,attacker.abilities,defender.abilities,weapon);
+        AttackDice(firepower,defence,needed,attacker.abilities,defender.abilities,weapon);
 
         
 
