@@ -1649,8 +1649,6 @@ const CC = (() => {
         let weapon = attacker.weapons[weaponNum];
         let order = attacker.order;
 
-
-
         let losResult = LOS(attacker,defender);
         let firepower = attacker.firepower;
         let fpTip = "FP: " + firepower;
@@ -1738,7 +1736,9 @@ const CC = (() => {
 
         AttackDice(firepower,defence,needed,attacker.abilities,defender.abilities,weapon);
 
-        
+        //fx
+
+        //sound
 
 
 
@@ -1895,7 +1895,7 @@ const CC = (() => {
         let finalAttackRolls = DeepCopy(attackRolls); //display again
         if (attackRolls.length > 0) {
             //assign criticals to their own groups initially
-            //dont place as critical if single die could generate a hit on own
+            //dont place as a critical if single die could generate a hit on own - favouring more hits over critical hits
             do {
                 roll = attackRolls.shift();
                 if (roll) {
