@@ -183,8 +183,6 @@ section {
 .weap {
   grid-area: weap;
   background-color: white;
-    align-items: center;
-
 }
 
 .weaponinfo {
@@ -192,10 +190,11 @@ section {
   display: grid;
   grid-gap: 2px;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto;
+  grid-template-rows: 1fr;
   background-color: white;
   text-align: center;
   align-items: center;
+  border-style: solid
 }
 
 
@@ -213,6 +212,8 @@ input[type="hidden"][value="Off"].weapon1-status ~ .weapon1{
     text-align: center;
     align-items: center;
     padding: 3px;
+    border-style: solid
+
 }
 
 /* Weapon 2 */
@@ -229,6 +230,8 @@ input[type="hidden"][value="Off"].weapon2-status ~ .weapon2{
     text-align: center;
     align-items: center;
     padding: 3px;
+        border-style: solid
+
 }
 
 /* Weapon 3 */
@@ -245,6 +248,8 @@ input[type="hidden"][value="Off"].weapon3-status ~ .weapon3{
     text-align: center;
     align-items: center;
     padding: 3px;
+        border-style: solid
+
 }
 
 
