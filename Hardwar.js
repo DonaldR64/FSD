@@ -684,14 +684,17 @@ const CC = (() => {
             if (hull === 0) {
                 outputCard.body.push("Hull Damaged beyond repair");
             }
+            this.damage = hull;
+            AttributeSet(this.charID,"damage",hull);
+
             let keys = Object.keys(statDamage);
             _.each(keys,stat => {
-                let statDamage = statDamage[stat];
-                if (statDamage > 0) {
+                let damage = statDamage[stat];
+                if (damage > 0) {
                     let num = parseInt(this[stat]);
                     let max = parseInt(this[stat + "Max"]);
                     if (isNaN(max)) {max = 0};
-                    num = Math.max(0,num - statDamage);
+                    num = Math.max(0,num - damage);
                     this[stat] = num;
                     AttributeSet(this.charID,stat,num);
                     if (num === 0 && max > 0) {
