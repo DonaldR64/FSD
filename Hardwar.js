@@ -2068,7 +2068,7 @@ const CC = (() => {
                 }
             })
 
-            if (currentUnitID === attackerID) {
+            if (currentUnitID === attacker.id) {
                 let damage = parseInt(defender.token.get("bar3_value"));
                 damage = Math.max(0,damage - totalHits);
                 defender.token.set("bar3_value",damage);
@@ -2084,7 +2084,13 @@ const CC = (() => {
                             if (isNaN(max)) {max = 0}; //will be X in sheet?
                             num = Math.max(0,num - damage);
                             defender[key] = num;
-                            AttributeSet(defender.characterID,key,num);
+
+    log(key)
+    log(keyMax)
+    log(num)
+    log(max)
+
+                            //AttributeSet(defender.charID,key,num);
                             if (num === 0 && max > 0) {
                                 if (key === "mobility") {
                                     outputCard.body.push(defender.name + " is Immobilized");
@@ -2131,23 +2137,6 @@ const CC = (() => {
                 }
             }
         }
-
-
-        if (currentUnitID === attackerID && totalHits > 0) {
-            let damage = parseInt(defender.token.get("bar3_value"));
-            damage = Math.max(0,damage - totalHits);
-            defender.token.set("bar3_value",damage);
-            if (damage === 0) {
-                outputCard.body.push(defender.name + " was Destroyed!");
-            } 
-
-
-
-        }
-
-
-
-
 
         PrintCard();
 
