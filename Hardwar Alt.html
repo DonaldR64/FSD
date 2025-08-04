@@ -217,10 +217,21 @@
 
 
  on("change:attrs sheet:opened", function() { 
-        getAttrs(["mobility","mobility_max"], function(values) {
+        getAttrs(["mobility","mobility_max","fp","fp_max","armour","armour_max","defence","defence_max"], function(values) {
             let mobility = parseInt(values.mobility);
             let mobilityMax = parseInt(values.mobility_max);
+            let fp = parseInt(values.fp);
+            let fpMax = parseInt(values.fp_max);
+            let armour = parseInt(values.armour);
+            let armourMax = parseInt(values.armour_max);
+            let defence = parseInt(values.defence);
+            let defenceMax = parseInt(values.defence_max);
+
             let mobpic = "";
+            let fppic = "";
+            let armpic = "";
+            let defpic = "";
+
             for (let i=0;i<mobilityMax;i++) {
                 if (i<mobility) {
                     mobpic += "◉";
@@ -228,9 +239,38 @@
                     mobpic += "○";
                 }
             }
+            for (let i=0;i<fpMax;i++) {
+                if (i<fp) {
+                    fppic += "◉";
+                } else {
+                    fppic += "○";
+                }
+            }
+            for (let i=0;i<armourMax;i++) {
+                if (i<armour) {
+                    armpic += "◉";
+                } else {
+                    armpic += "○";
+                }
+            }
+            for (let i=0;i<defenceMax;i++) {
+                if (i<defence) {
+                    defpic += "◉";
+                } else {
+                    defpic += "○";
+                }
+            }
+
+
+
+
             setAttrs({
-                "mob_pic": mobpic,
-                
+                "mobpic": mobpic,
+                "fppic": fppic,
+                "armpic": armpic,
+                "defpic": defpic,
+
+
             });
         });    
     }); 
