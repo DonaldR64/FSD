@@ -1,5 +1,5 @@
 const CC = (() => {
-    const version = '2025.7.30';
+    const version = '2025.8.4';
     if (!state.Hardwar) {state.Hardwar = {}};
 
     const pageInfo = {};
