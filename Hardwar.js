@@ -224,6 +224,27 @@ const CC = (() => {
         }
     };
 
+    const FX = (fxname,model1,model2) => {
+        //model2 is target, model1 is shooter
+        //if its an area effect, model1 isnt used
+        if (fxname.includes("System")) {
+            //system fx
+            fxname = fxname.replace("System-","");
+            if (fxname.includes("Blast")) {
+                fxname = fxname.replace("Blast-","");
+                spawnFx(model2.token.get("left"),model2.token.get("top"), fxname);
+            } else {
+                spawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxname);
+            }
+        } else {
+            let fxType =  findObjs({type: "custfx", name: fxname})[0];
+            if (fxType) {
+                pawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxType.id);
+            }
+        }
+    }
+
+
     const translatePoly = (poly) => {
         //translate points in a pathv2 polygon to map points
         let vertices = [];
@@ -1746,9 +1767,9 @@ const CC = (() => {
         AttackDice(firepower,defence,needed,attacker.abilities,defender.abilities,weapon);
 
         //fx
-
+        FX(weapon.fx,attacker,defender);
         //sound
-
+        PlaySound(weapon.sound);
 
 
 
@@ -2048,7 +2069,21 @@ const CC = (() => {
         totalHits = noncriticals.length + criticals.length;
         outputCard.body.push("[U]" + tip + "[/u]");
         let s;
+
+
+
+
+
+
+
+
+
+
         if (totalHits > 0) {
+            if (cancelledRolls.length > 0) {
+                s = (cancelledRolls.length === 1) ? "":"s";
+                outputCard.body.push("Active Defences Defeated " + cancelledRolls.length + " Attack" + s)
+            }
             if (weapon.abilities.includes("Sonic Cannon")) {
                 let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
                 cTip += '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
