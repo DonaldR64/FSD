@@ -239,7 +239,7 @@ const CC = (() => {
         } else {
             let fxType =  findObjs({type: "custfx", name: fxname})[0];
             if (fxType) {
-                pawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxType.id);
+                spawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxType.id);
             }
         }
     }
