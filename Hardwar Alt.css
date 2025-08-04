@@ -180,17 +180,7 @@ section {
   grid-template-rows: auto;
   text-align: center;
   align-items: center;
-
-}
-
-.weaponheader{
-    grid-area: weaponheader;
-   background-color: white;
-}
-
-.weaponbody{
-    grid-area: weaponbody;
-   background-color: white;
+  background-color: white;
 }
 
 
