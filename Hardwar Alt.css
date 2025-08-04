@@ -45,10 +45,11 @@ main {
   height: 450px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"attr   common"
                       "attr   common"
                       "header header"
+                      "ab     weap"
                       "ab     weap"
                       "ab     weap";
 }
