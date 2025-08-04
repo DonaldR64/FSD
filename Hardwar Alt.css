@@ -183,6 +183,15 @@ section {
 
 }
 
+.weaponheader{
+    grid-area: weaponheader;
+   background-color: white;
+}
+
+.weaponbody{
+    grid-area: weaponbody;
+   background-color: white;
+}
 
 
 
