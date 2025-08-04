@@ -37,7 +37,7 @@
             <h3>Max Attributes</h3>
             <label>Mobility:</label><input type="number" name="attr_mobility_max">
             <br>
-            <label>Firepower:</label><input type="number" name="attr_fp_max">
+            <label>Firepower:</label><input type="number" name="attr_firepower_max">
             <br>
             <label>Armour:</label><input type="number" name="attr_armour_max">
             <br>
@@ -217,11 +217,11 @@
 
 
  on("change:attrs sheet:opened", function() { 
-        getAttrs(["mobility","mobility_max","fp","fp_max","armour","armour_max","defence","defence_max"], function(values) {
+        getAttrs(["mobility","mobility_max","firepower","firepower","armour","armour_max","defence","defence_max"], function(values) {
             let mobility = parseInt(values.mobility);
             let mobilityMax = parseInt(values.mobility_max);
-            let fp = parseInt(values.fp);
-            let fpMax = parseInt(values.fp_max);
+            let fp = parseInt(values.firepower);
+            let fpMax = parseInt(values.firepower_max);
             let armour = parseInt(values.armour);
             let armourMax = parseInt(values.armour_max);
             let defence = parseInt(values.defence);
