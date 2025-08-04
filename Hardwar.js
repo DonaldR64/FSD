@@ -136,7 +136,9 @@ const CC = (() => {
     const SM = {
         "alert": "status_blue", //temp
         "digin": "status_brown", //temp
-
+        "immobilized": "status_red",
+        "disarmed": "status_purple",
+        "deactivated": "status_green",
 
     }
 
@@ -633,6 +635,9 @@ const CC = (() => {
             this.armourMax = parseInt(aa.armour_max) || 0;
             this.defence = parseInt(aa.defence) || 0;
             this.defenceMax = parseInt(aa.defence_max) || 0;           
+            let damage = parseInt(aa.damage) || (this.class * 2);
+            this.damage = damage;
+
 
             let weapons = [];
 
@@ -666,6 +671,76 @@ const CC = (() => {
 
 
         }
+
+
+        Damage () {
+            let hits = combatArray.totalHits;
+            let statDamage = combatArray.statDamage;
+            log("In Damage")
+            log(hits)
+            log(statDamage)
+            let hull = this.damage;
+            hull = Math.max(0,hull - hits);
+            if (hull === 0) {
+                outputCard.body.push("Hull Damaged beyond repair");
+            }
+            let keys = Object.keys(statDamage);
+            _.each(keys,stat => {
+                let statDamage = statDamage[stat];
+                if (statDamage > 0) {
+                    let num = parseInt(this[stat]);
+                    let max = parseInt(this[stat + "Max"]);
+                    if (isNaN(max)) {max = 0};
+                    num = Math.max(0,num - statDamage);
+                    this[stat] = num;
+                    AttributeSet(this.charID,stat,num);
+                    if (num === 0 && max > 0) {
+                        if (stat === "mobility") {
+                            outputCard.body.push(this.name + ' is Immobilized');
+                            this.token.set(SM.immobilized,true);
+                        }
+                        if (stat === "firepower") {
+                            outputCard.body.push(this.name + " is Disarmed");
+                            this.token.set(SM.disarmed,true);
+                        }
+                        if (stat === "armour") {
+                            outputCard.body.push(this.name + ' is Destroyed!');
+                            this.Destroyed();
+                        }
+                        if (stat === "defence") {
+                            outputCard.body.push(this.name + ' is Deactivated');
+                            this.token.set(SM.deactivated,true);
+                        }
+                    }
+                }
+            })
+
+
+
+
+
+
+        }
+
+
+        Destroyed () {
+            //turn into a wreck if appropriate and place on map layer, update HexMap 
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 
 
@@ -1765,6 +1840,7 @@ const CC = (() => {
             firepower: firepower,
             defence: defence,
             needed: needed,
+            totalHits: 0,
         };
 
 
@@ -1931,12 +2007,11 @@ const CC = (() => {
         let finalAttackRolls = DeepCopy(attackRolls); //display again
         if (attackRolls.length > 0) {
             //assign criticals to their own groups initially
-            //dont place as a critical if single die could generate a hit on own - favouring more hits over critical hits
             do {
                 roll = attackRolls.shift();
                 if (roll) {
                     let nextRoll = attackRolls[0];
-                    if (nextRoll && roll === nextRoll && roll < target) {
+                    if (nextRoll && roll === nextRoll) {
                         roll = attackRolls.shift();
                         let info = {
                             sum: roll * 2,
@@ -2077,14 +2152,6 @@ const CC = (() => {
         let s;
 
 
-
-
-
-
-
-
-
-
         if (totalHits > 0) {
             if (cancelledRolls.length > 0) {
                 s = (cancelledRolls.length === 1) ? "":"s";
@@ -2106,6 +2173,7 @@ const CC = (() => {
                     outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
                 }
                 outputCard.body.push("Total: " + totalHits);
+                combatArray.totalHits = totalHits;
             }
             outputCard.body.push("[hr]");
             outputCard.body.push("[U]Stat Damage[/u]");
@@ -2119,56 +2187,8 @@ const CC = (() => {
             })
 
             if (currentUnitID === attacker.id) {
-                let damage = parseInt(defender.token.get("bar3_value"));
-                damage = Math.max(0,damage - totalHits);
-                defender.token.set("bar3_value",damage);
-                if (damage === 0) {
-                    outputCard.body.push(defender.name + " was Destroyed!");
-                } else {
-                    _.each(keys,key => {
-                        let damage = combatArray.statDamage[key];
-                        if (damage > 0) {
-                            let num = parseInt(defender[key]);
-                            let keyMax = key + "Max";
-                            let max = parseInt(defender[keyMax]);
-                            if (isNaN(max)) {max = 0}; //will be X in sheet?
-                            num = Math.max(0,num - damage);
-                            defender[key] = num;
-
-                            AttributeSet(defender.charID,key,num);
-                            if (num === 0 && max > 0) {
-                                if (key === "mobility") {
-                                    outputCard.body.push(defender.name + " is Immobilized");
-    //Status markers here
-                                }
-                                if (key === "firepower") {
-                                    outputCard.body.push(defender.name + " is Disarmed");
-    //Status markers here
-                                }
-                                if (key === "armour") {
-                                    outputCard.body.push(defender.name + " is Destroyed");
-//Destroy
-                                }
-                                if (key === "defence") {
-                                    outputCard.body.push(defender.name + " is Deactivated");
-    //Status markers here
-                                }
-                            }
-
-
-
-                        }                        
-                    })
-
-
-                }
-
-
-
-
+                defender.Damage();
             }
-
-
         } else {
             if (finalAttackRolls === 0) {
                 outputCard.body.push("All Attacks Defeated by Active Defences");
