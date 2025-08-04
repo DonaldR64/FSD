@@ -624,6 +624,8 @@ const CC = (() => {
             this.startHexLabel = label; //used to track movement
 
             this.faction = aa.faction || "Neutral";
+            this.player = (this.faction === "Neutral") ? 2:(state.Hardwar.factions[0] === this.faction)? 0:1;
+
             this.class = parseInt(aa.class);
             this.type = aa.type;
 
@@ -1157,6 +1159,45 @@ log(this.weapons)
     }
 
 
+    const PlaceTarget = (msg) => {
+        let Tag = msg.split(";");
+        let id = Tag[0];
+        let type = Tag[1];
+        let unit = UnitArray[id];
+        if (type === "Relay") {
+            let charID = "-OWqqZirwy4ocuhD9Llb";
+            let char = getObj("character", charID);
+            let tokenID = summonToken(char,unit.token.get("left"),unit.token.get('top'));
+            if (tokenID) {
+                let token2 = findObjs({_type:"graphic", id: tokenID})[0];
+                toFront(token2);
+                let unit2 = new Unit(tokenID);
+            }
+
+        }
+
+
+
+
+
+    }
+
+    const Mark = (msg) => {
+        let id = msg.selected[0]._id;
+        let unit = UnitArray[id];
+        //place a token to indicate marked spot
+        let charID = "-OWqtQm0wk9ar83oNbf3";
+        let char = getObj("character", charID);
+        let player = UnitArray[currentUnitID].playerID; 
+        let tokenID = summonToken(char,unit.token.get("left"),unit.token.get('top'),0,50);
+        if (tokenID) {
+            let token2 = findObjs({_type:"graphic", id: tokenID})[0];
+            toFront(token2);
+            token2.set("layer","map");
+            let unit2 = new Unit(tokenID);
+            state.Hardwar.rangedIn[player].push(tokenID);
+        }
+    }
 
 
 
@@ -1372,6 +1413,7 @@ log(this.weapons)
             factions: ["",""],
             lines: [],
             turn: 0,
+            rangedIn: [[],[]],
         }
 
 
@@ -1399,12 +1441,16 @@ log(this.weapons)
                 rotation: 0,
             })
 
-            let unit = new Unit(id);           
+            let unit = new Unit(id);          
             if (state.Hardwar.factions[0] === "") {
                 state.Hardwar.factions[0] = unit.faction;
             } else if (state.Hardwar.factions[0] !== unit.faction && state.Hardwar.factions[1] === "") {
                 state.Hardwar.factions[1] = unit.faction;
-            }
+            } 
+            let player = (state.Hardwar.factions[0] == unit.faction) ? 0:1;
+            
+            unit.player = player;
+
             //reset stats
             unit.firepower = unit.firepowerMax;
             unit.mobility = unit.mobilityMax;
@@ -1430,6 +1476,7 @@ log(this.weapons)
                 bar2_max: "",
                 bar2_link: damID,
                 bar_location: "overlap_bottom",
+
             })
         })
 
@@ -1747,6 +1794,12 @@ log(this.weapons)
             outputCard.body.push("Cautious Move: " + mobility + " MP, gaining Alert");
             outputCard.body.push("Patrol Move: " + (mobility * 2) + " MP");
             outputCard.body.push("Rapid Move: " + (mobility * 3) + " MP");
+        }
+        if (order === "Relay Coordinates") {
+            outputCard.body.push("Place the Target Icon on a Hex, then activate it");
+            outputCard.body.push("That Hex will be marked until the end of the turn");
+            let msg = unit.id + ";" + "Relay"
+            PlaceTarget(msg);
         }
 
         actions = Math.max(0,actions);
