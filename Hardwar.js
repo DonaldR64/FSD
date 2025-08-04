@@ -2067,6 +2067,57 @@ const CC = (() => {
                     outputCard.body.push(name + ": " + damage);
                 }
             })
+
+            if (currentUnitID === attackerID) {
+                let damage = parseInt(defender.token.get("bar3_value"));
+                damage = Math.max(0,damage - totalHits);
+                defender.token.set("bar3_value",damage);
+                if (damage === 0) {
+                    outputCard.body.push(defender.name + " was Destroyed!");
+                } else {
+                    _.each(keys,key => {
+                        let damage = combatArray.statDamage[key];
+                        if (damage > 0) {
+                            let num = parseInt(defender[key]);
+                            let keyMax = key + "_max";
+                            let max = parseInt(defender[keyMax]);
+                            if (isNaN(max)) {max = 0}; //will be X in sheet?
+                            num = Math.max(0,num - damage);
+                            defender[key] = num;
+                            AttributeSet(defender.characterID,key,num);
+                            if (num === 0 && max > 0) {
+                                if (key === "mobility") {
+                                    outputCard.body.push(defender.name + " is Immobilized");
+    //Status markers here
+                                }
+                                if (key === "firepower") {
+                                    outputCard.body.push(defender.name + " is Disarmed");
+    //Status markers here
+                                }
+                                if (key === "armour") {
+                                    outputCard.body.push(defender.name + " is Destroyed");
+//Destroy
+                                }
+                                if (key === "defence") {
+                                    outputCard.body.push(defender.name + " is Deactivated");
+    //Status markers here
+                                }
+                            }
+
+
+
+                        }                        
+                    })
+
+
+                }
+
+
+
+
+            }
+
+
         } else {
             if (finalAttackRolls === 0) {
                 outputCard.body.push("All Attacks Defeated by Active Defences");
@@ -2081,10 +2132,24 @@ const CC = (() => {
             }
         }
 
+
+        if (currentUnitID === attackerID && totalHits > 0) {
+            let damage = parseInt(defender.token.get("bar3_value"));
+            damage = Math.max(0,damage - totalHits);
+            defender.token.set("bar3_value",damage);
+            if (damage === 0) {
+                outputCard.body.push(defender.name + " was Destroyed!");
+            } 
+
+
+
+        }
+
+
+
+
+
         PrintCard();
-
-
-
 
 
 
