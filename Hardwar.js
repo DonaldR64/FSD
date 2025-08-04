@@ -1480,40 +1480,30 @@ const CC = (() => {
             sendChat("","Not valid target");
             return;
         }
-
-        let losResult = LOS(shooter,target);
-
         SetupCard(shooter.name,"LOS",shooter.faction);
         outputCard.body.push("Distance: " + losResult.distance);
-        if (losResult.los === false) {
-            outputCard.body.push(losResult.losReason);
-        } else if (losResult.los === true && losResult.lof === false) {
-            outputCard.body.push("In LOS but Out of Arc of Fire");
-        } else if (losResult.los === true && losResult.lof === true) {
-            if (losResult.cover < 6) {
+
+        for (let i=0;i<shooter.weapons;i++) {
+            if (i > 0) {
+                outputCard.body.push("[hr]");
+            }
+            let weapon = shooter.weapons[i];
+            let losResult = LOS(shooter,target,weapon);
+            outputCard.body.push("[U]" + weapon.name + "[/u]");
+            if (losResult.los === false) {
+                outputCard.body.push(losResult.losReason);
+            } else if (losResult.los === true && losResult.lof === false) {
+                outputCard.body.push("In LOS but Out of Arc of Fire");
+            } else if (losResult.los === true && losResult.lof === true) {
                 outputCard.body.push("In LOS and LOF");
                 outputCard.body.push("Cover is " + losResult.cover);
-            } else {
-                //cover 6+
-                let noWeapon = true;
-                _.each(shooter.weapons,weapon => {
-                    if (weapon.abilities.includes("Smart")) {
-                        outputCard.body.push("Only " + weapon.name + " can fire at the Target, at -1 F");
-                        noWeapon = false;
-                    } 
-                    //indirect ?
-                })
-                if (noWeapon === true) {
-                    outputCard.body.push("Target is obscured by Cover, no LOS");
-                }
-                outputCard.body.push("Cover is " + losResult.cover);
-            }
+            } 
         }
         PrintCard();
     }
 
 
-    const LOS = (shooter,target) => {
+    const LOS = (shooter,target,weapon) => {
 
         let los = true;
         let losReason = "";
@@ -1521,6 +1511,10 @@ const CC = (() => {
         let lof = true;
         let water = "";
         let cover = 0;
+        if (weapon.abilities.includes("Smart")) {
+            cover = -2;
+        }
+
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
         let distance = shooterHex.cube.distance(targetHex.cube);
@@ -1590,10 +1584,11 @@ const CC = (() => {
                     break;
                 }
                 if (cover > 5 && losBlock === "") {
+                    los = false;
+                    losReason = "Blocked by Cover at " + label;
                     losBlock = label;
+                    break;
                 }
-
-
 
             }
 
@@ -1619,6 +1614,8 @@ const CC = (() => {
                     if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
                         cover++;
                         if (cover > 5 && losBlock === "") {
+                            los = false;
+                            losReason = "Blocked by Cover at " + label;
                             losBlock = label;
                         }                        
                     }
@@ -1643,6 +1640,8 @@ const CC = (() => {
             if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
                 cover++;
                 if (cover > 5 && losBlock === "") {
+                    los = false;
+                    losReason = "Blocked by Cover at " + targetHex.label + " Edge";
                     losBlock = label;
                 }
             }
@@ -1667,9 +1666,12 @@ const CC = (() => {
         }
 
         if (cover > 5 && losBlock === "") {
+            los = false;
+            losReason = "Blocked by Cover"
             losBlock = targetHex.label;
         }
 
+        cover = Math.max(0,cover);
 
         let result = {
             los: los,
@@ -1763,7 +1765,7 @@ const CC = (() => {
         let weapon = attacker.weapons[weaponNum];
         let order = attacker.order;
 
-        let losResult = LOS(attacker,defender);
+        let losResult = LOS(attacker,defender,weapon);
         let firepower = attacker.firepower;
         let fpTip = "FP: " + firepower;
         if (order === "Advance" && attacker.abilities.includes("Bracing Mass") === false) {
@@ -1818,10 +1820,9 @@ const CC = (() => {
         let armour = defender.armour;
         let nTip = "Distance: " + distance + "<br>Cover: " + cover + "<br>Armour: " + armour;
 
-        let coverPlusArmour = cover + armour;
         if (weapon.abilities.includes("Gatling")) {
-            coverPlusArmour -= 3;
-            nTip += "<br>Gatling: Cover/Armour reduced by 3"
+            armour = Math.max(0,armour - 2);
+            nTip += "<br>Gatling: -2 Armour";
         }
 
         let needed = distance + coverPlusArmour;
