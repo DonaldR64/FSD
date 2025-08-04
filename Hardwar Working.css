@@ -230,17 +230,17 @@ input[type="hidden"][name="attr_nation"]:is([value="Canada"]) ~ .spbody {
   margin-bottom: 1em;
 }
 
-.w1tooltip {
+.sheet-tooltip {
     outline: none;
     cursor: help;
 }
-.w1tooltip strong { line-height: 30px; }
-.w1tooltip:hover span {
+.sheet-tooltip strong { line-height: 30px; }
+.sheet-tooltip:hover span {
     display: block;
     position: absolute;
 }
-.w1tooltip:hover { text-decoration: none; }
-.w1tooltip span {
+.sheet-tooltip:hover { text-decoration: none; }
+.sheet-tooltip span {
     display: none;
     border-radius: 4px;
     box-shadow: 5px 5px 8px #ccc;
