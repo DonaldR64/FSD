@@ -644,19 +644,21 @@ const CC = (() => {
             for (let i=0;i<3;i++) {
                 let w=i+1;
                 let wname = "weapon" + w + "name";
-                let wabilities = "weapon" + w + "abilities";
-                let wfx = "weapon" + w + "fx";
-                let wsound = "weapon" + w + "sound";
+                wname = aa[wname];
+                if (!wname || wname === undefined || wname === null) {continue};
+                let wabilities = "weapon" + w + "abilities" || " ";
+                wabilities = aa[wabilities];
                 let weapon = {
-                    name: aa[wname],
-                    abilities: aa[wabilities],
-                    fx: aa[wfx],
-                    sound: aa[wsound],
+                    name: wname,
+                    abilities: wabilities,
+                    fx: "weapon" + w + "fx",
+                    sound: "weapon" + w + "sound",
                 }
                 weapons.push(weapon);
             }
             this.weapons = weapons;
-
+log(this.name)
+log(this.weapons)
             this.abilities = aa.abilities || " ";
 
             this.order = "";
@@ -1480,10 +1482,12 @@ const CC = (() => {
             sendChat("","Not valid target");
             return;
         }
-        SetupCard(shooter.name,"LOS",shooter.faction);
-        outputCard.body.push("Distance: " + losResult.distance);
+        let distance = HexMap[shooter.hexLabel].cube.distance(HexMap[target.hexLabel].cube);
 
-        for (let i=0;i<shooter.weapons;i++) {
+        SetupCard(shooter.name,"LOS",shooter.faction);
+        outputCard.body.push("Distance: " + distance + " Hexes");
+
+        for (let i=0;i<shooter.weapons.length;i++) {
             if (i > 0) {
                 outputCard.body.push("[hr]");
             }
@@ -1504,7 +1508,6 @@ const CC = (() => {
 
 
     const LOS = (shooter,target,weapon) => {
-
         let los = true;
         let losReason = "";
         let losBlock = "";
@@ -1514,7 +1517,6 @@ const CC = (() => {
         if (weapon.abilities.includes("Smart")) {
             cover = -2;
         }
-
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
         let distance = shooterHex.cube.distance(targetHex.cube);
@@ -1816,7 +1818,7 @@ const CC = (() => {
         let distance = losResult.distance;
         //AA and Aircraft here
 
-        let cover = losResult.cover;
+        let cover = losResult.cover; //smart is factored in LOS function already
         let armour = defender.armour;
         let nTip = "Distance: " + distance + "<br>Cover: " + cover + "<br>Armour: " + armour;
 
@@ -1825,7 +1827,7 @@ const CC = (() => {
             nTip += "<br>Gatling: -2 Armour";
         }
 
-        let needed = distance + coverPlusArmour;
+        let needed = distance + cover + armour;
 
 
 
@@ -2176,7 +2178,7 @@ const CC = (() => {
                     let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
                     outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
                 }
-                outputCard.body.push("Total: " + totalHits);
+                outputCard.body.push("Total: " + totalHits + " Hull Damage");
                 combatArray.totalHits = totalHits;
             }
             outputCard.body.push("[hr]");
