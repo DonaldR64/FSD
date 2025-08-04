@@ -595,6 +595,7 @@ const CC = (() => {
             this.name = token.get("name");
             this.charName = char.get("name");
             this.id = id;
+            this.charID = charID;
             this.hexLabel = label;
             this.startHexLabel = label; //used to track movement
 
@@ -604,8 +605,8 @@ const CC = (() => {
 
             this.mobility = parseInt(aa.mobility) || 0;
             this.mobilityMax = parseInt(aa.mobility_max) || 0;
-            this.firepower = parseInt(aa.fp) || 0;
-            this.firepowerMax = parseInt(aa.fp_max) || 0;
+            this.firepower = parseInt(aa.firepower) || 0;
+            this.firepowerMax = parseInt(aa.firepower_max) || 0;
             this.armour = parseInt(aa.armour) || 0;
             this.armourMax = parseInt(aa.armour_max) || 0;
             this.defence = parseInt(aa.defence) || 0;
@@ -1307,6 +1308,14 @@ const CC = (() => {
             unit.mobility = unit.mobilityMax;
             unit.armour = unit.armourMax;
             unit.defence = unit.defenceMax;
+            AttributeSet(unit.charID,"firepower",unit.firepower);
+            AttributeSet(unit.charID,"mobility",unit.mobility);
+            AttributeSet(unit.charID,"armour",unit.armour);
+            AttributeSet(unit.charID,"defence",unit.defence);
+
+
+
+
             //set hp and activations
             token.set({
                 bar1_value: 2,//mayneed to change based on units activations
@@ -2079,18 +2088,13 @@ const CC = (() => {
                         let damage = combatArray.statDamage[key];
                         if (damage > 0) {
                             let num = parseInt(defender[key]);
-                            let keyMax = key + "_max";
+                            let keyMax = key + "Max";
                             let max = parseInt(defender[keyMax]);
                             if (isNaN(max)) {max = 0}; //will be X in sheet?
                             num = Math.max(0,num - damage);
                             defender[key] = num;
 
-    log(key)
-    log(keyMax)
-    log(num)
-    log(max)
-
-                            //AttributeSet(defender.charID,key,num);
+                            AttributeSet(defender.charID,key,num);
                             if (num === 0 && max > 0) {
                                 if (key === "mobility") {
                                     outputCard.body.push(defender.name + " is Immobilized");
