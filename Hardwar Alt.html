@@ -99,6 +99,7 @@
           <section class="header">
                 <h1><span name="attr_character_name"></span></h1>   
                 <h2><span>Class </span><span name="attr_class"></span> - <span name="attr_type"></span></h2>
+                <span name="attr_damagepic"></span>
           </section>
 
 
@@ -216,7 +217,7 @@
 
 
  on("change:attrs sheet:opened", function() { 
-        getAttrs(["mobility","mobility_max","firepower","firepower_max","armour","armour_max","defence","defence_max"], function(values) {
+        getAttrs(["mobility","mobility_max","firepower","firepower_max","armour","armour_max","defence","defence_max","damage","class"], function(values) {
             let mobility = parseInt(values.mobility);
             let mobilityMax = parseInt(values.mobility_max);
             let fp = parseInt(values.firepower);
@@ -225,11 +226,14 @@
             let armourMax = parseInt(values.armour_max);
             let defence = parseInt(values.defence);
             let defenceMax = parseInt(values.defence_max);
+            let damage = parseInt(values.damage);
+            let damageMax = parseInt(value.class) * 2;
 
             let mobpic = "";
             let fppic = "";
             let armpic = "";
             let defpic = "";
+            let damagepic = "";
 
             for (let i=0;i<mobilityMax;i++) {
                 if (i<mobility) {
@@ -259,6 +263,13 @@
                     defpic += "○";
                 }
             }
+            for (let i=0;i<damageMax;i++) {
+                if (i<damage) {
+                    damagepic += "◉";
+                } else {
+                    damagepic += "○";
+                }
+            }
 
 
 
@@ -268,7 +279,7 @@
                 "fppic": fppic,
                 "armpic": armpic,
                 "defpic": defpic,
-
+                "damagepic": damagepic,
 
             });
         });    
