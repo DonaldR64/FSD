@@ -1482,17 +1482,14 @@ log(this.weapons)
             sendChat("","Not valid target");
             return;
         }
-        let distance = HexMap[shooter.hexLabel].cube.distance(HexMap[target.hexLabel].cube);
+        let distance;
 
         SetupCard(shooter.name,"LOS",shooter.faction);
-        outputCard.body.push("Distance: " + distance + " Hexes");
-
         for (let i=0;i<shooter.weapons.length;i++) {
-            if (i > 0) {
                 outputCard.body.push("[hr]");
-            }
             let weapon = shooter.weapons[i];
             let losResult = LOS(shooter,target,weapon);
+            distance = losResult.distance;
             outputCard.body.push("[U]" + weapon.name + "[/u]");
             if (losResult.los === false) {
                 outputCard.body.push(losResult.losReason);
@@ -1502,7 +1499,10 @@ log(this.weapons)
                 outputCard.body.push("In LOS and LOF");
                 outputCard.body.push("Cover is " + losResult.cover);
             } 
+            outputCard.body.push("[hr]");
         }
+        outputCard.body.push("Distance is " + distance);
+        outputCard.body.push("Target's Armour is " + target.armour);
         PrintCard();
     }
 
