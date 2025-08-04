@@ -334,6 +334,7 @@ const CC = (() => {
                 });            
             }
         }
+        return attributeobj.id;
     };
 
     const DeleteAttribute = (characterID,attributeName) => {
@@ -1329,11 +1330,12 @@ const CC = (() => {
             unit.mobility = unit.mobilityMax;
             unit.armour = unit.armourMax;
             unit.defence = unit.defenceMax;
+            unit.damage = unit.class * 2;
             AttributeSet(unit.charID,"firepower",unit.firepower);
             AttributeSet(unit.charID,"mobility",unit.mobility);
-            AttributeSet(unit.charID,"armour",unit.armour);
+            let armID = AttributeSet(unit.charID,"armour",unit.armour);
             AttributeSet(unit.charID,"defence",unit.defence);
-
+            let damID = AttributeSet(unit.charID,"damage",unit.damage);
 
 
 
@@ -1341,8 +1343,12 @@ const CC = (() => {
             token.set({
                 bar1_value: 2,//mayneed to change based on units activations
                 bar1_max: "",
-                bar3_value: (unit.class * 2), 
-                bar3_max: (unit.class * 2),
+                bar3_value: unit.armour,
+                bar3_max: unit.armour,
+                bar3_link: armID,
+                bar2_value: unit.damage, 
+                bar2_max: "",
+                bar2_link: damID,
                 bar_location: "overlap_bottom",
             })
         })
