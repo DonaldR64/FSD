@@ -217,7 +217,7 @@
 
 
  on("change:attrs sheet:opened", function() { 
-        getAttrs(["mobility","mobility_max","firepower","firepower","armour","armour_max","defence","defence_max"], function(values) {
+        getAttrs(["mobility","mobility_max","firepower","firepower_max","armour","armour_max","defence","defence_max"], function(values) {
             let mobility = parseInt(values.mobility);
             let mobilityMax = parseInt(values.mobility_max);
             let fp = parseInt(values.firepower);
