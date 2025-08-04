@@ -112,8 +112,7 @@
                 <h2>Stat</h2>
                 <h2>Current/Max</h2>
                 <h3>Mobility: </h3>
-                <h3><span name="attr_mob_pic"><span style='font-size:100px;'>&#9675;</span>
-</span></h3>
+                <h3><span name="attr_mob_pic"></span></h3>
                 <h3>Firepower: </h3>
                 <h3><span name="attr_fp"></span> / <span name="attr_fp_max"></span></h3>
                 <h3>Armour: </h3>
@@ -224,9 +223,9 @@
             let mobpic = "";
             for (let i=0;i<mobilityMax;i++) {
                 if (i<mobility) {
-                    mobpic += "&#x25C9;";
+                    mobpic += "◉";
                 } else {
-                    mobpic += "&#x25CB;";
+                    mobpic += "○";
                 }
             }
             setAttrs({
