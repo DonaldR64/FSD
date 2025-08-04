@@ -219,7 +219,7 @@
  on("change:attrs sheet:opened", function() { 
         getAttrs(["mobility","mobility_max"], function(values) {
             let mobility = parseInt(values.mobility);
-            let mobilityMax = parseInt(values.mobilityMax);
+            let mobilityMax = parseInt(values.mobility_max);
             let mobpic = "";
             for (let i=0;i<mobilityMax;i++) {
                 if (i<mobility) {
@@ -228,9 +228,6 @@
                     mobpic += "&#x25CB;";
                 }
             }
-
-
-
             setAttrs({
                 "mob_pic": mobpic,
                 
