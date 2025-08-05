@@ -1601,6 +1601,11 @@ log(this.weapons)
 
         }
 
+
+
+
+
+
         let pt1 = new Point(0,shooterHex.elevation + sH);
         let pt2 = new Point(distance,targetHex.elevation + tH);
 
@@ -1727,6 +1732,25 @@ log(this.weapons)
 
         cover = Math.max(0,cover);
 
+        let indirect = false;
+        if (weapon.abilities.includes("Indirect")) {
+            //check for spotter, markers
+            
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
         let result = {
             los: los,
             losReason: losReason,
@@ -1736,6 +1760,7 @@ log(this.weapons)
             angle: angle,
             cover: cover,
             water: water,
+            indirect: indirect,
         }
         return result;
     }
@@ -1853,21 +1878,28 @@ log(this.weapons)
             errorMsg.push("Cannot Fire while on " + order);
         }
 
-        if (losResult.los === false) {
+        if (losResult.los === false && losResult.indirect === false) {
             errorMsg.push("No LOS To Target");
             errorMsg.push(losResult.losReason);
+        } else if (losResult.los === false && losResult.lof === true && losResult.indirect !== false) {
+            if (losResult.indirect === "No LOS") {
+                firepower = Math.round(firepower/2);
+                fpTip += "<br>1/2 FP - No LOS/Indirect";
+            } else if (losResult === "Spotter") {
+                fpTip += "<br>Full FP - Spotter/Indirect";
+            } else if (losResult === "Marker") {
+                firepower--;
+                fpTip += "<br>-1 FP, Marker/Indirect"
+            }
+
+
+
+
         } else if (losResult.los === true && losResult.lof === false) {
             errorMsg.push("In LOS but Out of Arc of Fire");
-        } else if (losResult.los === true && losResult.lof === true && losResult.cover > 5) {
-            if (weapon.abilities.includes("Smart") === false) {
-                errorMsg.push("Target is obscured by Cover, no LOS");
-            } else {
-                firepower--;
-                fpTip += "<br>-1F Smart Weapon/Cover";
-            }
         }
 
-        
+
 
 
 
