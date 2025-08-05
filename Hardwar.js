@@ -134,12 +134,12 @@ const CC = (() => {
     };
 
     const SM = {
-        "alert": "status_blue", //temp
-        "digin": "status_brown", //temp
+        "alert": "status_blue", 
+        "digin": "status_brown", 
         "immobilized": "status_red",
         "disarmed": "status_purple",
         "deactivated": "status_green",
-
+        "spotting": "status_red",
     }
 
 
@@ -1732,24 +1732,38 @@ log(this.weapons)
 
         cover = Math.max(0,cover);
 
+        //indirect or guided weapons check
         let indirect = false;
-        if (weapon.abilities.includes("Indirect")) {
-            //check for spotter, markers
-            
-
-
+        if (los === false && (weapon.abilities.includes("Indirect") || weapon.abilities.includes("Guided"))) {
+            //check for spotter
+            _.each(UnitArray,spotter => {
+                if (spotter.faction === shooter.faction) {
+                    if (spotter.token.get(SM.spotting) === true) {
+                        let spotterLOS = LOS(spotter,target);
+                        if (spotterLOS.los === true) {
+                            los = true;
+                            indirect = "Spotter"
+                            if (weapon.abilities.includes("Guided")) {
+                                distance = spotterLOS.distance;
+                                cover = spotterLOS.cover;
+                            }
+                        }
+                    }
+                }
+            })
+            //check for markers
+            if (los === false && weapon.abilities.includes("Indirect")) {
+                los = true;
+                indirect = "No LOS";
+                _.each(state.Hardwar.rangedIn[shooter.player],markerID => {
+                    let marker = UnitArray[markerID];
+                    let d = HexMap[marker.hexLabel].cube.distance(targetHex.cube);
+                    if (d < 2) {
+                        indirect = "Marker";
+                    }
+                })
+            }
         }
-
-
-
-
-
-
-
-
-
-
-
 
         let result = {
             los: los,
@@ -1881,25 +1895,27 @@ log(this.weapons)
         if (losResult.los === false && losResult.indirect === false) {
             errorMsg.push("No LOS To Target");
             errorMsg.push(losResult.losReason);
-        } else if (losResult.los === false && losResult.lof === true && losResult.indirect !== false) {
-            if (losResult.indirect === "No LOS") {
-                firepower = Math.round(firepower/2);
-                fpTip += "<br>1/2 FP - No LOS/Indirect";
-            } else if (losResult === "Spotter") {
-                fpTip += "<br>Full FP - Spotter/Indirect";
-            } else if (losResult === "Marker") {
-                firepower--;
-                fpTip += "<br>-1 FP, Marker/Indirect"
-            }
-
-
-
-
-        } else if (losResult.los === true && losResult.lof === false) {
+        }
+        if (losResult.los === true && losResult.lof === false) {
             errorMsg.push("In LOS but Out of Arc of Fire");
         }
 
-
+        if (losResult.indirect !== false) {
+            if (weapon.abilities.includes("Indirect")) {
+                if (losResult.indirect === "No LOS") {
+                    firepower = Math.round(firepower/2);
+                    fpTip += "<br>1/2 FP - No LOS/Indirect";
+                } else if (losResult === "Spotter") {
+                    fpTip += "<br>Full FP - Spotter/Indirect";
+                } else if (losResult === "Marker") {
+                    firepower--;
+                    fpTip += "<br>-1 FP, Marker/Indirect"
+                }
+            }
+            if (weapon.abilities.includes("Spotter")) {
+                fpTip += "<br>Guided - Distance and Cover from Spotter";
+            }
+        }
 
 
 
