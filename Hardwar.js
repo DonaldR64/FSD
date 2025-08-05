@@ -1899,6 +1899,7 @@ log(this.weapons)
 
 
         CombatRolls();
+        RangedOutput();
         if (currentUnitID === attacker.id) {
             defender.Damage();
         }
