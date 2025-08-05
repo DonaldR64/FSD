@@ -1570,6 +1570,7 @@ log(this.weapons)
         let targetHex = HexMap[target.hexLabel];
         let distance = shooterHex.cube.distance(targetHex.cube);
         let angle = TargetAngle(shooter,target);
+        let spotterID = "";
         let aov = 180;
 
         let aof = 180;
@@ -1743,6 +1744,7 @@ log(this.weapons)
                         if (spotterLOS.los === true) {
                             los = true;
                             indirect = "Spotter"
+                            spotterID = spotter.id;
                             if (weapon.abilities.includes("Guided")) {
                                 distance = spotterLOS.distance;
                                 cover = spotterLOS.cover;
@@ -1775,6 +1777,7 @@ log(this.weapons)
             cover: cover,
             water: water,
             indirect: indirect,
+            spotterID: spotterID,
         }
         return result;
     }
@@ -1905,9 +1908,9 @@ log(this.weapons)
                 if (losResult.indirect === "No LOS") {
                     firepower = Math.round(firepower/2);
                     fpTip += "<br>1/2 FP - No LOS/Indirect";
-                } else if (losResult === "Spotter") {
+                } else if (losResult.indirect === "Spotter") {
                     fpTip += "<br>Full FP - Spotter/Indirect";
-                } else if (losResult === "Marker") {
+                } else if (losResult.indirect === "Marker") {
                     firepower--;
                     fpTip += "<br>-1 FP, Marker/Indirect"
                 }
@@ -1916,8 +1919,6 @@ log(this.weapons)
                 fpTip += "<br>Guided - Distance and Cover from Spotter";
             }
         }
-
-
 
         if (errorMsg.length > 0) {
             _.each(errorMsg,msg => {
@@ -1980,7 +1981,10 @@ log(this.weapons)
         //sound
         PlaySound(weapon.sound);
 
-
+        if (losResult.indirect === "Spotter") {
+            let spotter = UnitArray[losResult.spotterID];
+            spotter.token.set(SM.spotting,false);
+        }
 
 
     }
