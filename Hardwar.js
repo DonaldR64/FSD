@@ -684,12 +684,12 @@ log(this.weapons)
             log(hits)
             log(statDamage)
             let hull = this.damage;
-            hull = Math.max(0,hull - hits);
-            if (hull === 0) {
-                outputCard.body.push("Hull Damaged beyond repair");
+            newHull = Math.max(0,hull - hits);
+            if (newHull === 0 && hull > 0) {
+                outputCard.body.push("Damage is extensive and no longer Repairable");
             }
-            this.damage = hull;
-            AttributeSet(this.charID,"damage",hull);
+            this.damage = newHull;
+            AttributeSet(this.charID,"damage",newHull);
 
             let keys = Object.keys(statDamage);
             _.each(keys,stat => {
@@ -1444,7 +1444,7 @@ log(this.weapons)
             unit.mobility = unit.mobilityMax;
             unit.armour = unit.armourMax;
             unit.defence = unit.defenceMax;
-            unit.damage = unit.class * 2;
+            unit.damage = 12;
             AttributeSet(unit.charID,"firepower",unit.firepower);
             AttributeSet(unit.charID,"mobility",unit.mobility);
             let armID = AttributeSet(unit.charID,"armour",unit.armour);
