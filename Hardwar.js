@@ -1829,7 +1829,7 @@ log(this.weapons)
         let firepower = attacker.firepower;
         let fpTip = "FP: " + firepower;
         if (order === "Advance" && attacker.abilities.includes("Bracing Mass") === false) {
-            firepower = Math.ceil(firepower/2);
+            firepower = Math.round(firepower/2);
             fpTip += "<br>Advance = 1/2 FP";
         } else if (order === "Aimed Shot") {
             firepower++;
@@ -1842,6 +1842,8 @@ log(this.weapons)
             defence--;
             dTip += "<br>XMG -1 D";
         }
+
+
 
 
         SetupCard(attacker.name,weapon.name,attacker.faction);
@@ -1864,6 +1866,10 @@ log(this.weapons)
                 fpTip += "<br>-1F Smart Weapon/Cover";
             }
         }
+
+        
+
+
 
         if (errorMsg.length > 0) {
             _.each(errorMsg,msg => {
@@ -1909,7 +1915,6 @@ log(this.weapons)
             ranged: true,
             results: {},
             statsFlag: false,
-            EMP: false,
         };
 
 
