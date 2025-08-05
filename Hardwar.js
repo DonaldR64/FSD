@@ -1348,8 +1348,18 @@ log(this.weapons)
             unit.order = "";
 
         })
-
-
+        //remove markers
+        let rangedInMarkers = state.Hardwar.rangedIn;
+        for (let i=0;i<2;i++) {
+            let markers = rangedInMarkers[i];
+            _.each(markers,markerID => {
+                let unit = UnitArray[markerID];
+                if (unit) {delete UnitArray[markerID]};
+                let token = findObjs({_type:"graphic", id: markerID})[0];
+                if (token) {token.remove()};
+            })
+        }
+        state.Hardwar.rangedIn = [[],[]];
 //remove smoke
 
         let unitNumbers = [0,0];
