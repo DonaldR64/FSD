@@ -680,9 +680,7 @@ log(this.weapons)
         Damage () {
             let hits = combatArray.totalHits;
             let statDamage = combatArray.statDamage;
-            log("In Damage")
-            log(hits)
-            log(statDamage)
+            if (hits === 0 && combatArray.statFlag === false) {return};
             let hull = this.damage;
             newHull = Math.max(0,hull - hits);
             if (newHull === 0 && hull > 0) {
@@ -1882,6 +1880,7 @@ log(this.weapons)
         outputCard.body.push(fpTip + " Firepower: " + firepower + " Dice");
         outputCard.body.push(nTip + " Target: " + needed + "+");
         outputCard.body.push(dTip + " Defence: " + defence + " Dice");
+        outputCard.body.push("[hr]");
 
         combatArray = {
             attacker: attacker,
@@ -1891,12 +1890,19 @@ log(this.weapons)
             defence: defence,
             needed: needed,
             totalHits: 0,
+            ranged: true,
+            results: {},
+            statsFlag: false,
         };
 
 
 
 
-        AttackDice(firepower,defence,needed,attacker.abilities,defender.abilities,weapon);
+        CombatRolls();
+        if (currentUnitID === attacker.id) {
+            defender.Damage();
+        }
+        PrintCard();
 
         //fx
         FX(weapon.fx,attacker,defender);
@@ -1908,7 +1914,7 @@ log(this.weapons)
 
     }
 
-    const AttackDice = () => {
+    const CombatRolls = () => {
 
         let attacker = combatArray.attacker;
         let defender = combatArray.defender;
@@ -1916,6 +1922,7 @@ log(this.weapons)
         let fp = combatArray.firepower;
         let defence = combatArray.defence;
         let target = combatArray.needed;
+        let rangedFlag = combatArray.ranged;
 
         let aTip = "";
         let dTip = "";
@@ -1942,7 +1949,7 @@ log(this.weapons)
                 attackRolls.sort();
             }
         }
-        if (defender.abilities.includes("Point Defence")) {
+        if (defender.abilities.includes("Point Defence") && rangedFlag === true) {
             for (let i=0;i<defenceRolls.length;i++) {
                 let test = defenceRolls[i];
                 if (attackRolls.includes(test) === false) {
@@ -1954,7 +1961,7 @@ log(this.weapons)
                 }
             }
         }
-        if (attacker.abilities.includes("Assisted Targetting")) {
+        if (attacker.abilities.includes("Assisted Targetting") && rangedFlag === true) {
             for (let i=0;i<attackRolls.length;i++) {
                 let test = attackRolls[i];
                 if (defenceRolls.includes(test) === true) {
@@ -2153,17 +2160,11 @@ log(this.weapons)
             tip += "<br>--------------------------";
             tip += "<br>Final Attack Rolls: " + finalAttackRolls.toString();
         }
+        tip = '[🎲](#" class="showtip" title="' + tip + ')';
 
 
-
-
-        tip = '[Hits](#" class="showtip" title="' + tip + ')';
-
-
-        outputCard.body.push("[hr]");
         let noncriticals = [];
         let criticals = [];
-        let totalHits = 0;
         let railgunUsed = false;
 
         _.each(groups,group => {
@@ -2196,16 +2197,30 @@ log(this.weapons)
             criticals = ["Sonic - " + rolls];
             StatDamage(defender,"Sonic");
         }
+        combatArray.results = {
+            hitTip: tip,
+            cancelledRolls: cancelledRolls.length,
+            criticals: criticals,
+            noncriticals: noncriticals,
+            totalHits: (criticals.length + noncriticals.length),
+            finalAttackRolls: finalAttackRolls.length,
+        }
+    }
 
-        totalHits = noncriticals.length + criticals.length;
-        outputCard.body.push("[U]" + tip + "[/u]");
+    const RangedOutput = () => {
+        let results = combatArray.results;
+        let noncriticals = combatArray.noncriticals;
+        let criticals = combatArray.criticals;
+        let cancelledRolls = combatArray.cancelledRolls;
+        let finalAttackRolls = combatArray.finalAttackRolls;
+        let totalHits = combatArray.totalHits;
         let s;
 
-
+        outputCard.body.push("[U]" + results.hitTip + " Results[/u]");
         if (totalHits > 0) {
-            if (cancelledRolls.length > 0) {
-                s = (cancelledRolls.length === 1) ? "":"s";
-                outputCard.body.push("Active Defences Defeated " + cancelledRolls.length + " Attack" + s)
+            if (cancelledRolls > 0) {
+                s = (cancelledRolls === 1) ? "":"s";
+                outputCard.body.push("Active Defences Defeated " + cancelledRolls + " Attack" + s)
             }
             if (weapon.abilities.includes("Sonic Cannon")) {
                 let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
@@ -2223,7 +2238,6 @@ log(this.weapons)
                     outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
                 }
                 outputCard.body.push("Total: " + totalHits + " Hull Damage");
-                combatArray.totalHits = totalHits;
             }
             outputCard.body.push("[hr]");
             outputCard.body.push("[U]Stat Damage[/u]");
@@ -2235,29 +2249,23 @@ log(this.weapons)
                     outputCard.body.push(name + ": " + damage);
                 }
             })
-
-            if (currentUnitID === attacker.id) {
-                defender.Damage();
-            }
         } else {
-            if (finalAttackRolls === 0) {
-                outputCard.body.push("All Attacks Defeated by Active Defences");
-            } else {
-                if (cancelledRolls.length > 0) {
-                    s = (cancelledRolls.length === 1) ? "":"s";
-                    outputCard.body.push("Active Defences Defeated " + cancelledRolls.length + " Attack" + s)
-                    outputCard.body.push("The Remainder Missed");
+                if (finalAttackRolls === 0) {
+                    outputCard.body.push("All Attacks Defeated by Active Defences");
                 } else {
-                    outputCard.body.push("All Attacks Missed");
+                    if (cancelledRolls > 0) {
+                        s = (cancelledRolls.length === 1) ? "":"s";
+                        outputCard.body.push("Active Defences Defeated " + cancelledRolls + " Attack" + s)
+                        outputCard.body.push("The Remainder Missed");
+                    } else {
+                        outputCard.body.push("All Attacks Missed");
+                    }
                 }
-            }
         }
-
-        PrintCard();
-
-
-
     }
+
+
+
 
 
     const SumArray = (array) => {
@@ -2292,10 +2300,7 @@ log(this.weapons)
             statDamage[highestStat]++;
         }
         combatArray.statDamage = statDamage;
-
-log("In Stat Damage")
-log(statDamage)
-
+        combatArray.statFlag = true;
     }
 
 
