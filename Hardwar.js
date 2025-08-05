@@ -1545,6 +1545,21 @@ log(this.weapons)
                 outputCard.body.push("In LOS and LOF");
                 outputCard.body.push("Cover is " + losResult.cover);
             } 
+            if (losResult.indirect !== false) {
+                if (losResult.indirect === "No LOS") {
+                    outputCard.body.push("Firing Indirect, 1/2 FP");
+                }
+                if (losResult.indirect === "Marker") {
+                    outputCard.body.push("Firing Indirect at Marker, -1 FP");
+                }
+                if (losResult.indirect === "Spotter") {
+                    outputCard.body.push("Firing Indirect, using Spotter");
+                }
+            }
+
+
+
+
             outputCard.body.push("[hr]");
         }
         outputCard.body.push("Distance is " + distance);
@@ -1779,6 +1794,10 @@ log(this.weapons)
             indirect: indirect,
             spotterID: spotterID,
         }
+
+log(result)
+
+
         return result;
     }
 
