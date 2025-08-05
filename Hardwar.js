@@ -681,44 +681,57 @@ log(this.weapons)
             let hits = combatArray.totalHits;
             let statDamage = combatArray.statDamage;
             if (hits === 0 && combatArray.statFlag === false) {return};
-            let hull = this.damage;
-            newHull = Math.max(0,hull - hits);
-            if (newHull === 0 && hull > 0) {
-                outputCard.body.push("Damage is extensive and no longer Repairable");
-            }
-            this.damage = newHull;
-            AttributeSet(this.charID,"damage",newHull);
 
-            let keys = Object.keys(statDamage);
-            _.each(keys,stat => {
-                let damage = statDamage[stat];
-                if (damage > 0) {
-                    let num = parseInt(this[stat]);
-                    let max = parseInt(this[stat + "Max"]);
-                    if (isNaN(max)) {max = 0};
-                    num = Math.max(0,num - damage);
-                    this[stat] = num;
-                    AttributeSet(this.charID,stat,num);
-                    if (num === 0 && max > 0) {
-                        if (stat === "mobility") {
-                            outputCard.body.push(this.name + ' is Immobilized');
-                            this.token.set(SM.immobilized,true);
-                        }
-                        if (stat === "firepower") {
-                            outputCard.body.push(this.name + " is Disarmed");
-                            this.token.set(SM.disarmed,true);
-                        }
-                        if (stat === "armour") {
-                            outputCard.body.push(this.name + ' is Destroyed!');
-                            this.Destroyed();
-                        }
-                        if (stat === "defence") {
-                            outputCard.body.push(this.name + ' is Deactivated');
-                            this.token.set(SM.deactivated,true);
+            if (hits > 0) {
+                let hull = this.damage;
+                newHull = Math.max(0,hull - hits);
+                if (newHull === 0 && hull > 0) {
+                    outputCard.body.push("Damage is extensive and no longer Repairable");
+                }
+                this.damage = newHull;
+                AttributeSet(this.charID,"damage",newHull);
+            }    
+
+            if (combatArray.statFlag === true) {
+                let keys = Object.keys(statDamage);
+                _.each(keys,stat => {
+                    if (stat === "emp") {
+                        this.token.set("bar1_value",0);
+                        this.token.set("aura1_color","#000000");
+                        this.token.set(SM.spotting, false);
+                        this.order = "";
+//? any others to stop
+                    } else {
+                        let damage = statDamage[stat];
+                        if (damage > 0) {
+                            let num = parseInt(this[stat]);
+                            let max = parseInt(this[stat + "Max"]);
+                            if (isNaN(max)) {max = 0};
+                            num = Math.max(0,num - damage);
+                            this[stat] = num;
+                            AttributeSet(this.charID,stat,num);
+                            if (num === 0 && max > 0) {
+                                if (stat === "mobility") {
+                                    outputCard.body.push(this.name + ' is Immobilized');
+                                    this.token.set(SM.immobilized,true);
+                                }
+                                if (stat === "firepower") {
+                                    outputCard.body.push(this.name + " is Disarmed");
+                                    this.token.set(SM.disarmed,true);
+                                }
+                                if (stat === "armour") {
+                                    outputCard.body.push(this.name + ' is Destroyed!');
+                                    this.Destroyed();
+                                }
+                                if (stat === "defence") {
+                                    outputCard.body.push(this.name + ' is Deactivated');
+                                    this.token.set(SM.deactivated,true);
+                                }
+                            }
                         }
                     }
-                }
-            })
+                })
+            }
 
 
 
@@ -1581,8 +1594,11 @@ log(this.weapons)
         let tH = target.type === "Walker" ? shooter.class/2:shooter.class/5;
         // ? crouching if used
 
-        if (shooter.type === "Air") {
-            ///different air units at different heights ???
+        if (target.type === "Air") {
+            //add height to distance unless weapon has AA
+
+
+
         }
 
         let pt1 = new Point(0,shooterHex.elevation + sH);
@@ -1767,7 +1783,7 @@ log(this.weapons)
         }
         if (order === "Stand and Fire") {
             outputCard.body.push("The Unit Stands and Fires");
-        }
+        } 
         if (order === "Aimed Shot") {
             outputCard.body.push("The Unit takes one action to aim and a 2nd to Fire. Other Units may React before it fires");
             actions--;
@@ -1893,6 +1909,7 @@ log(this.weapons)
             ranged: true,
             results: {},
             statsFlag: false,
+            EMP: false,
         };
 
 
@@ -2187,23 +2204,36 @@ log(this.weapons)
             }
         })
 
-        if (weapon.abilities.includes("Plasma Accelerator") && noncriticals > 0) {
+        let totalHits = noncriticals.length + criticals.length;
+
+        if (weapon.abilities.includes("Plasma Accelerator") && noncriticals.length > 0) {
             noncriticals.push("Plasma Accelerator - +1 Hit");
+            totalHits++
             StatDamage(defender,false);
         }
 
-        if (weapon.abilities.includes("Sonic Cannon") && (noncriticals > 0 || criticals > 0)) {
+        if (weapon.abilities.includes("Sonic Cannon") && totalHits > 0) {
             let rolls = "[" + groups[0].rolls.sort((a,b) => b-a).toString() + "]";
-            noncriticals = ["Sonic - +1 Hit"];
-            criticals = ["Sonic - " + rolls];
+            noncriticals = ["Sonic - 1 Hit does 3 Damage " + rolls];
+            criticals = [];
             StatDamage(defender,"Sonic");
+            totalHits = 3;
         }
+        if (weapon.abilities.includes("EMP") && totalHits > 0) {
+            totalHits = 1;
+        }
+
+
+
+
+
+
         combatArray.results = {
             hitTip: tip,
             cancelledRolls: cancelledRolls.length,
             criticals: criticals,
             noncriticals: noncriticals,
-            totalHits: (criticals.length + noncriticals.length),
+            totalHits: totalHits,
             finalAttackRolls: finalAttackRolls.length,
         }
     }
@@ -2215,6 +2245,7 @@ log(this.weapons)
         let cancelledRolls = combatArray.cancelledRolls;
         let finalAttackRolls = combatArray.finalAttackRolls;
         let totalHits = combatArray.totalHits;
+        let weapon = combatArray.weapon;
         let s;
 
         outputCard.body.push("[U]" + results.hitTip + " Results[/u]");
@@ -2223,7 +2254,12 @@ log(this.weapons)
                 s = (cancelledRolls === 1) ? "":"s";
                 outputCard.body.push("Active Defences Defeated " + cancelledRolls + " Attack" + s)
             }
-            if (weapon.abilities.includes("Sonic Cannon")) {
+            if (weapon.abilities.includes("EMP")) {
+                outputCard.body.push("No Damage is Done");
+                outputCard.body.push("But the Target loses all Actions");
+                outputCard.body.push("And any ongoing abilities such as Guard or Spotting");
+                combatArray.statDamage = {mobility: 0,firepower: 0,armour: 0, defence: 0, emp: 1};
+            } else if (weapon.abilities.includes("Sonic Cannon")) {
                 let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
                 cTip += '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
                 outputCard.body.push(cTip + " Sonic Cannon Hit");
@@ -2240,16 +2276,20 @@ log(this.weapons)
                 }
                 outputCard.body.push("Total: " + totalHits + " Hull Damage");
             }
-            outputCard.body.push("[hr]");
-            outputCard.body.push("[U]Stat Damage[/u]");
-            let keys = Object.keys(combatArray.statDamage);
-            _.each(keys,key => {
-                let damage = combatArray.statDamage[key];
-                if (damage > 0) {
-                    let name = key.charAt(0).toUpperCase() + key.slice(1);
-                    outputCard.body.push(name + ": " + damage);
-                }
-            })
+            if (combatArray.statFlag === true) {
+                outputCard.body.push("[hr]");
+                outputCard.body.push("[U]Stat Damage[/u]");
+                let keys = Object.keys(combatArray.statDamage);
+                _.each(keys,key => {
+                    let damage = combatArray.statDamage[key];
+                    if (damage > 0) {
+                        let name = key.charAt(0).toUpperCase() + key.slice(1);
+                        outputCard.body.push(name + ": " + damage);
+                    }
+                })
+            }
+
+
         } else {
                 if (finalAttackRolls === 0) {
                     outputCard.body.push("All Attacks Defeated by Active Defences");
