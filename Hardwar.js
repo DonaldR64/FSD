@@ -639,7 +639,7 @@ const CC = (() => {
             this.defenceMax = parseInt(aa.defence_max) || 0;           
             let damage = parseInt(aa.damage) || (this.class * 2);
             this.damage = damage;
-
+            this.targettingUnitID = "";
 
             let weapons = [];
 
@@ -1164,18 +1164,28 @@ log(this.weapons)
         let id = Tag[0];
         let type = Tag[1];
         let unit = UnitArray[id];
+
         if (type === "Relay") {
             let charID = "-OWqqZirwy4ocuhD9Llb";
-            let char = getObj("character", charID);
-            let tokenID = summonToken(char,unit.token.get("left"),unit.token.get('top'));
-            if (tokenID) {
-                let token2 = findObjs({_type:"graphic", id: tokenID})[0];
-                toFront(token2);
-                let unit2 = new Unit(tokenID);
-            }
-
+            let img = "https://files.d20.io/images/105823565/P035DS5yk74ij8TxLPU8BQ/thumb.png?1582679991";           
+            img = getCleanImgSrc(img);
+            let newToken = createObj("graphic", {
+                left: unit.token.get("left"),
+                top: unit.token.get("top"),
+                width: 50,
+                height: 50, 
+                pageid: Campaign().get("playerpageid"),
+                imgsrc: img,
+                layer: "objects",
+                represents: charID,
+                name: "Marker",
+            })
+            let newUnit = new Unit(newToken.id);
+            newUnit.targettingUnitID = id;
+            log(newUnit)
         }
 
+        
 
 
 
@@ -1185,23 +1195,27 @@ log(this.weapons)
     const Mark = (msg) => {
         let id = msg.selected[0]._id;
         let unit = UnitArray[id];
-        //place a token to indicate marked spot
-        let charID = "-OWqtQm0wk9ar83oNbf3";
-        let char = getObj("character", charID);
-        let player = UnitArray[currentUnitID].playerID; 
-        let tokenID = summonToken(char,unit.token.get("left"),unit.token.get('top'),0,50);
-        if (tokenID) {
-            let token2 = findObjs({_type:"graphic", id: tokenID})[0];
-            toFront(token2);
-            token2.set("layer","map");
-            let unit2 = new Unit(tokenID);
-            state.Hardwar.rangedIn[player].push(tokenID);
+        if (!unit) {return}
+        let targettingUnit = UnitArray[unit.targettingUnitID];
+        let los = LOS(targettingUnit,unit);
+        SetupCard(targettingUnit,"Mark Coordinates",targettingUnit.faction);
+        if (los.los === false) {
+            outputCard.body.push("Not in LOS, Reposition");
+        } else {
+            let token = findObjs({_type:"graphic", id: id})[0];
+            let newImg = "https://files.d20.io/images/307909216/Cqm8z6ZX2WPDQkodhdLVqQ/thumb.png?1665016507";
+            newImg = getCleanImgSrc(newImg);
+            token.set({
+                imgsrc: newImg,
+                layer: "map",
+            })        
+            toFront(token);
+            let player = UnitArray[currentUnitID].player;
+            state.Hardwar.rangedIn[player].push(token.get("id"));
+            outputCard.body.push("Coordinates Marked");
         }
+        PrintCard();
     }
-
-
-
-
 
 
     const AddMarker = (msg) => {
@@ -1255,42 +1269,6 @@ log(this.weapons)
     }
 
 
-
-
-	summonToken = function(character,left,top,currentSide,size){
-        if (!currentSide) {currentSide = 0};
-        if (!size) {size = 70};
-		character.get('defaulttoken',function(defaulttoken){
-		    const dt = JSON.parse(defaulttoken);
-            let img;
-            if (dt.sides) {
-                sides = dt.sides.split("|")
-                img = sides[currentSide] || dt.imgsrc;
-            } else {
-                img = dt.imgsrc;
-            }
-            img = tokenImage(img);
-			if(dt && img){
-				dt.imgsrc=img;
-				dt.left=left;
-				dt.top=top;
-				dt.pageid = pageInfo.page.get('id');
-                dt.layer = "objects";
-                dt.width = size;
-                dt.height = size;
-                dt.currentSide = currentSide;
-                log(dt)
-                let newToken = createObj("graphic", dt);
-                newToken.set({
-                    disableSnapping: true,
-                    disableTokenMenu: true,
-                })
-                return newToken.get("id");
-			} else {
-				sendChat('','/w gm Cannot create token for <b>'+character.get('name')+'</b>');
-			}
-		});
-	};
 
 
     const HexData = (msg) => {
@@ -1555,6 +1533,9 @@ log(this.weapons)
 
 
     const LOS = (shooter,target,weapon) => {
+        if (!weapon) {
+            weapon = {abilities: " "};
+        }
         let los = true;
         let losReason = "";
         let losBlock = "";
@@ -1795,7 +1776,7 @@ log(this.weapons)
             outputCard.body.push("Patrol Move: " + (mobility * 2) + " MP");
             outputCard.body.push("Rapid Move: " + (mobility * 3) + " MP");
         }
-        if (order === "Relay Coordinates") {
+        if (order === "Mark Coordinates") {
             outputCard.body.push("Place the Target Icon on a Hex, then activate it");
             outputCard.body.push("That Hex will be marked until the end of the turn");
             let msg = unit.id + ";" + "Relay"
@@ -2426,6 +2407,9 @@ log(statDamage)
                 break;
             case '!Test':
                 AttackDice();
+                break;
+            case '!Mark':
+                Mark(msg);
                 break;
 
         }
