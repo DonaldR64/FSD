@@ -140,6 +140,8 @@ const CC = (() => {
         "disarmed": "status_purple",
         "deactivated": "status_green",
         "spotting": "status_red",
+        "camo": "status_ninja-mask", 
+        "fullstrike": "status_lightning-helix",
     }
 
 
@@ -659,8 +661,6 @@ const CC = (() => {
                 weapons.push(weapon);
             }
             this.weapons = weapons;
-log(this.name)
-log(this.weapons)
             this.abilities = aa.abilities || " ";
 
             this.order = "";
@@ -678,18 +678,30 @@ log(this.weapons)
 
 
         Damage () {
-            let hits = combatArray.totalHits;
+            let hits = combatArray.results.totalHits;
             let statDamage = combatArray.statDamage;
             if (hits === 0 && combatArray.statFlag === false) {return};
 
             if (hits > 0) {
                 let hull = this.damage;
-                newHull = Math.max(0,hull - hits);
+                let newHull = Math.max(0,hull - hits);
                 if (newHull === 0 && hull > 0) {
                     outputCard.body.push("Damage is extensive and no longer Repairable");
                 }
                 this.damage = newHull;
                 AttributeSet(this.charID,"damage",newHull);
+                if (combatArray.weapon.abilities.includes("Ion")) {
+                    let actions = parseInt(this.token.get("bar1_value"));
+                    actions = Math.max(0,actions - 1);
+                    this.token.set("bar1_value",actions);
+                    if (actions === 0) {
+                        this.token.set("aura1_color","#000000");
+                    }
+                }
+                if (this.token.get(SM.camo) === true) {
+                    outputCard.body.push("Active Camo is now Disabled");
+                    this.token.set(SM.camo,false);
+                }
             }    
 
             if (combatArray.statFlag === true) {
@@ -1477,6 +1489,13 @@ log(this.weapons)
                 bar_location: "overlap_bottom",
 
             })
+
+            if (unit.abilities.includes("Active Camouflage")) {
+                token.set(SM.camo,true);
+            }
+
+
+
         })
 
 
@@ -1581,6 +1600,12 @@ log(this.weapons)
         if (weapon.abilities.includes("Smart")) {
             cover = -2;
         }
+
+        if (target.token.get(SM.camo) === true) {
+            cover += 2; 
+        }
+
+
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
         let distance = shooterHex.cube.distance(targetHex.cube);
@@ -1626,7 +1651,7 @@ log(this.weapons)
         let pt2 = new Point(distance,targetHex.elevation + tH);
 
         let interCubes = shooterHex.cube.linedraw(targetHex.cube);
-        
+
         for (let i=1;i<interCubes.length;i++) {
             let label = interCubes[i].label();
             let interHex = HexMap[label];
@@ -1876,6 +1901,57 @@ log(result)
         PrintCard();
     }
 
+    const SpecialAbilities = (msg) => {
+        let Tag = msg.content.split(";");
+        let unitID = Tag[1];
+        let unit = UnitArray[unitID];
+        let abil = Tag[2];
+        let targetID = Tag[3]; //used sometimes
+        SetupCard(unit.name,abil,unit.faction);
+
+        if (abil === "Full Strike") {
+            let fired = (unit.token.get("tint_color") === "transparent" ) ? false:true;
+            if (fired === false && unit.firepower > 1) {
+                outputCard.body.push("F will be temporarily increased by 2");
+                outputCard.body.push("After which it will be reduced by 2");
+                outputCard.body.push("Until the unit Reloads");
+                unit.token.set(SM.fullstrike,true);
+            } else if (fired === true) {
+                outputCard.body.push("Unit has to Reload/Recharge first");
+            } else if (unit.firepower <= 1) {
+                outputCard.body.push("Unit unable to Full Strike due to Damage");
+            }
+        }
+        if (abil === "Reload Weapons") {
+            outputCard.body.push("The Unit Reloads/Recharges its Weapons Systems");
+            unit.token.set("tint_color","transparent");
+            unit.firepower = Math.min(unit.firepower +2,unit.firepowerMax);
+            AttributeSet(unit.charID,"firepower",unit.firepower);
+        }
+
+
+
+
+
+
+
+
+
+        PrintCard();
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     const Fire = (msg) => {
         let Tag = msg.content.split(";");
         let attackerID = Tag[1];
@@ -1896,13 +1972,28 @@ log(result)
             firepower++;
             fpTip += "<br>Aimed Shot";
         }
+        if (attacker.token.get(SM.fullstrike) === true) {
+            firepower += 2;
+            fpTip += "<br>Full Strike +2F";
+        }
+        if (attacker.abilities.includes("Sat-Lock") && defender.mobility <= 3) {
+            firepower += 1;
+            fpTip += "<br>Sat-Lock +1F";
+        }
+
+
 
         let defence = defender.defence;
         let dTip = "Defence: " + defence;
         if (weapon.abilities.includes("XMG")) {
             defence--;
-            dTip += "<br>XMG -1 D";
+            dTip += "<br>XMG -1D";
         }
+        if (defender.abilities.includes("Agile")) {
+            defence++;
+            dTip += "<br>Agile +1D";
+        }
+
 
 
 
@@ -1949,15 +2040,19 @@ log(result)
         
         let distance = losResult.distance;
         //AA and Aircraft here
-
         let cover = losResult.cover; //smart is factored in LOS function already
         let armour = defender.armour;
         let nTip = "Distance: " + distance + "<br>Cover: " + cover + "<br>Armour: " + armour;
 
         if (weapon.abilities.includes("Gatling")) {
             armour = Math.max(0,armour - 2);
-            nTip += "<br>Gatling: -2 Armour";
+            nTip += "<br>Gatling: -2 Armour incl.";
         }
+        if (defender.token.get(SM.camo) === true) {
+            nTip += "<br>Active Camo: +2 Cover incl.";
+        }
+
+
 
         let needed = distance + cover + armour;
 
@@ -2003,6 +2098,12 @@ log(result)
         if (losResult.indirect === "Spotter") {
             let spotter = UnitArray[losResult.spotterID];
             spotter.token.set(SM.spotting,false);
+        }
+        if (unit.token.get(SM.fullstrike) === true) {
+            unit.token.set(SM.fullstrike,false);
+            unit.token.set("tint_color",red);
+            unit.firepower -= 2;
+            AttributeSet(unit.charID,"firepower",unit.firepower);
         }
 
 
@@ -2203,6 +2304,7 @@ log(result)
             //critical groups now filled or no more unassignedRolls
             //if further unassignedRolls, assign these to groups
             //start with highest # as a group, searching for best # (exact or higher) or using lowest and re-searching
+log(unassignedRolls)
             if (unassignedRolls.length > 0) {
                 do {
                     roll = parseInt(unassignedRolls.pop());
@@ -2212,6 +2314,7 @@ log(result)
                         rolls: [roll],
                         critical: false,
                     }
+
                     if (info.needed > 0 && unassignedRolls.length > 0) {
                         do {
                             let pos = 0;
@@ -2260,10 +2363,12 @@ log(result)
         let noncriticals = [];
         let criticals = [];
         let railgunUsed = false;
-
+        let totalHits = 0;
+log(groups)
         _.each(groups,group => {
             let rolls = "[" + group.rolls.sort((a,b) => b-a).toString() + "]";
             if (group.needed === 0) {
+                totalHits++;
                 if (group.critical === true) {
                     criticals.push(rolls);
                     StatDamage(defender,true); //place damage in combat array
@@ -2280,26 +2385,15 @@ log(result)
             }
         })
 
-        let totalHits = noncriticals.length + criticals.length;
-
         if (weapon.abilities.includes("Plasma Accelerator") && noncriticals.length > 0) {
             noncriticals.push("Plasma Accelerator - +1 Hit");
             totalHits++
             StatDamage(defender,false);
         }
 
-        if (weapon.abilities.includes("Sonic Cannon") && totalHits > 0) {
-            let rolls = "[" + groups[0].rolls.sort((a,b) => b-a).toString() + "]";
-            noncriticals = ["Sonic - 1 Hit does 3 Damage " + rolls];
-            criticals = [];
-            StatDamage(defender,"Sonic");
-            totalHits = 3;
-        }
         if (weapon.abilities.includes("EMP") && totalHits > 0) {
             totalHits = 1;
         }
-
-
 
 
 
@@ -2316,11 +2410,11 @@ log(result)
 
     const RangedOutput = () => {
         let results = combatArray.results;
-        let noncriticals = combatArray.noncriticals;
-        let criticals = combatArray.criticals;
-        let cancelledRolls = combatArray.cancelledRolls;
-        let finalAttackRolls = combatArray.finalAttackRolls;
-        let totalHits = combatArray.totalHits;
+        let noncriticals = results.noncriticals;
+        let criticals = results.criticals;
+        let cancelledRolls = results.cancelledRolls;
+        let finalAttackRolls = results.finalAttackRolls;
+        let totalHits = results.totalHits;
         let weapon = combatArray.weapon;
         let s;
 
@@ -2335,10 +2429,6 @@ log(result)
                 outputCard.body.push("But the Target loses all Actions");
                 outputCard.body.push("And any ongoing abilities such as Guard or Spotting");
                 combatArray.statDamage = {mobility: 0,firepower: 0,armour: 0, defence: 0, emp: 1};
-            } else if (weapon.abilities.includes("Sonic Cannon")) {
-                let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
-                cTip += '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
-                outputCard.body.push(cTip + " Sonic Cannon Hit");
             } else {
                 if (criticals.length > 0) {
                     s = (criticals.length > 1) ? "s":"";
@@ -2351,6 +2441,9 @@ log(result)
                     outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
                 }
                 outputCard.body.push("Total: " + totalHits + " Hull Damage");
+                if (weapon.abilities.includes("Ion")) {
+                    outputCard.body.push("The Target also loses 1 Action if it has any");
+                }
             }
             if (combatArray.statFlag === true) {
                 outputCard.body.push("[hr]");
