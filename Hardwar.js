@@ -1927,10 +1927,27 @@ log(result)
             }
         }
         if (abil === "Reload Weapons") {
-            outputCard.body.push("The Unit Reloads/Recharges its Weapons Systems");
-            unit.token.set("tint_color","transparent");
-            unit.firepower = Math.min(unit.firepower +2,unit.firepowerMax);
-            AttributeSet(unit.charID,"firepower",unit.firepower);
+            let success = false;
+            let rolls = [];
+            let target = parseInt(unit.damage);
+            for (let i=0;i<unit.defence;i++) {
+                let roll = randomInteger(12);
+                rolls.push(roll);
+                if (roll > target) {
+                    success === true
+                }
+            }
+            rolls.sort((a,b) =>  b-a);
+            let tip = "Rolls: " + rolls + " vs. >" + target;
+            tip = '[🎲](#" class="showtip" title="' + tip + ')';
+            if (success === true) {
+                outputCard.body.push("The Unit Reloads/Recharges its Weapons Systems");
+                unit.token.set("tint_color","transparent");
+                unit.firepower = Math.min(unit.firepower +2,unit.firepowerMax);
+                AttributeSet(unit.charID,"firepower",unit.firepower);
+            } else {
+                outputCard.body.push("The Unit was unable to fully Reload/Recharge this action");
+            }
         }
         if (abil === "Countermeasures") {
             outputCard.body.push("The Unit Deploys Countermeasures");
