@@ -142,6 +142,7 @@ const CC = (() => {
         "spotting": "status_red",
         "camo": "status_ninja-mask", 
         "fullstrike": "status_lightning-helix",
+        "counter": "status_overdrive",
     }
 
 
@@ -1360,7 +1361,8 @@ const CC = (() => {
     const NextTurn = () => {
         let turn = state.Hardwar.turn;
         turn++;
-        //reset unit activations, clear alert
+        //reset unit activations, clear various status markers
+        let toClear = ["alert","digin","spotting","counter"];
         _.each(UnitArray,unit => {
             let actions = 2; // ? adjust
             unit.token.set({
@@ -1369,9 +1371,11 @@ const CC = (() => {
             })
             unit.token.set(SM.alert,false);   
             unit.order = "";
-
+            _.each(toClear,marker => {
+                unit.token.set(SM[marker],false);
+            })
         })
-        //remove markers
+        //remove ranged in markers
         let rangedInMarkers = state.Hardwar.rangedIn;
         for (let i=0;i<2;i++) {
             let markers = rangedInMarkers[i];
@@ -1928,7 +1932,22 @@ log(result)
             unit.firepower = Math.min(unit.firepower +2,unit.firepowerMax);
             AttributeSet(unit.charID,"firepower",unit.firepower);
         }
-
+        if (abil === "Countermeasures") {
+            outputCard.body.push("The Unit Deploys Countermeasures");
+            outputCard.body.push("Any Nearby Artillery Markers are Removed");
+            outputCard.body.push("The Unit Cannot be Spotted this Turn");
+            unit.token.set(SM.counter,true);
+            let other = (unit.player === 0) ? 1:0
+            for (let i=0;i<state.Hardwar.rangedIn[other];i++) {
+                let marker = state.Hardwar.rangedIn[other][i];
+                let d = HexMap[marker.hexLabel].cube.distance(HexMap[unit.hexLabel].cube);
+                if (d < 2) {
+                    marker.token.remove();
+                    delete UnitArray[markerID];
+                    state.Hardwar.rangedIn[other].splice(i,1);
+                }
+            }
+        }
 
 
 
