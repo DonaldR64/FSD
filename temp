@@ -12,7 +12,7 @@ const CloseCombat = (msg) => {
         outputCard.body.push("Defender was Deactivated and so Destroyed");
         defenderStatus = "Destroyed";
     }
-    if (defender.token.get(SM.immobile) === true && (defender.type === "Vehicle" || defender.type === "Aircraft")) {
+    if (defender.token.get(SM.immobilized) === true && (defender.type === "Vehicle" || defender.type === "Aircraft")) {
         outputCard.body.push("Defender " + defender.type + " was Immobilized and so Destroyed");
         defenderStatus = "Destroyed";
     }
@@ -78,13 +78,62 @@ const CloseCombat = (msg) => {
 
 
 const CombatRoll = (unit1,unit2,combatStatus) => {
-    let cr = 0;
-    let crTip = "Base: " + parseInt(unit1.class);
+    let cr = parseInt(unit1.class)
+    let crTip = "Base: " + cr + " C";
+    //charging or countercharging
+    if (combatStatus === "Attacker") {
+        cr +=1;
+        crTip += "<br>Charging +1 C"
+        //gravity assisted here
+        //
+        //movement
+        let move = HexMap[unit1.hexLabel].cube.distance(HexMap[unit1.startHexLabel].cube);
+        let moveC = Math.floor(move/4);
+        if (moveC > 0) {
+            cr += moveC;
+            crTip += "<br>" + move + " Hexes Movement +" + moveC + " C";
+        }
+        //LOS
+        let defLOS = LOS(unit2,unit1);
+        if (defLOS.los === false) {
+            cr++;
+            crTip += "<br>Outside Defenders LOS +1 C";
+        }
+        //walker or vehicle
+        if (unit1.type === "Walker" || unit1.type === "Vehicle") {
+            cr++;
+            crTip += "<br>Unit is a " + unit1.type + " +1 C";
+        }
+        if (unit1.abilities.includes("Ramming")) {
+            cr++;
+            crTip += "<br>Unit has a Ramming Attachment +1 C";
+        }
+    }
+    if (unit1.abilities.includes("Close Combat")) {
+        cr++;
+        crTip += "<br>Unit has a Close Combat Attachment +1 C";
+    }
+    if (unit2.abilities.includes("Shield")) {
+        cr--;
+        crTip += "<br>Opponent has a Shield -1 C";
+    }
+    if (unit1.type === "Aircraft") {
+        cr--;
+        crTip += "<br>Unit is an Aircraft -1 C";
+    }
+    if (unit1.type === "Walker" && unit1.token.get(SM.immobilized) === true) {
+        cr--;
+        crTip += "<br>Unit is an Immobilized Walker -1 C";
+    }
     
-
-
-
-
-
-
+    let info = {
+        cr: cr,
+        tip: crTip,
+    }
+    
+    return info;
 }
+
+
+
+
