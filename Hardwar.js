@@ -1910,8 +1910,18 @@ log(result)
         let unitID = Tag[1];
         let unit = UnitArray[unitID];
         let abil = Tag[2];
-        let targetID = Tag[3]; //used sometimes
         SetupCard(unit.name,abil,unit.faction);
+        let actions = parseInt(unit.token.get("bar1_value"));
+        if (actions === 0) {
+            outputCard.body.push("Unit has no further actions left");
+            PrintCard();
+            return;
+        }
+        actions--;
+        unit.token.set("bar1_value",actions);
+        currentUnitID = id;
+        unit.order = order;
+
 
         if (abil === "Full Strike") {
             let fired = (unit.token.get("tint_color") === "transparent" ) ? false:true;
