@@ -1845,6 +1845,14 @@ log(result)
         if (actions === 1 && order === "Aimed Shot") {
             errorMsg.push("Unit needs 2 orders to take an Aimed Shot");
         }
+        if (order === "Full Strike") {
+            let fired = (unit.token.get("tint_color") === "transparent" ) ? false:true;
+            if (fired === true) {
+                errorMsg.push("Unit has to Reload/Recharge first");
+            } else if (unit.firepower <= 1) {
+                errorMsg.push("Unit unable to Full Strike due to Damage");
+            }
+        }
 
 
         if (errorMsg.length > 0) {
@@ -1896,47 +1904,13 @@ log(result)
             let msg = unit.id + ";" + "Relay"
             PlaceTarget(msg);
         }
-
-        actions = Math.max(0,actions);
-        if (actions === 0 && order !== "Guard") {
-            unit.token.set("aura1_color","#000000");
+        if (order === "Full Strike") {
+            outputCard.body.push("F will be temporarily increased by 2");
+            outputCard.body.push("After which it will be reduced by 2");
+            outputCard.body.push("Until the unit Reloads");
+            unit.token.set(SM.fullstrike,true);   
         }
-        unit.token.set("bar1_value",actions);
-        PrintCard();
-    }
-
-    const SpecialAbilities = (msg) => {
-        let Tag = msg.content.split(";");
-        let unitID = Tag[1];
-        let unit = UnitArray[unitID];
-        let abil = Tag[2];
-        SetupCard(unit.name,abil,unit.faction);
-        let actions = parseInt(unit.token.get("bar1_value"));
-        if (actions === 0) {
-            outputCard.body.push("Unit has no further actions left");
-            PrintCard();
-            return;
-        }
-        actions--;
-        unit.token.set("bar1_value",actions);
-        currentUnitID = id;
-        unit.order = order;
-
-
-        if (abil === "Full Strike") {
-            let fired = (unit.token.get("tint_color") === "transparent" ) ? false:true;
-            if (fired === false && unit.firepower > 1) {
-                outputCard.body.push("F will be temporarily increased by 2");
-                outputCard.body.push("After which it will be reduced by 2");
-                outputCard.body.push("Until the unit Reloads");
-                unit.token.set(SM.fullstrike,true);
-            } else if (fired === true) {
-                outputCard.body.push("Unit has to Reload/Recharge first");
-            } else if (unit.firepower <= 1) {
-                outputCard.body.push("Unit unable to Full Strike due to Damage");
-            }
-        }
-        if (abil === "Reload Weapons") {
+        if (order === "Reload Weapons") {
             let success = false;
             let rolls = [];
             let target = parseInt(unit.damage);
@@ -1959,7 +1933,7 @@ log(result)
                 outputCard.body.push("The Unit was unable to fully Reload/Recharge this action");
             }
         }
-        if (abil === "Countermeasures") {
+        if (order === "Countermeasures") {
             outputCard.body.push("The Unit Deploys Countermeasures");
             outputCard.body.push("Any Nearby Artillery Markers are Removed");
             outputCard.body.push("The Unit Cannot be Spotted this Turn");
@@ -1976,17 +1950,13 @@ log(result)
             }
         }
 
-
-
-
-
-
-
-
+        actions = Math.max(0,actions);
+        if (actions === 0 && order !== "Guard") {
+            unit.token.set("aura1_color","#000000");
+        }
+        unit.token.set("bar1_value",actions);
         PrintCard();
-
     }
-
 
 
 
