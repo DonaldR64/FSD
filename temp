@@ -58,18 +58,14 @@ const CloseCombat = (msg) => {
     let acr = CombatRoll(attacker,defender,"Attacker");
     let attackCR = acr.cr;
     let atip = acr.tip;    
+    let attackRollsInit = acr.rolls;
+    let atarget = parseInt(defender.class) + parseInt(defender.armour);
 
     let dcr = CombatRoll(defender,attacker,defenderStatus);
     let defendCR = dcr.cr;
     let dtip = dcr.tip;
-
-
-
-
-
-
-
-
+    let defenceRollsInit = dcr.rolls;
+    let dtarget = parseInt(attacker.class) + parseInt(attacker.armour);
 
 
 }
@@ -125,10 +121,18 @@ const CombatRoll = (unit1,unit2,combatStatus) => {
         cr--;
         crTip += "<br>Unit is an Immobilized Walker -1 C";
     }
+
+    let rolls = [];
+    for (let i=0;i<cr;i++) {
+        let roll = randomInteger(12);
+        rolls.push(roll);
+    }
+    rolls.sort((a,b) => b - a);
     
     let info = {
         cr: cr,
         tip: crTip,
+        rolls: rolls,
     }
     
     return info;

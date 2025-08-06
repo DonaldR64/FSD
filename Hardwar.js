@@ -2099,7 +2099,7 @@ log(result)
 
 
 
-        CombatRolls();
+        AttackRolls();
         RangedOutput();
         if (currentUnitID === attacker.id) {
             defender.Damage();
@@ -2125,7 +2125,7 @@ log(result)
 
     }
 
-    const CombatRolls = () => {
+    const AttackRolls = () => {
 
         let attacker = combatArray.attacker;
         let defender = combatArray.defender;
