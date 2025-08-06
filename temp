@@ -61,7 +61,12 @@ const CloseCombat = (msg) => {
         results: {},
     }
 
-    CombatRolls();
+    //calculate CR and initial rolls for each
+    combatArray.results.attacker = CombatRolls(attacker,defender,"Attacker");
+    combatArray.results.defender = CombatRolls(defender,attacker,defenderStatus);
+    //explode, cancel and group rolls into hits
+    ProcessCombatRolls();
+    //output the results and apply damage, with resolution noted
     CCOutput();
 
     //move below into CCOutput
@@ -92,24 +97,13 @@ const CloseCombat = (msg) => {
 
 
 
-    let acr = CombatRoll(attacker,defender,"Attacker");
-    let attackCR = acr.cr;
-    let atip = acr.tip;    
-    let attackRollsInit = acr.rolls;
-    let atarget = parseInt(defender.class) + parseInt(defender.armour);
-
-    let dcr = CombatRoll(defender,attacker,defenderStatus);
-    let defendCR = dcr.cr;
-    let dtip = dcr.tip;
-    let defenceRollsInit = dcr.rolls;
-    let dtarget = parseInt(attacker.class) + parseInt(attacker.armour);
 
 
 
 
 
 
-const CombatRoll = (unit1,unit2,combatStatus) => {
+const CombatRolls = (unit1,unit2,combatStatus) => {
     let cr = parseInt(unit1.class)
     let crTip = "Base: " + cr + " C";
     //charging or countercharging
@@ -164,14 +158,14 @@ const CombatRoll = (unit1,unit2,combatStatus) => {
         rolls.push(roll);
     }
     rolls.sort((a,b) => b - a);
-    
-    let info = {
+
+    let results = {
         cr: cr,
         tip: crTip,
         rolls: rolls,
     }
     
-    return info;
+    return results;
 }
 
 

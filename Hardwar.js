@@ -75,9 +75,10 @@ const CC = (() => {
 
     let UnitArray = {};
     let PlayerInfo = {};
-    let currentPlayer = 0;
     let currentUnitID = "";
     let combatArray = {};
+    let stats = {};
+    let statKeys = ["armour","defence","mobility","firepower"];
 
     let outputCard = {title: "",subtitle: "",side: "",body: [],buttons: [],};
 
@@ -138,7 +139,7 @@ const CC = (() => {
         "digin": "status_brown", 
         "immobilized": "status_red",
         "disarmed": "status_purple",
-        "deactivated": "status_green",
+        "disabled": "status_green",
         "spotting": "status_red",
         "camo": "status_ninja-mask", 
         "fullstrike": "status_lightning-helix",
@@ -680,72 +681,51 @@ const CC = (() => {
 
         Damage () {
             let hits = combatArray.results.totalHits;
-            let statDamage = combatArray.statDamage;
-            if (hits === 0 && combatArray.statFlag === false) {return};
+            let statDamage = combatArray.statDamage; //will be the new stats
+            if (hits === 0) {return};
 
-            if (hits > 0) {
-                let hull = this.damage;
-                let newHull = Math.max(0,hull - hits);
-                if (newHull === 0 && hull > 0) {
-                    outputCard.body.push("Damage is extensive and no longer Repairable");
+            let hull = this.damage;
+            let newHull = Math.max(0,hull - hits);
+            if (newHull === 0 && hull > 0) {
+                outputCard.body.push("Damage is extensive and no longer Repairable");
+            }
+            this.damage = newHull;
+            AttributeSet(this.charID,"damage",newHull);
+            if (combatArray.weapon.abilities.includes("Ion")) {
+                let actions = parseInt(this.token.get("bar1_value"));
+                actions = Math.max(0,actions - 1);
+                this.token.set("bar1_value",actions);
+                if (actions === 0) {
+                    this.token.set("aura1_color","#000000");
                 }
-                this.damage = newHull;
-                AttributeSet(this.charID,"damage",newHull);
-                if (combatArray.weapon.abilities.includes("Ion")) {
-                    let actions = parseInt(this.token.get("bar1_value"));
-                    actions = Math.max(0,actions - 1);
-                    this.token.set("bar1_value",actions);
-                    if (actions === 0) {
-                        this.token.set("aura1_color","#000000");
-                    }
-                }
-                if (this.token.get(SM.camo) === true) {
-                    outputCard.body.push("Active Camo is now Disabled");
-                    this.token.set(SM.camo,false);
-                }
-            }    
-
-            if (combatArray.statFlag === true) {
-                let keys = Object.keys(statDamage);
-                _.each(keys,stat => {
-                    if (stat === "emp") {
-                        this.token.set("bar1_value",0);
-                        this.token.set("aura1_color","#000000");
-                        this.token.set(SM.spotting, false);
-                        this.order = "";
-//? any others to stop
-                    } else {
-                        let damage = statDamage[stat];
-                        if (damage > 0) {
-                            let num = parseInt(this[stat]);
-                            let max = parseInt(this[stat + "Max"]);
-                            if (isNaN(max)) {max = 0};
-                            num = Math.max(0,num - damage);
-                            this[stat] = num;
-                            AttributeSet(this.charID,stat,num);
-                            if (num === 0 && max > 0) {
-                                if (stat === "mobility") {
-                                    outputCard.body.push(this.name + ' is Immobilized');
-                                    this.token.set(SM.immobilized,true);
-                                }
-                                if (stat === "firepower") {
-                                    outputCard.body.push(this.name + " is Disarmed");
-                                    this.token.set(SM.disarmed,true);
-                                }
-                                if (stat === "armour") {
-                                    outputCard.body.push(this.name + ' is Destroyed!');
-                                    this.Destroyed();
-                                }
-                                if (stat === "defence") {
-                                    outputCard.body.push(this.name + ' is Deactivated');
-                                    this.token.set(SM.deactivated,true);
-                                }
-                            }
-                        }
-                    }
-                })
+            }
+            if (this.token.get(SM.camo) === true) {
+                outputCard.body.push("Active Camo is now Disabled");
+                this.token.set(SM.camo,false);
             }
 
+            _.each(statKeys,key => {
+                this[key] = statDamage[key];
+                AttributeSet(this.charID,key,statDamage[key]);
+                if (statDamage[key] === 0 && this[key + "Max"] > 0) {
+                    if (key === "mobility") {
+                        outputCard.body.push(this.name + ' is Immobilized');
+                        this.token.set(SM.immobilized,true);
+                    }
+                    if (key === "firepower") {
+                        outputCard.body.push(this.name + " is Disarmed");
+                        this.token.set(SM.disarmed,true);
+                    }
+                    if (key === "armour") {
+                        outputCard.body.push(this.name + ' is Destroyed!');
+                        this.Destroyed();
+                    }
+                    if (key === "defence") {
+                        outputCard.body.push(this.name + ' is Disabled');
+                        this.token.set(SM.disabled,true);
+                    }
+                }
+            })
 
 
 
@@ -2093,7 +2073,6 @@ log(result)
             totalHits: 0,
             ranged: true,
             results: {},
-            statsFlag: false,
         };
 
 
@@ -2115,25 +2094,34 @@ log(result)
             let spotter = UnitArray[losResult.spotterID];
             spotter.token.set(SM.spotting,false);
         }
-        if (unit.token.get(SM.fullstrike) === true) {
-            unit.token.set(SM.fullstrike,false);
-            unit.token.set("tint_color",red);
-            unit.firepower -= 2;
-            AttributeSet(unit.charID,"firepower",unit.firepower);
+        if (attacker.token.get(SM.fullstrike) === true) {
+            attacker.token.set(SM.fullstrike,false);
+            attacker.token.set("tint_color",red);
+            attacker.firepower -= 2;
+            AttributeSet(attacker.charID,"firepower",attacker.firepower);
         }
 
 
     }
 
+
     const AttackRolls = () => {
 
         let attacker = combatArray.attacker;
         let defender = combatArray.defender;
-        let weapon = combatArray.weapon;
-        let fp = combatArray.firepower;
-        let defence = combatArray.defence;
-        let target = combatArray.needed;
+        let weapon = combatArray.weapon || {abilities: " "};
         let rangedFlag = combatArray.ranged;
+        let attDice,defDice,attTarget,defTarget;
+        if (rangedFlag === true) {
+            attDice = combatArray.firepower;
+            defDice = combatArray.defence;
+            attTarget = combatArray.needed;
+        } else {
+            attDice = combatArray.attCR;
+            defDice = combatArray.defCR;
+            attTarget = parseInt(defender.class) + parseInt(defender.armour);
+            defTarget = parseInt(attacker.class) + parseInt(attacker.armour);
+        }
 
         let aTip = "";
         let dTip = "";
@@ -2141,18 +2129,18 @@ log(result)
         let attackRolls = [];
         let defenceRolls = [];
 
-        for (let i=0;i<fp;i++) {
+        for (let i=0;i<attDice;i++) {
             roll = randomInteger(12);
             attackRolls.push(roll);
         }
-        for (let i=0;i<defence;i++) {
+        for (let i=0;i<defDice;i++) {
             roll = randomInteger(12);
             defenceRolls.push(roll);
         }
         attackRolls.sort();
         defenceRolls.sort();
 
-        if (weapon.abilities.includes("Dual")) {
+        if (weapon.abilities.includes("Dual") && rangedFlag === true) {
             if (attackRolls[0] < 7) {
                 aTip += "<br>Dual: " + attackRolls[0];
                 attackRolls[0] = randomInteger(12);
@@ -2191,8 +2179,6 @@ log(result)
         let explodingDefenceRolls = []; //output
         let cancelledRolls = []; //used for output
 
-
-
         //cancel out any augments before exploding - only done on initial rolls
         let a12count = attackRolls.filter(num => num === 12).length;
         let d12count = defenceRolls.filter(num => num === 12).length;
@@ -2213,7 +2199,7 @@ log(result)
         a12count -= min;
         d12count -= min;
         
-        if (weapon.abilities.includes("Laser")) {
+        if (weapon.abilities.includes("Laser") && rangedFlag === true) {
             aTip += "<br>Laser: Augments on 11 or 12";
             a11count = attackRolls.filter(num => num === 11).length;
             d11count = defenceRolls.filter(num => num === 11).length
@@ -2259,20 +2245,49 @@ log(result)
         explodingDefenceRolls.sort((a,b) => b-a);
 
         //cancel out rolls now
+        let finalDefenceRolls = [];
         _.each(defenceRolls,roll => {
             let pos = attackRolls.indexOf(roll);
             if (pos > -1) {
                 attackRolls.splice(pos,1);
                 cancelledRolls.push(roll)
+            } else {
+                finalDefenceRolls.push(roll);
             }
         })
-
-        let groups = [];
-        let unassignedRolls = [];
         attackRolls.sort((a,b) => b - a); //sort highest to lowest for this
+        defenceRolls = DeepCopy(finalDefenceRolls).sort((a,b) => b-a);
         cancelledRolls.sort();
 
-        let finalAttackRolls = DeepCopy(attackRolls); //display again
+        //output shows original rolls
+        combatArray.output = {
+            aTip: aTip,
+            dTip: dTip,
+            originalAttackRolls: originalAttackRolls,
+            originalDefenceRolls: originalDefenceRolls,
+            explodingAttackRolls: explodingAttackRolls,
+            explodingDefenceRolls: explodingDefenceRolls,
+            cancelledRolls: cancelledRolls,
+            finalAttackRolls: DeepCopy(attackRolls),
+            finalDefenceRolls: finalDefenceRolls,
+        }
+
+        //divide into ranged - only attacker can hit, vs CC, where both can get hits
+
+        if (rangedFlag === true) {
+            combatArray.results = GroupAttackRolls(attackRolls,attTarget);
+        } else {
+            combatArray.attResults = GroupAttackRolls(attackRolls,attTarget);
+            combatArray.defResults = GroupAttackRolls(defenceRolls,defTarget);
+        }
+
+    }
+
+
+    const GroupAttackRolls = (attackRolls,target) => {
+        let groups = [];
+        let unassignedRolls = [];
+
         if (attackRolls.length > 0) {
             //assign criticals to their own groups initially
             do {
@@ -2320,7 +2335,6 @@ log(result)
             //critical groups now filled or no more unassignedRolls
             //if further unassignedRolls, assign these to groups
             //start with highest # as a group, searching for best # (exact or higher) or using lowest and re-searching
-log(unassignedRolls)
             if (unassignedRolls.length > 0) {
                 do {
                     roll = parseInt(unassignedRolls.pop());
@@ -2353,98 +2367,88 @@ log(unassignedRolls)
 
         }
 
-
-        let tip = "Attack Rolls<br>" + originalAttackRolls.toString();
-        if (explodingAttackRolls.length > 0) {
-            tip += " + " + explodingAttackRolls.toString();
-        }
-        tip += aTip;
-        tip += "<br>--------------------------";
-        tip += "<br>Defence Rolls<br>" + originalDefenceRolls.toString();
-        if (explodingDefenceRolls.length > 0) {
-            tip += " + " + explodingDefenceRolls.toString();
-        }
-        tip += dTip;
-        if (cancelledRolls.length > 0) {
-            tip += "<br>--------------------------";
-            tip += "<br>Cancelled Rolls: " + cancelledRolls.toString();
-        }
-        if (finalAttackRolls.length > 0) {
-            tip += "<br>--------------------------";
-            tip += "<br>Final Attack Rolls: " + finalAttackRolls.toString();
-        }
-        tip = '[🎲](#" class="showtip" title="' + tip + ')';
-
-
         let noncriticals = [];
         let criticals = [];
+        let weapon = combatArray.weapon || {abilities: " "};
         let railgunUsed = false;
-        let totalHits = 0;
-log(groups)
+
         _.each(groups,group => {
             let rolls = "[" + group.rolls.sort((a,b) => b-a).toString() + "]";
             if (group.needed === 0) {
-                totalHits++;
                 if (group.critical === true) {
                     criticals.push(rolls);
-                    StatDamage(defender,true); //place damage in combat array
                 } else {
                     if (weapon.abilities.includes("Railgun") && railgunUsed === false) {
                         criticals.push("Railgun - " + rolls);
                         railgunUsed = true;
-                        StatDamage(defender,true);
                     } else {
                         noncriticals.push(rolls);
-                        StatDamage(defender,false);
                     }
                 }
             }
         })
 
-        if (weapon.abilities.includes("Plasma Accelerator") && noncriticals.length > 0) {
+        if (weapon.abilities.includes("Plasma Accelerator") && (criticals.length + noncriticals.length) > 0) {
             noncriticals.push("Plasma Accelerator - +1 Hit");
-            totalHits++
-            StatDamage(defender,false);
         }
 
-        if (weapon.abilities.includes("EMP") && totalHits > 0) {
-            totalHits = 1;
+        if (weapon.abilities.includes("EMP") && (criticals.length + noncriticals.length) > 0) {
+            noncriticals = ["EMP - 1 Hit" + attackRolls.toString()];
+            criticals = [];
         }
 
-
-
-
-        combatArray.results = {
-            hitTip: tip,
-            cancelledRolls: cancelledRolls.length,
+        results = {
             criticals: criticals,
             noncriticals: noncriticals,
-            totalHits: totalHits,
-            finalAttackRolls: finalAttackRolls.length,
         }
+        return results;
     }
 
+
+
+
+
     const RangedOutput = () => {
-        let results = combatArray.results;
-        let noncriticals = results.noncriticals;
-        let criticals = results.criticals;
-        let cancelledRolls = results.cancelledRolls;
-        let finalAttackRolls = results.finalAttackRolls;
-        let totalHits = results.totalHits;
+        //build dice roll tip output
+        let tip = "Attack Rolls<br>" + combatArray.output.originalAttackRolls.toString();
+        if (combatArray.output.explodingAttackRolls.length > 0) {
+            tip += " + " + combatArray.output.explodingAttackRolls.toString();
+        }
+        tip += combatArray.output.aTip;
+        tip += "<br>--------------------------";
+        tip += "<br>Defence Rolls<br>" + combatArray.output.originalDefenceRolls.toString();
+        if (combatArray.output.explodingDefenceRolls.length > 0) {
+            tip += " + " + combatArray.output.explodingDefenceRolls.toString();
+        }
+        tip += combatArray.output.dTip;
+        if (combatArray.output.cancelledRolls.length > 0) {
+            tip += "<br>--------------------------";
+            tip += "<br>Cancelled Rolls: " + combatArray.output.cancelledRolls.toString();
+        }
+        if (combatArray.output.finalAttackRolls.length > 0) {
+            tip += "<br>--------------------------";
+            tip += "<br>Final Attack Rolls: " + combatArray.output.finalAttackRolls.toString();
+        }
+        tip = '[🎲](#" class="showtip" title="' + tip + ')';
+        outputCard.body.push(tip + " " + "[U]Results[/u]");
+
+        let noncriticals = combatArray.results.noncriticals;
+        let criticals = combatArray.results.criticals;
+        let totalHits = noncriticals.length + criticals.length;
         let weapon = combatArray.weapon;
         let s;
 
-        outputCard.body.push("[U]" + results.hitTip + " Results[/u]");
         if (totalHits > 0) {
-            if (cancelledRolls > 0) {
-                s = (cancelledRolls === 1) ? "":"s";
-                outputCard.body.push("Active Defences Defeated " + cancelledRolls + " Attack" + s)
+            if (combatArray.output.cancelledRolls.length > 0) {
+                s = (combatArray.output.cancelledRolls.length === 1) ? "":"s";
+                outputCard.body.push("Active Defences Defeated " + combatArray.output.cancelledRolls.length + " Attack" + s)
             }
             if (weapon.abilities.includes("EMP")) {
                 outputCard.body.push("No Damage is Done");
                 outputCard.body.push("But the Target loses all Actions");
                 outputCard.body.push("And any ongoing abilities such as Guard or Spotting");
-                combatArray.statDamage = {mobility: 0,firepower: 0,armour: 0, defence: 0, emp: 1};
+//apply
+
             } else {
                 if (criticals.length > 0) {
                     s = (criticals.length > 1) ? "s":"";
@@ -2459,29 +2463,36 @@ log(groups)
                 outputCard.body.push("Total: " + totalHits + " Hull Damage");
                 if (weapon.abilities.includes("Ion")) {
                     outputCard.body.push("The Target also loses 1 Action if it has any");
+//apply
                 }
-            }
-            if (combatArray.statFlag === true) {
                 outputCard.body.push("[hr]");
                 outputCard.body.push("[U]Stat Damage[/u]");
-                let keys = Object.keys(combatArray.statDamage);
-                _.each(keys,key => {
-                    let damage = combatArray.statDamage[key];
+                StatDamage(combatArray.defender,criticals.length,noncriticals.length);
+                _.each(statKeys,key => {
+                    let damage = combatArray.defender[key] - stats[key];
                     if (damage > 0) {
                         let name = key.charAt(0).toUpperCase() + key.slice(1);
                         outputCard.body.push(name + ": " + damage);
                     }
                 })
+                combatArray.statDamage = stats;
+
+
+
+
             }
 
 
+
+
+
         } else {
-                if (finalAttackRolls === 0) {
+                if (combatArray.output.finalAttackRolls === 0) {
                     outputCard.body.push("All Attacks Defeated by Active Defences");
                 } else {
-                    if (cancelledRolls > 0) {
-                        s = (cancelledRolls.length === 1) ? "":"s";
-                        outputCard.body.push("Active Defences Defeated " + cancelledRolls + " Attack" + s)
+                    if (combatArray.output.cancelledRolls > 0) {
+                        s = (combatArray.output.cancelledRolls.length === 1) ? "":"s";
+                        outputCard.body.push("Active Defences Defeated " + combatArray.output.cancelledRolls + " Attack" + s)
                         outputCard.body.push("The Remainder Missed");
                     } else {
                         outputCard.body.push("All Attacks Missed");
@@ -2503,33 +2514,53 @@ log(groups)
         return sum;
     }
 
-    const StatDamage = (defender,critical) => {
-        let highestStat;
-        let lowestStat;
-        let highest = 0
-        let lowest = Infinity
-        let names = ["armour","defence","mobility","firepower"];
-        _.each(names,name => {
-            if (defender[name] > highest) {
-                highest = defender[name];
-                highestStat = name;
-            }
-            if (defender[name] < lowest) {
-                lowest = defender[name];
-                lowestStat = name;
-            }
-        })        
-        let statDamage = combatArray.statDamage || {mobility: 0,firepower: 0,armour: 0, defence: 0};
-        if (critical === true) {
-            statDamage[lowestStat]++;
-        } else {
-            statDamage[highestStat]++;
+    const StatDamage = (unit,criticals,noncriticals) => {
+        stats = {
+            armour: unit.armour,
+            defence: unit.defence,
+            mobility: unit.mobility,
+            firepower: unit.firepower,
         }
-        combatArray.statDamage = statDamage;
-        combatArray.statFlag = true;
+    log("Initial")
+    log(stats)
+    log("Criticals")
+        for (let i=0;i<criticals;i++) {
+            LowestStat();
+        }
+    log("NonCriticals")
+        for (let i=0;i<noncriticals;i++) {
+            HighestStat();
+        }
+    log("End")
+    log(stats)
     }
 
-
+    const HighestStat = () => {
+        let highestStat;
+        let highest = 0;
+        _.each(statKeys,key => {
+            if (stats[key] > highest && stats[key] > 0) {
+                highest = stats[key];
+                highestStat = key;
+            }
+        })     
+        if (highestStat) {
+            stats[highestStat] = Math.max(0,stats[highestStat] - 1);
+        }
+    }
+    const LowestStat = () => {
+        let lowestStat;
+        let lowest = Infinity;
+        _.each(statKeys,key => {
+            if (stats[key] < lowest && stats[key] > 0) {
+                lowest = stats[key];
+                lowestStat = key;
+            }
+        })     
+        if (lowestStat) {
+            stats[lowestStat] = Math.max(0,stats[lowestStat] - 1);
+        }
+    }
 
 
 
