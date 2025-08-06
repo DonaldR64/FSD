@@ -5,9 +5,20 @@ const CloseCombat = (msg) => {
     let attacker = UnitArray[attackerID];
     let defender = UnitArray[defenderID];
     let defenderStatus = "Passive";
-    
+    SetupCard("Close Combat","",attacker.faction);
 
-    if (defender.token.get())
+    if (defender.token.get(SM.deactived) === true) {
+        outputCard.body.push("Defender was Deactivated and so Destroyed");
+        defenderStatus = "Destroyed";
+    }
+    if (defender.token.get(SM.immobile) === true && (defender.type === "Vehicle" || defender.type === "Aircraft")) {
+        outputCard.body.push("Defender " + defender.type + " was Immobilized and so Destroyed");
+        defenderStatus = "Destroyed";
+    }
+
+    //aircraft charging
+
+    
 
 
 
