@@ -1594,25 +1594,15 @@ const CC = (() => {
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
         let distance = shooterHex.cube.distance(targetHex.cube);
-        let angle = TargetAngle(shooter,target);
         let spotterID = "";
-        let aov = 180;
-
-        let aof = 180;
-        if (shooter.type === "Air" && shooter.abilities.includes("Fixed Wing")) {
-            aof = 90;
-            aov = 360;
-        }
-        if (shooter.abilities.includes("Alert") || shooter.token.get(SM.alert) === true) {
-            aov = 360;
-        }
-
-
-        if (angle > aov/2 && angle < (360-(aov/2))) {
-            losReason = "Out of Arc of Vision";
+        //AOV and AOF angles
+        let AOV = AOV(shooter,target);
+        let AOF = AOF(shooter,target);
+        if (AOV === false) {
             los = false;
-        }
-        if (angle > aof/2 && angle < (360-(aof/2))) {
+            losReason = "Out of Arc of Vision";
+        }  
+        if (AOF === false) {
             lof = false;
         }
 
@@ -2117,21 +2107,23 @@ log(result)
         let defender = combatArray.defender;
         let weapon = combatArray.weapon || {abilities: " "};
         let rangedFlag = combatArray.ranged;
-        let attDice,defDice,attTarget,defTarget;
+        let attDice,defDice,attTarget,defTarget,roll,aTip,dTip;
+
         if (rangedFlag === true) {
             attDice = combatArray.firepower;
             defDice = combatArray.defence;
             attTarget = combatArray.needed;
+            aTip = "";
+            dTip = "";
         } else {
-            attDice = combatArray.attCR;
-            defDice = combatArray.defCR;
+            attDice = combatArray.attCRResults.cr;
+            defDice = combatArray.defCRResults.cr;
             attTarget = parseInt(defender.class) + parseInt(defender.armour);
+            aTip = combatArray.attCRResults.tip;
+            dTip = combatArray.defCRResults.tip;
             defTarget = parseInt(attacker.class) + parseInt(attacker.armour);
         }
 
-        let aTip = "";
-        let dTip = "";
-        let roll;
         let attackRolls = [];
         let defenceRolls = [];
 
@@ -2146,35 +2138,37 @@ log(result)
         attackRolls.sort();
         defenceRolls.sort();
 
-        if (weapon.abilities.includes("Dual") && rangedFlag === true) {
-            if (attackRolls[0] < 7) {
-                aTip += "<br>Dual: " + attackRolls[0];
-                attackRolls[0] = randomInteger(12);
-                aTip += "->" + attackRolls[0];
-                attackRolls.sort();
-            }
-        }
-        if (defender.abilities.includes("Point Defence") && rangedFlag === true) {
-            for (let i=0;i<defenceRolls.length;i++) {
-                let test = defenceRolls[i];
-                if (attackRolls.includes(test) === false) {
-                    dTip += "<br>Point Defence: " + test;
-                    defenceRolls[i] = randomInteger(12);
-                    dTip += "->" + defenceRolls[i];
-                    defenceRolls.sort();
-                    break;
+        if (rangedFlag === true) {
+            if (weapon.abilities.includes("Dual")) {
+                if (attackRolls[0] < 7) {
+                    aTip += "<br>Dual: " + attackRolls[0];
+                    attackRolls[0] = randomInteger(12);
+                    aTip += "->" + attackRolls[0];
+                    attackRolls.sort();
                 }
             }
-        }
-        if (attacker.abilities.includes("Assisted Targetting") && rangedFlag === true) {
-            for (let i=0;i<attackRolls.length;i++) {
-                let test = attackRolls[i];
-                if (defenceRolls.includes(test) === true) {
-                    aTip += "<br>Assisted Targetting: " + test;
-                    attackRolls[i] = randomInteger(12);
-                    aTip += "->" + attackRolls[i];
-                    attackRolls.sort();
-                    break;
+            if (defender.abilities.includes("Point Defence")) {
+                for (let i=0;i<defenceRolls.length;i++) {
+                    let test = defenceRolls[i];
+                    if (attackRolls.includes(test) === false) {
+                        dTip += "<br>Point Defence: " + test;
+                        defenceRolls[i] = randomInteger(12);
+                        dTip += "->" + defenceRolls[i];
+                        defenceRolls.sort();
+                        break;
+                    }
+                }
+            }
+            if (attacker.abilities.includes("Assisted Targetting")) {
+                for (let i=0;i<attackRolls.length;i++) {
+                    let test = attackRolls[i];
+                    if (defenceRolls.includes(test) === true) {
+                        aTip += "<br>Assisted Targetting: " + test;
+                        attackRolls[i] = randomInteger(12);
+                        aTip += "->" + attackRolls[i];
+                        attackRolls.sort();
+                        break;
+                    }
                 }
             }
         }
@@ -2508,6 +2502,194 @@ log(result)
     }
 
 
+const CloseCombat = (msg) => {
+    let Tag = msg.content.split(";");
+    let attackerID = Tag[1];
+    let defenderID = Tag[2];
+    let attacker = UnitArray[attackerID];
+    let defender = UnitArray[defenderID];
+    let distance = HexMap[attacker.hexLabel].cube.distance(HexMap[defender.hexLabel].cube);
+    if (distance > 1) {
+        sendChat("","Not in Base to Base Contact");
+        return;
+    }
+
+
+    let defenderStatus = "Passive";
+    let defenderText = "Defender is a PASSIVE Defender";
+    SetupCard("Close Combat","",attacker.faction);
+
+    if (defender.token.get(SM.disabled) === true) {
+        outputCard.body.push("Defender was Deactivated and so Destroyed");
+        defenderStatus = "Destroyed";
+    }
+    if (defender.token.get(SM.immobilized) === true && (defender.type === "Vehicle" || defender.type === "Aircraft")) {
+        outputCard.body.push("Defender " + defender.type + " was Immobilized and so Destroyed");
+        defenderStatus = "Destroyed";
+    }
+
+
+    if (defenderStatus === "Destroyed") {
+        PrintCard();
+        defender.Destroyed();
+        return;
+    }
+
+
+    //aircraft charging
+
+
+
+
+
+
+
+    if (defender.token.get("aura1_color") === "#800080") {
+        //is on guard
+        defenderStatus = "Active";
+        defenderText = "Defender is on Guard and is an ACTIVE Defender"
+        if (defender.hexLabel !== defender.startHexLabel) {
+            //defender countercharged
+            defenderStatus = "Attacker";
+            defenderText = "Defender Countercharges and is treated as an Attacker as well";
+        }
+        defender.token.set("aura1_color") === "#000000";
+    } else {
+        let defActions = parseInt(defender.token.get("bar1_value"));
+        if (defActions > 0) {
+            defenderText = "Defender Spends an Action to be ACTIVE Defender";
+            defender.token.set("bar1_value",defActions - 1);
+            defenderStatus = "Active";
+        }
+    }
+    outputCard.body.push(defenderText);
+    outputCard.body.push("[hr]");
+
+    combatArray = {
+        attacker: attacker,
+        defender: defender,
+        defenderStatus: defenderStatus,
+        results: {},
+    }
+
+    //calculate CR. Returns CR and tips - tips pulled out in output
+    combatArray.attCRResults = CR(attacker,defender,"Attacker");
+    combatArray.defCRResults = CR(defender,attacker,defenderStatus);
+    AttackRolls();
+    CCOutput();
+
+
+    PrintCard();
+
+
+}
+
+
+const CCOutput = () => {
+    log(combatArray.attCRResults);
+    log(combatArray.defCRResults);
+    log(combatArray.output);
+    log(combatArray.results);
+
+}
+
+
+
+
+const CR = (unit1,unit2,combatStatus) => {
+    let cr = parseInt(unit1.class)
+    let crTip = "Base: " + cr + " C";
+    //charging or countercharging
+    if (combatStatus === "Attacker") {
+        cr +=1;
+        crTip += "<br>Charging +1 C"
+        //gravity assisted here
+        //
+        //movement
+        let move = HexMap[unit1.hexLabel].cube.distance(HexMap[unit1.startHexLabel].cube);
+        let moveC = Math.floor(move/4);
+        if (moveC > 0) {
+            cr += moveC;
+            crTip += "<br>" + move + " Hexes Movement +" + moveC + " C";
+        }
+        //In AOV?
+        if (AOV(unit2,unit1) === false) {
+            cr++;
+            crTip += "<br>Outside Defenders AOV +1 C";
+        }
+        //walker or vehicle
+        if (unit1.type === "Walker" || unit1.type === "Vehicle") {
+            cr++;
+            crTip += "<br>Unit is a " + unit1.type + " +1 C";
+        }
+        if (unit1.abilities.includes("Ramming")) {
+            cr++;
+            crTip += "<br>Unit has a Ramming Attachment +1 C";
+        }
+    }
+    if (unit1.abilities.includes("Close Combat")) {
+        cr++;
+        crTip += "<br>Unit has a Close Combat Attachment +1 C";
+    }
+    if (unit2.abilities.includes("Shield")) {
+        cr--;
+        crTip += "<br>Opponent has a Shield -1 C";
+    }
+    if (unit1.type === "Aircraft") {
+        cr--;
+        crTip += "<br>Unit is an Aircraft -1 C";
+    }
+    if (unit1.type === "Walker" && unit1.token.get(SM.immobilized) === true) {
+        cr--;
+        crTip += "<br>Unit is an Immobilized Walker -1 C";
+    }
+
+
+
+    let results = {
+        cr: cr,
+        tip: crTip,
+    }
+    
+    return results;
+}
+
+
+
+    const AOV = (subject,target) => {       
+        let result = false;
+        let angle = TargetAngle(subject,target);
+        let halfaov = 90;
+        if (subject.type === "Air" && subject.abilities.includes("Fixed Wing")) {
+            halfaov = 180;
+        }
+        if (subject.abilities.includes("Alert") || subject.token.get(SM.alert) === true) {
+            halfaov = 180;
+        }
+        if (angle <= halfaov || angle >= (360 - halfaov)) {
+            result = true;
+        }
+        return result;
+    }
+    const AOF = (subject,target) => {       
+        let result = false;
+        let angle = TargetAngle(subject,target);
+        let halfaof = 90;
+        if (subject.type === "Air" && subject.abilities.includes("Fixed Wing")) {
+            halfaof= 45;
+        }
+        if (angle <= halfaof || angle >= (360 - halfaof)) {
+            result = true;
+        }
+        return result;
+    }
+
+
+
+
+
+
+
 
 
 
@@ -2688,6 +2870,9 @@ log(result)
                 break;
             case '!Mark':
                 Mark(msg);
+                break;
+            case '!CloseCombat':
+                CloseCombat(msg);
                 break;
 
         }

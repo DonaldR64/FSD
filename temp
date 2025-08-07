@@ -61,12 +61,10 @@ const CloseCombat = (msg) => {
         results: {},
     }
 
-    //calculate CR and initial rolls for each
-    combatArray.results.attacker = CombatRolls(attacker,defender,"Attacker");
-    combatArray.results.defender = CombatRolls(defender,attacker,defenderStatus);
-    //explode, cancel and group rolls into hits
-    ProcessCombatRolls();
-    //output the results and apply damage, with resolution noted
+    //calculate CR. Returns CR and tips - tips pulled out in output
+    combatArray.attCRResults = CR(attacker,defender,"Attacker");
+    combatArray.defCRResults = CR(defender,attacker,defenderStatus);
+    AttackRolls();
     CCOutput();
 
     //move below into CCOutput
@@ -95,79 +93,8 @@ const CloseCombat = (msg) => {
 }
 
 
+const CCOutput = () => {
+    log(combatArray)
 
 
-
-
-
-
-
-
-const CombatRolls = (unit1,unit2,combatStatus) => {
-    let cr = parseInt(unit1.class)
-    let crTip = "Base: " + cr + " C";
-    //charging or countercharging
-    if (combatStatus === "Attacker") {
-        cr +=1;
-        crTip += "<br>Charging +1 C"
-        //gravity assisted here
-        //
-        //movement
-        let move = HexMap[unit1.hexLabel].cube.distance(HexMap[unit1.startHexLabel].cube);
-        let moveC = Math.floor(move/4);
-        if (moveC > 0) {
-            cr += moveC;
-            crTip += "<br>" + move + " Hexes Movement +" + moveC + " C";
-        }
-        //LOS
-        let defLOS = LOS(unit2,unit1);
-        if (defLOS.los === false) {
-            cr++;
-            crTip += "<br>Outside Defenders LOS +1 C";
-        }
-        //walker or vehicle
-        if (unit1.type === "Walker" || unit1.type === "Vehicle") {
-            cr++;
-            crTip += "<br>Unit is a " + unit1.type + " +1 C";
-        }
-        if (unit1.abilities.includes("Ramming")) {
-            cr++;
-            crTip += "<br>Unit has a Ramming Attachment +1 C";
-        }
-    }
-    if (unit1.abilities.includes("Close Combat")) {
-        cr++;
-        crTip += "<br>Unit has a Close Combat Attachment +1 C";
-    }
-    if (unit2.abilities.includes("Shield")) {
-        cr--;
-        crTip += "<br>Opponent has a Shield -1 C";
-    }
-    if (unit1.type === "Aircraft") {
-        cr--;
-        crTip += "<br>Unit is an Aircraft -1 C";
-    }
-    if (unit1.type === "Walker" && unit1.token.get(SM.immobilized) === true) {
-        cr--;
-        crTip += "<br>Unit is an Immobilized Walker -1 C";
-    }
-
-    let rolls = [];
-    for (let i=0;i<cr;i++) {
-        let roll = randomInteger(12);
-        rolls.push(roll);
-    }
-    rolls.sort((a,b) => b - a);
-
-    let results = {
-        cr: cr,
-        tip: crTip,
-        rolls: rolls,
-    }
-    
-    return results;
 }
-
-
-
-
