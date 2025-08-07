@@ -1608,13 +1608,14 @@ const CC = (() => {
         let distance = shooterHex.cube.distance(targetHex.cube);
         let spotterID = "";
         //AOV and AOF angles
-        let AOV = AOV(shooter,target);
-        let AOF = AOF(shooter,target);
-        if (AOV === false) {
+        let aov = AOV(shooter,target);
+        let aof = AOF(shooter,target);
+
+        if (aov === false) {
             los = false;
             losReason = "Out of Arc of Vision";
         }  
-        if (AOF === false) {
+        if (aof === false) {
             lof = false;
         }
 
@@ -1803,7 +1804,6 @@ const CC = (() => {
             losBlock: losBlock,
             lof: lof,
             distance: distance,
-            angle: angle,
             cover: cover,
             water: water,
             indirect: indirect,
@@ -2882,6 +2882,7 @@ const CR = (unit1,unit2,combatStatus) => {
         }
         return result;
     }
+
     const AOF = (subject,target) => {       
         let result = false;
         let angle = TargetAngle(subject,target);
