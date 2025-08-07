@@ -2648,6 +2648,9 @@ const CR = (unit1,unit2,combatStatus) => {
     }
 
     let target = parseInt(unit2.class) + parseInt(unit2.armour);
+    crTip += "<br>Target: " + target;
+    crTip += "<br>[Class " + unit2.class + " + Armour " + unit2.armour + "]"; 
+
 
     let results = {
         cr: cr,
