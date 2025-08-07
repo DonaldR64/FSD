@@ -681,12 +681,13 @@ const CC = (() => {
 
 
         Damage () {
-            let hits = combatArray.results.totalHits;
+            let hits = parseInt(combatArray.results.totalHits);
             let result = false;
             let statDamage = combatArray.statDamage; //will be the new stats
+
             if (hits === 0) {return result};
 
-            let hull = this.damage;
+            let hull = parseInt(this.damage);
             let newHull = Math.max(0,hull - hits);
             if (newHull === 0 && hull > 0) {
                 outputCard.body.push("Damage is extensive and no longer Repairable");
@@ -699,7 +700,7 @@ const CC = (() => {
             }
 
             _.each(statKeys,key => {
-                this[key] = statDamage[key];
+                this[key] = parseInt(statDamage[key]);
                 AttributeSet(this.charID,key,statDamage[key]);
                 if (statDamage[key] === 0 && this[key + "Max"] > 0) {
                     if (key === "mobility") {
@@ -2448,6 +2449,7 @@ log(result)
         let noncriticals = combatArray.results.noncriticals;
         let criticals = combatArray.results.criticals;
         let totalHits = noncriticals.length + criticals.length;
+        combatArray.results.totalHits = totalHits;
         let weapon = combatArray.weapon;
         let s;
 
@@ -2915,10 +2917,10 @@ const CR = (unit1,unit2,combatStatus) => {
 
     const StatDamage = (unit,criticals,noncriticals) => {
         stats = {
-            armour: unit.armour,
-            defence: unit.defence,
-            mobility: unit.mobility,
-            firepower: unit.firepower,
+            armour: parseInt(unit.armour) || 0,
+            defence: parseInt(unit.defence) || 0,
+            mobility: parseInt(unit.mobility) || 0,
+            firepower: parseInt(unit.firepower) || 0,
         }
     log("Initial")
     log(stats)
