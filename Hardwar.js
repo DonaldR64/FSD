@@ -692,14 +692,6 @@ const CC = (() => {
             }
             this.damage = newHull;
             AttributeSet(this.charID,"damage",newHull);
-            if (combatArray.weapon.abilities.includes("Ion")) {
-                let actions = parseInt(this.token.get("bar1_value"));
-                actions = Math.max(0,actions - 1);
-                this.token.set("bar1_value",actions);
-                if (actions === 0) {
-                    this.token.set("aura1_color","#000000");
-                }
-            }
             if (this.token.get(SM.camo) === true) {
                 outputCard.body.push("Active Camo is now Disabled");
                 this.token.set(SM.camo,false);
@@ -737,8 +729,19 @@ const CC = (() => {
 
         Destroyed () {
             //turn into a wreck if appropriate and place on map layer, update HexMap 
-
-
+            if (this.token) {
+                this.token.set({
+                    statusmarkers: "",
+                    layer: "map",
+                })
+                this.token.set("status_dead",true);
+///alter this to be more graphical later
+            }
+            let index = HexMap[this.hexLabel].tokenIDs.indexOf(this.id);
+            if (index > -1) {
+                HexMap[this.hexLabel].tokenIDs.splice(index,1); 
+            }
+            delete UnitArray[this.id];
         }
 
 
@@ -1619,13 +1622,13 @@ const CC = (() => {
 
         let shooterElevation = shooterHex.elevation;
         let targetElevation = targetHex.elevation;
-        if (shooter.type === "Air") {
+        if (shooter.type === "Aircraft") {
             shooterElevation = shooter.airheight;
         }
-        if (target.type === "Air") {
+        if (target.type === "Aircraft") {
             targetElevation = target.airheight;
         }
-        if (target.type === "Air" && weapon.abilities.includes("AA") === false) {
+        if (target.type === "Aircraft" && weapon.abilities.includes("AA") === false) {
             //add height to distance unless weapon has AA
             distance += Math.abs(targetElevation - shooterElevation);
         }
@@ -2651,7 +2654,8 @@ const CCOutput = () => {
             }
         })
         combatArray.statDamage = stats;
-        //apply damage
+        combatArray.results.totalHits = attHits;
+        combatArray.defender.Damage();
     } else {
         outputCard.body.push("No Hits were Scored");
     }
@@ -2689,7 +2693,8 @@ const CCOutput = () => {
             }
         })
         combatArray.statDamage = stats;
-        //apply damage
+        combatArray.results.totalHits = attHits;
+        combatArray.attacker.Damage();
     } else {
         outputCard.body.push("No Hits were Scored");
     }
@@ -2732,16 +2737,6 @@ const CCOutput = () => {
                 combatArray.attacker.airheight = 0;
             }
         }
-        if (combatArray.attacker.type === "Aircraft" && combatArray.defender === "Aircraft") {
-            if (defHits > attHits) {
-                outputCard.body.push(combatArray.attacker.name + " Is Immobilized and Crashing");
-                combatArray.attacker.token.set(SM.immobilized, true);
-            }
-            if (attHits > defHits) {
-                outputCard.body.push(combatArray.defender.name + " Is Immobilized and Crashing");
-                combatArray.defender.token.set(SM.immobilized, true);
-            }
-        }
     }
 
     //did either die?
@@ -2782,13 +2777,30 @@ const CR = (unit1,unit2,combatStatus) => {
     let cr = parseInt(unit1.class)
     let crTip = "Base: C " + cr;
     //charging or countercharging
+    let delta = 0;
     if (combatStatus === "Attacker") {
         cr +=1;
         crTip += "<br>Charging +1 C"
         //gravity assisted here
-        //
+        if (unit1.type === "Aircraft") {
+            let height1 = unit1.airheight;
+            let height2 = HexMap[unit2.hexLabel].elevation;
+            if (unit2.type === "Aircraft") {
+                height2 = unit2.airheight;
+            }
+            delta = height1 - height2;
+            if (delta > 0) {
+                cr++;
+                crTip += "<br>Jump Jet Assisted Charge +1 C";
+            }
+        }
+        if (unit1.abilities.includes("Jump Jets") && unit1.type === "Walker" && unit1.token.get("tint_color") === "transparent") {
+            cr++;
+            crTip += "<br>Jump Jet Assisted Charge +1 C";
+        }
+
         //movement
-        let move = HexMap[unit1.hexLabel].cube.distance(HexMap[unit1.startHexLabel].cube);
+        let move = HexMap[unit1.hexLabel].cube.distance(HexMap[unit1.startHexLabel].cube) + delta;
         let moveC = Math.floor(move/4);
         if (moveC > 0) {
             cr += moveC;
