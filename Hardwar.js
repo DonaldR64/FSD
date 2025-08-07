@@ -2720,6 +2720,29 @@ const CCOutput = () => {
         }
     }
 
+    if (combatArray.attacker && combatArray.defender) {
+        if (combatArray.attacker.type === "Aircraft" && combatArray.defender !== "Aircraft") {
+            if (defHits > attHits) {
+                outputCard.body.push(combatArray.attacker.name + " Crashes and is Destroyed");
+                combatArray.attacker.Destroyed();
+            } else {
+                outputCard.body.push(combatArray.attacker.name + " Is Immobilized and Landed");
+                combatArray.attacker.token.set(SM.immobilized, true);
+    //set height token
+                combatArray.attacker.airheight = 0;
+            }
+        }
+        if (combatArray.attacker.type === "Aircraft" && combatArray.defender === "Aircraft") {
+            if (defHits > attHits) {
+                outputCard.body.push(combatArray.attacker.name + " Is Immobilized and Crashing");
+                combatArray.attacker.token.set(SM.immobilized, true);
+            }
+            if (attHits > defHits) {
+                outputCard.body.push(combatArray.defender.name + " Is Immobilized and Crashing");
+                combatArray.defender.token.set(SM.immobilized, true);
+            }
+        }
+    }
 
     //did either die?
    if (!combatArray.attacker || !combatArray.defender) {   
@@ -2732,25 +2755,22 @@ const CCOutput = () => {
         }
         return;
     }
-    winner = false;
+    let text1;
+    let text2 = "Both Combatants pull back 1 Hex";
     if (attHits === defHits) {
-        outputCard.body.push("Combat is a Tie");
-        outputCard.body.push("Both Combatants pull back 1 Hex");
+        text1 = "Combat is a Tie";
     } else if (attHits > defHits) {
-        outputCard.body.push(combatArray.attacker.name + " Wins the Battle");
-        winner = true;
+        text1 = combatArray.attacker.name + " Wins the Battle";
+        if (combatArray.attacker.type !== "Aircraft") {
+            text2 = " and can choose to Pull Back 1 Hex, Push the Loser Back 1 Hex or remain in Close Combat";
+        }
     } else if (defHits > attHits) {
-        outputCard.body.push(combatArray.defender.name + " Wins the Battle");
-        winner = true;
+        text1 = combatArray.defender.name + " Wins the Battle";
+        if (combatArray.defender.type !== "Aircraft") {
+            text2 = " and can choose to Pull Back 1 Hex, Push the Loser Back 1 Hex or remain in Close Combat";
+        }
     }
-    if (winner === true) {
-        outputCard.body.push("The Winner can choose to Pull Back 1 Hex, Push the Loser Back 1 Hex or remain in Close Combat");
-    }
-
-
-
-
-
+    outputCard.body.push(text1 + text2);
 
 
 }
