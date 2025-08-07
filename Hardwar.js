@@ -2696,7 +2696,57 @@ const CCOutput = () => {
 
 
     //resolution
+    outputCard.body.push("[hr]");
+    outputCard.body.push("[U]Resolution[/u]")
+    if (combatArray.attacker) {
+        if (combatArray.attacker.token.get(SM.immobilized) === true && combatArray.attacker.type !== "Walker") {
+            outputCard.body.push(combatArray.attacker.name + " was Immobilized and Destroyed");
+            combatArray.attacker.Destroyed();
+        }
+        if (combatArray.attacker.token.get(SM.disabled) === true && combatArray.attacker.type !== "Troopers") {
+            outputCard.body.push(combatArray.attacker.name + " was Disabled and Destroyed");
+            combatArray.attacker.Destroyed();
+        }
+    }
+
+    if (combatArray.defender) {
+        if (combatArray.defender.token.get(SM.immobilized) === true && combatArray.defender.type !== "Walker") {
+            outputCard.body.push(combatArray.defender.name + " was Immobilized and Destroyed");
+            combatArray.defender.Destroyed();
+        }
+        if (combatArray.defender.token.get(SM.disabled) === true && combatArray.defender.type !== "Troopers") {
+            outputCard.body.push(combatArray.defender.name + " was Disabled and Destroyed");
+            combatArray.defender.Destroyed();
+        }
+    }
+
+
     //did either die?
+   if (!combatArray.attacker || !combatArray.defender) {   
+        if (!combatArray.attacker && !combatArray.defender) {
+            outputCard.body.push("Both Combatants Destroyed");
+        } else if (!combatArray.attacker) {
+            outputCard.body.push(combatArray.defender.name + " Wins the Combat");
+        } else if (!combatArray.defender) {
+            outputCard.body.push(combatArray.attacker.name + " Wins the Combat");
+        }
+        return;
+    }
+    winner = false;
+    if (attHits === defHits) {
+        outputCard.body.push("Combat is a Tie");
+        outputCard.body.push("Both Combatants pull back 1 Hex");
+    } else if (attHits > defHits) {
+        outputCard.body.push(combatArray.attacker.name + " Wins the Battle");
+        winner = true;
+    } else if (defHits > attHits) {
+        outputCard.body.push(combatArray.defender.name + " Wins the Battle");
+        winner = true;
+    }
+    if (winner === true) {
+        outputCard.body.push("The Winner can choose to Pull Back 1 Hex, Push the Loser Back 1 Hex or remain in Close Combat");
+    }
+
 
 
 
