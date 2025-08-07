@@ -644,7 +644,7 @@ const CC = (() => {
             let damage = parseInt(aa.damage) || (this.class * 2);
             this.damage = damage;
             this.targettingUnitID = "";
-            this.landed = false; //used by aircraft
+            this.airheight = 0; //used by aircraft, adjusted by Climb/Descend/Land
 
             let weapons = [];
 
@@ -1624,10 +1624,10 @@ const CC = (() => {
         let shooterElevation = shooterHex.elevation;
         let targetElevation = targetHex.elevation;
         if (shooter.type === "Air") {
-            shooterElevation = AirHeight(shooter);
+            shooterElevation = shooter.airheight;
         }
         if (target.type === "Air") {
-            targetElevation = AirHeight(target);
+            targetElevation = target.airheight;
         }
         if (target.type === "Air" && weapon.abilities.includes("AA") === false) {
             //add height to distance unless weapon has AA
@@ -1710,7 +1710,7 @@ const CC = (() => {
             }
         }
 
-        if (target.type !== "Aircraft" || target.landed === false) {
+        if (target.airheight === 0) {
             //target hexside
             let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
             let dir;
@@ -1813,6 +1813,8 @@ log(result)
 
         return result;
     }
+
+
 
 
     const Activate = (msg) => {
