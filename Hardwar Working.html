@@ -99,7 +99,6 @@
           <section class="header">
                 <h1><span name="attr_character_name"></span></h1>   
                 <h3><span>Class </span><span name="attr_class"></span> <span name="attr_type"></span></h3>
-                <h3>Damage: <span name="attr_damagepic"></span></h3>
           </section>
 
 
@@ -119,6 +118,8 @@
                 <h3><span name="attr_armpic"></span></h3>
                 <h3>Defence: </h3>                
                 <h3><span name="attr_defpic"></span></h3>
+                <h3><span name="attr_damagename"></span>: </h3>                
+                <h3><span name="attr_damagepic"></span></h3>
             </section>
 
         <section class="weap f-col">
@@ -216,8 +217,8 @@
     });
 
 
- on("change:attrs sheet:opened", function() { 
-        getAttrs(["mobility","mobility_max","firepower","firepower_max","armour","armour_max","defence","defence_max","damage","class"], function(values) {
+    on("change:attrs sheet:opened", function() { 
+        getAttrs(["mobility","mobility_max","firepower","firepower_max","armour","armour_max","defence","defence_max","damage","class","type"], function(values) {
             let mobility = parseInt(values.mobility);
             let mobilityMax = parseInt(values.mobility_max);
             let fp = parseInt(values.firepower);
@@ -227,7 +228,8 @@
             let defence = parseInt(values.defence);
             let defenceMax = parseInt(values.defence_max);
             let damage = parseInt(values.damage);
-            let damageMax = parseInt(values.class) * 2;
+            let type = values.type;
+            let damageName = (values.type === "Trooper") ? "Strength":"Hull";
 
             let mobpic = "";
             let fppic = "";
@@ -263,7 +265,7 @@
                     defpic += "○";
                 }
             }
-            for (let i=0;i<damageMax;i++) {
+            for (let i=0;i<12;i++) {
                 if (i<damage) {
                     damagepic += "◉";
                 } else {
@@ -271,16 +273,13 @@
                 }
             }
 
-
-
-
             setAttrs({
                 "mobpic": mobpic,
                 "fppic": fppic,
                 "armpic": armpic,
                 "defpic": defpic,
                 "damagepic": damagepic,
-
+                "damagename": damageName,
             });
         });    
     }); 
