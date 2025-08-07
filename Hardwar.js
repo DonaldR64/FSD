@@ -2734,7 +2734,7 @@ const CCOutput = () => {
         }
     }
 
-    if (attackerDestroyed === false && defenderDestroyed === FileSystemWritableFileStream) {
+    if (attackerDestroyed === false && defenderDestroyed === false) {
         if (combatArray.attacker.type === "Aircraft" && combatArray.defender !== "Aircraft") {
             if (defHits > attHits) {
                 outputCard.body.push(combatArray.attacker.name + " Crashes and is Destroyed");
@@ -2789,38 +2789,41 @@ const CR = (unit1,unit2,combatStatus) => {
     //charging or countercharging
     let delta = 0;
     if (combatStatus === "Attacker") {
-        cr +=1;
-        crTip += "<br>Charging +1 C"
-        //gravity assisted here
-        if (unit1.type === "Aircraft") {
-            let height1 = unit1.airheight;
-            let height2 = HexMap[unit2.hexLabel].elevation;
-            if (unit2.type === "Aircraft") {
-                height2 = unit2.airheight;
+        let move = HexMap[unit1.hexLabel].cube.distance(HexMap[unit1.startHexLabel].cube) + delta;
+        if (move > 0) {
+            cr +=1;
+            crTip += "<br>Charging +1 C"
+            //gravity assisted here
+            if (unit1.type === "Aircraft") {
+                let height1 = unit1.airheight;
+                let height2 = HexMap[unit2.hexLabel].elevation;
+                if (unit2.type === "Aircraft") {
+                    height2 = unit2.airheight;
+                }
+                delta = height1 - height2;
+                if (delta > 0) {
+                    cr++;
+                    crTip += "<br>Jump Jet Assisted Charge +1 C";
+                }
             }
-            delta = height1 - height2;
-            if (delta > 0) {
+            if (unit1.abilities.includes("Jump Jets") && unit1.type === "Walker" && unit1.token.get("tint_color") === "transparent") {
                 cr++;
                 crTip += "<br>Jump Jet Assisted Charge +1 C";
             }
-        }
-        if (unit1.abilities.includes("Jump Jets") && unit1.type === "Walker" && unit1.token.get("tint_color") === "transparent") {
-            cr++;
-            crTip += "<br>Jump Jet Assisted Charge +1 C";
+
+            //movement
+            let moveC = Math.floor(move/4);
+            if (moveC > 0) {
+                cr += moveC;
+                crTip += "<br>" + move + " Hexes Movement +" + moveC + " C";
+            }
+            //In AOV?
+            if (AOV(unit2,unit1) === false) {
+                cr++;
+                crTip += "<br>Outside Defenders AOV +1 C";
+            }
         }
 
-        //movement
-        let move = HexMap[unit1.hexLabel].cube.distance(HexMap[unit1.startHexLabel].cube) + delta;
-        let moveC = Math.floor(move/4);
-        if (moveC > 0) {
-            cr += moveC;
-            crTip += "<br>" + move + " Hexes Movement +" + moveC + " C";
-        }
-        //In AOV?
-        if (AOV(unit2,unit1) === false) {
-            cr++;
-            crTip += "<br>Outside Defenders AOV +1 C";
-        }
         //walker or vehicle
         if (unit1.type === "Walker" || unit1.type === "Vehicle") {
             cr++;
