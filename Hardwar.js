@@ -644,6 +644,7 @@ const CC = (() => {
             let damage = parseInt(aa.damage) || (this.class * 2);
             this.damage = damage;
             this.targettingUnitID = "";
+            this.landed = false; //used by aircraft
 
             let weapons = [];
 
@@ -1598,8 +1599,9 @@ const CC = (() => {
         let aov = 180;
 
         let aof = 180;
-        if (shooter.type === "Air") {
+        if (shooter.type === "Air" && shooter.abilities.includes("Fixed Wing")) {
             aof = 90;
+            aov = 360;
         }
         if (shooter.abilities.includes("Alert") || shooter.token.get(SM.alert) === true) {
             aov = 360;
@@ -1619,20 +1621,21 @@ const CC = (() => {
         let tH = target.type === "Walker" ? shooter.class/2:shooter.class/5;
         // ? crouching if used
 
+        let shooterElevation = shooterHex.elevation;
+        let targetElevation = targetHex.elevation;
+        if (shooter.type === "Air") {
+            shooterElevation = AirHeight(shooter);
+        }
         if (target.type === "Air") {
+            targetElevation = AirHeight(target);
+        }
+        if (target.type === "Air" && weapon.abilities.includes("AA") === false) {
             //add height to distance unless weapon has AA
-
-
-
+            distance += Math.abs(targetElevation - shooterElevation);
         }
 
-
-
-
-
-
-        let pt1 = new Point(0,shooterHex.elevation + sH);
-        let pt2 = new Point(distance,targetHex.elevation + tH);
+        let pt1 = new Point(0,shooterElevation + sH);
+        let pt2 = new Point(distance,targetElevation + tH);
 
         let interCubes = shooterHex.cube.linedraw(targetHex.cube);
 
@@ -1707,46 +1710,47 @@ const CC = (() => {
             }
         }
 
-
-        //target hexside
-        let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
-        let dir;
-        for (let i=0;i<6;i++) {
-            let d = HexInfo.directions[DIRECTIONS[i]];
-            if (delta.q === d.q && delta.r === d.r) {
-                dir = DIRECTIONS[i];
-                break;
-            }
-        }     
-        let edge = targetHex.edges[dir];
-        if (edge !== "Open") {
-            let terrain = EdgeInfo[edge];
-            if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
-                cover++;
-                if (cover > 5 && losBlock === "") {
-                    los = false;
-                    losReason = "Blocked by Cover at " + targetHex.label + " Edge";
-                    losBlock = label;
+        if (target.type !== "Aircraft" || target.landed === false) {
+            //target hexside
+            let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
+            let dir;
+            for (let i=0;i<6;i++) {
+                let d = HexInfo.directions[DIRECTIONS[i]];
+                if (delta.q === d.q && delta.r === d.r) {
+                    dir = DIRECTIONS[i];
+                    break;
+                }
+            }     
+            let edge = targetHex.edges[dir];
+            if (edge !== "Open") {
+                let terrain = EdgeInfo[edge];
+                if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
+                    cover++;
+                    if (cover > 5 && losBlock === "") {
+                        los = false;
+                        losReason = "Blocked by Cover at " + targetHex.label + " Edge";
+                        losBlock = label;
+                    }
                 }
             }
-        }
 
-        //target hex
-        if (targetHex.traits.includes("Foliage")) {cover++};
-        if (targetHex.traits.includes("Smoke")) {cover += 2};
-        if (targetHex.traits.includes("Open Structure") || targetHex.traits.includes("Solid")) {cover += 3};
+            //target hex
+            if (targetHex.traits.includes("Foliage")) {cover++};
+            if (targetHex.traits.includes("Smoke")) {cover += 2};
+            if (targetHex.traits.includes("Open Structure") || targetHex.traits.includes("Solid")) {cover += 3};
 
-        if (targetHex.traits.includes("Water")) {
-            //partially submerged or fully submerged
-            //partially = +1 cover 
-            //fully = +2 cover / depth - only for submersible units
-            //water will also have a depth, most units can't go in unless depth is 0
-            //pass back something also for things like exploding dice, flamethrowers, laser etc which have different effects
+            if (targetHex.traits.includes("Water")) {
+                //partially submerged or fully submerged
+                //partially = +1 cover 
+                //fully = +2 cover / depth - only for submersible units
+                //water will also have a depth, most units can't go in unless depth is 0
+                //pass back something also for things like exploding dice, flamethrowers, laser etc which have different effects
 
 
-        }
-        if (target.token.get(SM.digin) === true) {
-            cover += 3;
+            }
+            if (target.token.get(SM.digin) === true) {
+                cover += 3;
+            }
         }
 
         if (cover > 5 && losBlock === "") {
