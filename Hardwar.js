@@ -2255,8 +2255,9 @@ log(result)
                 finalDefenceRolls.push(roll);
             }
         })
+        finalDefenceRolls = finalDefenceRolls.sort((a,b) => b - a);
         attackRolls.sort((a,b) => b - a); //sort highest to lowest for this
-        defenceRolls = DeepCopy(finalDefenceRolls).sort((a,b) => b-a);
+        defenceRolls = DeepCopy(finalDefenceRolls);
         cancelledRolls.sort();
 
         //output shows original rolls
