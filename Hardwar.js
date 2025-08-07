@@ -682,8 +682,9 @@ const CC = (() => {
 
         Damage () {
             let hits = combatArray.results.totalHits;
+            let result = false;
             let statDamage = combatArray.statDamage; //will be the new stats
-            if (hits === 0) {return};
+            if (hits === 0) {return result};
 
             let hull = this.damage;
             let newHull = Math.max(0,hull - hits);
@@ -712,6 +713,7 @@ const CC = (() => {
                     if (key === "armour") {
                         outputCard.body.push(this.name + ' is Destroyed!');
                         this.Destroyed();
+                        result = true;
                     }
                     if (key === "defence") {
                         outputCard.body.push(this.name + ' is Disabled');
@@ -720,7 +722,7 @@ const CC = (() => {
                 }
             })
 
-
+            return result;
 
 
 
@@ -742,6 +744,7 @@ const CC = (() => {
                 HexMap[this.hexLabel].tokenIDs.splice(index,1); 
             }
             delete UnitArray[this.id];
+            return true;
         }
 
 
@@ -2594,6 +2597,8 @@ const CloseCombat = (msg) => {
 
 
 const CCOutput = () => {
+    let defenderDestroyed = false;
+    let attackerDestroyed = false;
     let tip = combatArray.output.aTip;
     tip = '[🎲](#" class="showtip" title="' + tip + ')';
     outputCard.body.push(tip + " " + combatArray.attacker.name + " Charges in with " + combatArray.attCRResults.cr + " Dice");
@@ -2655,7 +2660,7 @@ const CCOutput = () => {
         })
         combatArray.statDamage = stats;
         combatArray.results.totalHits = attHits;
-        combatArray.defender.Damage();
+        defenderDestroyed = combatArray.defender.Damage();
     } else {
         outputCard.body.push("No Hits were Scored");
     }
@@ -2694,7 +2699,7 @@ const CCOutput = () => {
         })
         combatArray.statDamage = stats;
         combatArray.results.totalHits = attHits;
-        combatArray.attacker.Damage();
+        attackerDestroyed = combatArray.attacker.Damage();
     } else {
         outputCard.body.push("No Hits were Scored");
     }
@@ -2703,33 +2708,38 @@ const CCOutput = () => {
     //resolution
     outputCard.body.push("[hr]");
     outputCard.body.push("[U]Resolution[/u]")
-    if (combatArray.attacker) {
+    if (attackerDestroyed === false) {
         if (combatArray.attacker.token.get(SM.immobilized) === true && combatArray.attacker.type !== "Walker") {
             outputCard.body.push(combatArray.attacker.name + " was Immobilized and Destroyed");
             combatArray.attacker.Destroyed();
+            attackerDestroyed = true;
         }
         if (combatArray.attacker.token.get(SM.disabled) === true && combatArray.attacker.type !== "Troopers") {
             outputCard.body.push(combatArray.attacker.name + " was Disabled and Destroyed");
             combatArray.attacker.Destroyed();
+            attackerDestroyed = true;
         }
     }
 
-    if (combatArray.defender) {
+    if (defenderDestroyed === false) {
         if (combatArray.defender.token.get(SM.immobilized) === true && combatArray.defender.type !== "Walker") {
             outputCard.body.push(combatArray.defender.name + " was Immobilized and Destroyed");
             combatArray.defender.Destroyed();
+            defenderDestroyed = true;
         }
         if (combatArray.defender.token.get(SM.disabled) === true && combatArray.defender.type !== "Troopers") {
             outputCard.body.push(combatArray.defender.name + " was Disabled and Destroyed");
             combatArray.defender.Destroyed();
+            defenderDestroyed = true;
         }
     }
 
-    if (combatArray.attacker && combatArray.defender) {
+    if (attackerDestroyed === false && defenderDestroyed === FileSystemWritableFileStream) {
         if (combatArray.attacker.type === "Aircraft" && combatArray.defender !== "Aircraft") {
             if (defHits > attHits) {
                 outputCard.body.push(combatArray.attacker.name + " Crashes and is Destroyed");
                 combatArray.attacker.Destroyed();
+                attackerDestroyed = true;
             } else {
                 outputCard.body.push(combatArray.attacker.name + " Is Immobilized and Landed");
                 combatArray.attacker.token.set(SM.immobilized, true);
@@ -2740,18 +2750,18 @@ const CCOutput = () => {
     }
 
     //did either die?
-   if (!combatArray.attacker || !combatArray.defender) {   
-        if (!combatArray.attacker && !combatArray.defender) {
+   if (attackerDestroyed === true || defenderDestroyed === true) {   
+        if (attackerDestroyed === true && defenderDestroyed === true) {
             outputCard.body.push("Both Combatants Destroyed");
-        } else if (!combatArray.attacker) {
+        } else if (attackerDestroyed === true) {
             outputCard.body.push(combatArray.defender.name + " Wins the Combat");
-        } else if (!combatArray.defender) {
+        } else if (defenderDestroyed === true) {
             outputCard.body.push(combatArray.attacker.name + " Wins the Combat");
         }
         return;
     }
     let text1;
-    let text2 = ", Both Combatants pull back 1 Hex";
+    let text2 = ", both Combatants pull back 1 Hex";
     if (attHits === defHits) {
         text1 = "Combat is a Tie";
     } else if (attHits > defHits) {
