@@ -1650,7 +1650,6 @@ const CC = (() => {
             let pt3 = new Point(i,0);
             let pt4 = new Point(i,interHex.elevation)
             let pt5 = lineLine(pt1,pt2,pt3,pt4);
-//add in indirect here ?
 
 
             if (pt5) {
