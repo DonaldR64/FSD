@@ -2751,7 +2751,7 @@ const CCOutput = () => {
         return;
     }
     let text1;
-    let text2 = "Both Combatants pull back 1 Hex";
+    let text2 = ", Both Combatants pull back 1 Hex";
     if (attHits === defHits) {
         text1 = "Combat is a Tie";
     } else if (attHits > defHits) {
