@@ -2661,11 +2661,6 @@ const CCOutput = () => {
     outputCard.body.push(combatArray.defender.name + ":")
     noncriticals = combatArray.defResults.noncriticals;
     criticals = combatArray.defResults.criticals;
-     if (combatArray.defenderStatus === "Passive") {
-        outputCard.body.push("[" + noncriticals.length + " Noncritical Hits Ignored]");
-        noncriticals = [];
-    }
-
     let defHits = noncriticals.length + criticals.length;
     if (defHits > 0) {
         if (criticals.length > 0) {
@@ -2677,6 +2672,11 @@ const CCOutput = () => {
             s = (noncriticals.length > 1) ? "s":"";
             let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
             outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+            if (combatArray.defenderStatus === "Passive") {
+                outputCard.body.push("[Ignored for Damage Purposes]");
+                noncriticals = [];
+                defHits = criticals.length;
+            }
         }
         outputCard.body.push("Total: " + defHits + " Hull Damage");
         outputCard.body.push("[U]Stat Damage[/u]");
@@ -2697,7 +2697,7 @@ const CCOutput = () => {
 
     //resolution
     //did either die?
-    
+
 
 
 
