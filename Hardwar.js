@@ -1346,15 +1346,21 @@ const CC = (() => {
         let toClear = ["alert","digin","spotting","counter"];
         _.each(UnitArray,unit => {
             let actions = 2; // ? adjust
-            unit.token.set({
-                aura1_color: "#00FF00",
-                bar1_value: actions,
-            })
-            unit.token.set(SM.alert,false);   
-            unit.order = "";
-            _.each(toClear,marker => {
-                unit.token.set(SM[marker],false);
-            })
+            if (unit.token) {
+                unit.token.set({
+                    aura1_color: "#00FF00",
+                    bar1_value: actions,
+                })
+                unit.token.set(SM.alert,false);   
+                unit.order = "";
+                _.each(toClear,marker => {
+                    unit.token.set(SM[marker],false);
+                })
+
+
+            } else {
+                sendChat("","No Token for " + unit.name + "?")
+            }
         })
         //remove ranged in markers
         let rangedInMarkers = state.Hardwar.rangedIn;
@@ -2452,15 +2458,15 @@ log(result)
 //apply
 
             } else {
-                if (criticals.length > 0) {
-                    s = (criticals.length > 1) ? "s":"";
-                    let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
-                    outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
-                }
                 if (noncriticals.length > 0) {
                     s = (noncriticals.length > 1) ? "s":"";
                     let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
                     outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+                }
+                if (criticals.length > 0) {
+                    s = (criticals.length > 1) ? "s":"";
+                    let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+                    outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
                 }
                 outputCard.body.push("Total: " + totalHits + " Hull Damage");
                 if (weapon.abilities.includes("Ion")) {
@@ -2518,7 +2524,7 @@ const CloseCombat = (msg) => {
 
 
     let defenderStatus = "Passive";
-    let defenderText = "Defender is a PASSIVE Defender";
+    let defenderText = " is a PASSIVE Defender";
     SetupCard("Close Combat","",attacker.faction);
 
     if (defender.token.get(SM.disabled) === true) {
@@ -2549,28 +2555,27 @@ const CloseCombat = (msg) => {
     if (defender.token.get("aura1_color") === "#800080") {
         //is on guard
         defenderStatus = "Active";
-        defenderText = "Defender is on Guard and is an ACTIVE Defender"
+        defenderText = " is on Guard and is an ACTIVE Defender"
         if (defender.hexLabel !== defender.startHexLabel) {
             //defender countercharged
             defenderStatus = "Attacker";
-            defenderText = "Defender Countercharges and is treated as an Attacker as well";
+            defenderText = " Countercharges and is treated as an Attacker as well";
         }
         defender.token.set("aura1_color") === "#000000";
     } else {
         let defActions = parseInt(defender.token.get("bar1_value"));
         if (defActions > 0) {
-            defenderText = "Defender Spends an Action to be ACTIVE Defender";
+            defenderText = " Spends an Action to be an ACTIVE Defender";
             defender.token.set("bar1_value",defActions - 1);
             defenderStatus = "Active";
         }
     }
-    outputCard.body.push(defenderText);
-    outputCard.body.push("[hr]");
 
     combatArray = {
         attacker: attacker,
         defender: defender,
         defenderStatus: defenderStatus,
+        defenderText: defenderText,
         results: {},
     }
 
@@ -2578,9 +2583,7 @@ const CloseCombat = (msg) => {
     combatArray.attCRResults = CR(attacker,defender,"Attacker");
     combatArray.defCRResults = CR(defender,attacker,defenderStatus);
     AttackRolls();
-    CCOutput();
-
-
+    CCOutput(); //also applies damage while in routine
     PrintCard();
 
 
@@ -2588,11 +2591,117 @@ const CloseCombat = (msg) => {
 
 
 const CCOutput = () => {
-    log(combatArray.attCRResults);
-    log(combatArray.defCRResults);
-    log(combatArray.output);
-    log(combatArray.attResults);
-    log(combatArray.defResults);
+    let tip = combatArray.output.aTip;
+    tip = '[🎲](#" class="showtip" title="' + tip + ')';
+    outputCard.body.push(tip + " " + combatArray.attacker.name + " Charges in with " + combatArray.attCRResults.cr + " Dice");
+    tip = combatArray.output.dTip;
+    tip = '[🎲](#" class="showtip" title="' + tip + ')';
+    outputCard.body.push(tip + " " + combatArray.defender.name + combatArray.defenderText + " with " + combatArray.defCRResults.cr + " Dice");
+    outputCard.body.push("[hr]");
+     //build dice roll tip output
+    tip = "Attack Rolls<br>" + combatArray.output.originalAttackRolls.toString();
+    if (combatArray.output.explodingAttackRolls.length > 0) {
+        tip += " + " + combatArray.output.explodingAttackRolls.toString();
+    }
+    tip += "<br>--------------------------";
+    tip += "<br>Defence Rolls<br>" + combatArray.output.originalDefenceRolls.toString();
+    if (combatArray.output.explodingDefenceRolls.length > 0) {
+        tip += " + " + combatArray.output.explodingDefenceRolls.toString();
+    }
+    if (combatArray.output.cancelledRolls.length > 0) {
+        tip += "<br>--------------------------";
+        tip += "<br>Cancelled Rolls: " + combatArray.output.cancelledRolls.toString();
+    }
+    if (combatArray.output.finalAttackRolls.length > 0) {
+        tip += "<br>--------------------------";
+        tip += "<br>Final Attack Rolls: " + combatArray.output.finalAttackRolls.toString();
+    }
+    if (combatArray.output.finalDefenceRolls.length > 0) {
+        tip += "<br>--------------------------";
+        tip += "<br>Final Defence Rolls: " + combatArray.output.finalDefenceRolls.toString();
+    }
+    tip = '[🎲](#" class="showtip" title="' + tip + ')';
+    outputCard.body.push(tip + " [U]Results[/u]");
+
+    //attacker
+    outputCard.body.push(combatArray.attacker.name + ":")
+    let noncriticals = combatArray.attResults.noncriticals;
+    let criticals = combatArray.attResults.criticals;
+    let attHits = noncriticals.length + criticals.length;
+    let s;
+    if (attHits > 0) {
+        if (noncriticals.length > 0) {
+            s = (noncriticals.length > 1) ? "s":"";
+            let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+            outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+        }
+        if (criticals.length > 0) {
+            s = (criticals.length > 1) ? "s":"";
+            let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+            outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+        }
+        outputCard.body.push("Total: " + attHits + " Hull Damage");
+        outputCard.body.push("[U]Stat Damage[/u]");
+        StatDamage(combatArray.defender,criticals.length,noncriticals.length);
+        _.each(statKeys,key => {
+            let damage = combatArray.defender[key] - stats[key];
+            if (damage > 0) {
+                let name = key.charAt(0).toUpperCase() + key.slice(1);
+                outputCard.body.push(name + ": " + damage);
+            }
+        })
+        combatArray.statDamage = stats;
+        //apply damage
+    } else {
+        outputCard.body.push("No Hits were Scored");
+    }
+    outputCard.body.push("[hr]")
+
+    //defender
+    outputCard.body.push(combatArray.defender.name + ":")
+    noncriticals = combatArray.defResults.noncriticals;
+    criticals = combatArray.defResults.criticals;
+     if (combatArray.defenderStatus === "Passive") {
+        outputCard.body.push("[" + noncriticals.length + " Noncritical Hits Ignored]");
+        noncriticals = [];
+    }
+
+    let defHits = noncriticals.length + criticals.length;
+    if (defHits > 0) {
+        if (criticals.length > 0) {
+            s = (criticals.length > 1) ? "s":"";
+            let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+            outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+        }
+        if (noncriticals.length > 0) {
+            s = (noncriticals.length > 1) ? "s":"";
+            let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+            outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+        }
+        outputCard.body.push("Total: " + defHits + " Hull Damage");
+        outputCard.body.push("[U]Stat Damage[/u]");
+        StatDamage(combatArray.attacker,criticals.length,noncriticals.length);
+        _.each(statKeys,key => {
+            let damage = combatArray.attacker[key] - stats[key];
+            if (damage > 0) {
+                let name = key.charAt(0).toUpperCase() + key.slice(1);
+                outputCard.body.push(name + ": " + damage);
+            }
+        })
+        combatArray.statDamage = stats;
+        //apply damage
+    } else {
+        outputCard.body.push("No Hits were Scored");
+    }
+
+
+    //resolution
+    //did either die?
+    
+
+
+
+
 
 }
 
@@ -2601,7 +2710,7 @@ const CCOutput = () => {
 
 const CR = (unit1,unit2,combatStatus) => {
     let cr = parseInt(unit1.class)
-    let crTip = "Base: " + cr + " C";
+    let crTip = "Base: C " + cr;
     //charging or countercharging
     if (combatStatus === "Attacker") {
         cr +=1;
