@@ -2117,11 +2117,12 @@ log(result)
             dTip = "";
         } else {
             attDice = combatArray.attCRResults.cr;
-            defDice = combatArray.defCRResults.cr;
-            attTarget = parseInt(defender.class) + parseInt(defender.armour);
+            attTarget = combatArray.attCRResults.target;
             aTip = combatArray.attCRResults.tip;
+
+            defDice = combatArray.defCRResults.cr;
+            defTarget = combatArray.defCRResults.target;
             dTip = combatArray.defCRResults.tip;
-            defTarget = parseInt(attacker.class) + parseInt(attacker.armour);
         }
 
         let attackRolls = [];
@@ -2590,7 +2591,8 @@ const CCOutput = () => {
     log(combatArray.attCRResults);
     log(combatArray.defCRResults);
     log(combatArray.output);
-    log(combatArray.results);
+    log(combatArray.attResults);
+    log(combatArray.defResults);
 
 }
 
@@ -2645,11 +2647,12 @@ const CR = (unit1,unit2,combatStatus) => {
         crTip += "<br>Unit is an Immobilized Walker -1 C";
     }
 
-
+    let target = parseInt(unit2.class) + parseInt(unit2.armour);
 
     let results = {
         cr: cr,
         tip: crTip,
+        target: target,
     }
     
     return results;
