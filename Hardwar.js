@@ -144,6 +144,8 @@ const CC = (() => {
         "camo": "status_ninja-mask", 
         "fullstrike": "status_lightning-helix",
         "counter": "status_overdrive",
+        "jumpjetused": "status_red",
+        "fullstrikeused": "status_red",
     }
 
 
@@ -698,6 +700,16 @@ const CC = (() => {
                 outputCard.body.push("Active Camo is now Disabled");
                 this.token.set(SM.camo,false);
             }
+            let overkill = hits - (parseInt(this.class) + 1);
+            let actions = parseInt(this.token.get("bar1_value"));
+            if (actions > 0 && overkill > 0) {
+                overkill = Math.max(overkill,actions);
+                let s = (overkill === 1) ? "":"s";
+                actions -= overkill
+                this.token.set("bar1_value",actions)
+                outputCard.body.push("The Unit loses " + overkill + " Action" + s);
+            }
+
 
             _.each(statKeys,key => {
                 this[key] = parseInt(statDamage[key]);
@@ -722,6 +734,9 @@ const CC = (() => {
                     }
                 }
             })
+
+
+
 
             return result;
 
@@ -1896,9 +1911,10 @@ log(result)
             outputCard.body.push("F will be temporarily increased by 2");
             outputCard.body.push("After which it will be reduced by 2");
             outputCard.body.push("Until the unit Reloads");
-            unit.token.set(SM.fullstrike,true);   
+            unit.token.set(SM.fullstrike,true);  
+            unit.token.set(SM.fullstrikeused,true);  
         }
-        if (order === "Reload Weapons") {
+        if (order === "Reload" || order === "Recharge") {
             let success = false;
             let rolls = [];
             let target = parseInt(unit.damage);
@@ -1913,14 +1929,20 @@ log(result)
             let tip = "Rolls: " + rolls + " vs. >" + target;
             tip = '[🎲](#" class="showtip" title="' + tip + ')';
             if (success === true) {
-                outputCard.body.push("The Unit Reloads/Recharges its Weapons Systems");
-                unit.token.set("tint_color","transparent");
-                unit.firepower = Math.min(unit.firepower +2,unit.firepowerMax);
-                AttributeSet(unit.charID,"firepower",unit.firepower);
+                if (order === "Recharge") {
+                    outputCard.body.push("The Unit Recharges its Jump Jets");
+                    unit.token.set(SM.jumpjetused,false);
+                } else if (order === "Reload") {
+                    outputCard.body.push("The Unit Reloads/Recharges its Weapons Systems");
+                    unit.token.set(SM.fullstrikeused,false);
+                    unit.firepower = Math.min(unit.firepower +2,unit.firepowerMax);
+                    AttributeSet(unit.charID,"firepower",unit.firepower);
+                }
             } else {
-                outputCard.body.push("The Unit was unable to fully Reload/Recharge this action");
+                outputCard.body.push("The Unit was unable to fully " + order + " this action");
             }
         }
+
         if (order === "Countermeasures") {
             outputCard.body.push("The Unit Deploys Countermeasures");
             outputCard.body.push("Any Nearby Artillery Markers are Removed");
@@ -2104,7 +2126,7 @@ log(result)
         }
         if (attacker.token.get(SM.fullstrike) === true) {
             attacker.token.set(SM.fullstrike,false);
-            attacker.token.set("tint_color",red);
+            attacker.token.set(SM.fullstrikeused,true);
             attacker.firepower -= 2;
             AttributeSet(attacker.charID,"firepower",attacker.firepower);
         }
