@@ -1,100 +1,309 @@
-const CloseCombat = (msg) => {
-    let Tag = msg.content.split(";");
-    let attackerID = Tag[1];
-    let defenderID = Tag[2];
-    let attacker = UnitArray[attackerID];
-    let defender = UnitArray[defenderID];
-    let defenderStatus = "Passive";
-    let defenderText = "Defender is a PASSIVE Defender";
-    SetupCard("Close Combat","",attacker.faction);
-
-    if (defender.token.get(SM.deactived) === true) {
-        outputCard.body.push("Defender was Deactivated and so Destroyed");
-        defenderStatus = "Destroyed";
-    }
-    if (defender.token.get(SM.immobilized) === true && (defender.type === "Vehicle" || defender.type === "Aircraft")) {
-        outputCard.body.push("Defender " + defender.type + " was Immobilized and so Destroyed");
-        defenderStatus = "Destroyed";
-    }
 
 
-    if (defenderStatus === "Destroyed") {
-        PrintCard();
-        defender.Destroyed();
+    const aStar = () => {
+        let startHex = moveInfo.prevHex;
+        let goalHex = moveInfo.newHex;
+        let unit = moveInfo.unit;
+        let maIndex = moveInfo.maIndex;
+        let distance = moveInfo.distance;
+
+        let group = DeepCopy(unit.group);
+        let movement = unit.movement;
+        let moveArray = unit.moveArray; //info on hexes visited this turn
+        if (unit.status === "Concealed" && unit.group !== "Gun") {
+            //won't be vehicle
+            movement = 5; 
+            group = "Infantry";
+        }
+    
+        //check if moving back to a prev. hex in moveArray
+        if (maIndex > -1) {
+            unit.moveCost = moveArray[maIndex].cost;
+            //no need to create new markers, but need to remove after index
+            for (let i=(maIndex + 1);i<moveArray.length;i++) {
+                let markerID = moveArray[i].markerID;
+                let marker = findObjs({_type:"graphic", id: markerID})[0];
+                if (marker) {
+                    marker.remove();
+                }
+            }
+            moveArray.length = (maIndex+1); //0 indexed array
+            unit.moveArray = moveArray;
+            unit.token.set("rotation",moveArray[maIndex].rotation);
+            return;
+        }
+    
+        //if not, find path to goal Hex
+        let nodes = 1;
+        let explored = [];
+        let frontier = [{
+            label: startHex.label,
+            mapLabel: startHex.mapLabel,
+            cost: unit.moveCost,
+            estimate: distance, 
+            tokenRotation: Angle(unit.token.get("rotation")),
+        }];
+        
+        while (frontier.length > 0) {
+            //sort paths in frontier by cost,lowest cost first
+            //choose lowest cost path from the frontier
+            //if more than one, choose one with highest cost       
+            frontier.sort(function(a,b) {
+                return a.estimate - b.estimate || b.cost - a.cost; //2nd part used if estimates are same
+            })
+            let node = frontier.shift();
+            let nodeHex = HexMap[node.label];
+            nodes++
+            //add this node to explored paths
+            explored.push(node);
+            //if this node reaches goal, end loop
+            if (node.label === goalHex.label) {
+                break;
+            }
+            //generate possible next steps
+            let next = HexMap[node.label].cube.neighbours();
+            //for each possible next step
+            for (let i=0;i<next.length;i++) {
+                //calculate the cost of the next step 
+                //by adding the step's cost to the node's cost
+                let stepCube = next[i];
+                let rotation = node.tokenRotation;
+                let stepHexLabel = stepCube.label();
+                let stepHex = HexMap[stepHexLabel];
+                if (!stepHex) {continue};
+                let costResults = HexCost(stepHex,rotation);
+                if (costResults === -1) {continue};
+                let stepHexCost = costResults.hexCost;
+                rotation = costResults.rotation;
+                let cost = stepHexCost + node.cost;
+                //check if this step has already been explored
+                let isExplored = (explored.find(e=> {
+                    return e.label === stepHexLabel
+                }));
+                //avoid repeated nodes during the calculation of neighbours
+                let isFrontier = (frontier.find(e=> {
+                    return e.label === stepHexLabel
+                }));
+                //if this step has not been explored
+                if (!isExplored && !isFrontier) {
+                    let est = cost + stepHex.cube.distance(goalHex.cube);
+                    //add the step to the frontier, using the cost and distance
+                    frontier.push({
+                        label: stepHex.label,
+                        mapLabel: stepHex.mapLabel,
+                        cost: cost,
+                        estimate: est,
+                        tokenRotation: rotation,
+                    });
+                }
+            }
+        }
+    
+        //If there are no paths left to explore or hit target hex
+        if (explored.length > 0) {
+            array = [];
+            results = [];
+            explored.sort((a,b) => {
+                return b.cost - a.cost;
+            })
+            let last = explored.shift(); //end hex
+            array.push(last);
+            let finished = explored.length > 0 ? false:true;
+    
+            while (finished === false) {
+                let lowestCost = last.cost;
+                let current = 0;
+                for (let i=0;i<explored.length;i++) {
+                    let next = explored[i];
+                    if (HexMap[next.label].cube.distance(HexMap[last.label].cube) === 1 && next.cost < lowestCost) {
+                        lowestCost = next.cost;
+                        current = i;
+                    }
+                }
+                last = explored[current];
+                explored.splice(current,1);
+                array.push(last);
+                if (last.label === startHex.label) {
+                    finished = true;
+                }
+            }
+            array.reverse();
+    
+            //redo costs and work out final rotations based on this final path
+            //place markers
+            //check concealment
+            let cost = unit.moveCost;
+            let rotation = array[0].tokenRotation;
+            let prevHex = HexMap[array[0].label];
+            if (unit.moveCost === 0) {
+                let markerID = CreateMarker(prevHex,"Move",array[0].cost);
+                let move = {
+                    hexLabel: array[0].label,
+                    mapLabel: array[0].mapLabel,
+                    cost: 0,
+                    rotation: array[0].tokenRotation,
+                    markerID: markerID,
+                    flagged: false,
+                }
+                moveArray.push(move);
+            }
+
+            for (let i=1;i<array.length;i++) {
+                let nextHex = HexMap[array[i].label];
+                let costResults = HexCost(nextHex,rotation);
+                let hexCost = costResults.hexCost;
+                let init = rotation;
+                rotation = costResults.rotation;
+                if (cost + hexCost > movement) {
+                    break;
+                }
+                if (init !== rotation && unit.token.get(SM.moved) === false) {
+                    unit.token.set(SM.rotate,true);
+                } 
+                cost += hexCost;
+                let markerID = CreateMarker(nextHex,"Move",cost);
+                unit.hexLabel = array[i].label;
+                let flagged = CheckConcealment(unit);
+                let move = {
+                    hexLabel: array[i].label,
+                    mapLabel: array[i].mapLabel,
+                    cost: cost,
+                    rotation: rotation,
+                    markerID: markerID,
+                    flagged: flagged,
+                }
+                moveArray.push(move);
+                lastHex = nextHex;
+            }
+        } else {
+            sendChat("","No Path")
+        }
         return;
     }
+    
+    const HexCost = (currentHex,rotation) => {
+        let prevHex = moveInfo.prevHex;
+        let unit = moveInfo.unit;
+        let group = unit.group;
+        let totalDistance = moveInfo.distance;
+        let goalHex = moveInfo.newHex;
+        let player = unit.player;
 
-
-    //aircraft charging
-
-
-
-
-
-
-
-    if (defender.token.get("aura1_color") === "#800080") {
-        //is on guard
-        defenderStatus = "Active";
-        defenderText = "Defender is on Guard and is an ACTIVE Defender"
-        if (defender.hexLabel !== defender.startHexLabel) {
-            //defender countercharged
-            defenderStatus = "Attacker";
-            defenderText = "Defender Countercharges and is treated as an Attacker as well";
+        let hexCost = currentHex.movementCost[group];
+        if (unit.mounted === true && unit.type === "Gun") {
+            hexCost += .5;
         }
-        defender.token.set("aura1_color") === "#000000";
-    } else {
-        let defActions = parseInt(defender.token.get("bar1_value"));
-        if (defActions > 0) {
-            defenderText = "Defender Spends an Action to be ACTIVE Defender";
-            defender.token.set("bar1_value",defActions - 1);
-            defenderStatus = "Active";
+log("Initial cost: " + hexCost)
+        if (currentHex.terrain.includes("Offboard") || hexCost === false || hexCost === undefined || isNaN(hexCost)) {return -1};
+        
+
+        let enemies = {Vehicle: 0,Gun: 0, Infantry: 0};
+
+        if (currentHex.tokenIDs.length > 0) {
+            for (let i=0;i<currentHex.tokenIDs.length;i++) {
+                let tid = currentHex.tokenIDs[i];
+                if (tid === unit.id) {continue};
+                let possible = UnitArray[tid];
+                if (possible.player !== player) {
+                    enemies[possible.group] += 1;
+                }
+            }
         }
+
+        if (currentHex.tokenIDs.length > 0) {
+            if (group === "Infantry" && currentHex.label !== goalHex.label && (enemies.Vehicle > 0 || enemies.Gun > 0 || enemies.Infantry > 0)) {
+                return -1;
+            }
+            if (group === "Vehicle") {   
+                if (enemies.Vehicle > 0) {
+                    return -1;
+                }     
+                if (enemies.Gun > 0 || enemies.Infantry > 0) {
+                    if (currentHex.label === goalHex.label) {
+                        return -1;
+                    }
+                    for (let i=0;i<currentHex.tokenIDs.length;i++) {
+                        let id = currentHex.tokenIDs[i];
+                        let uni = UnitArray[id];
+                        if (uni.status === "Concealed") {
+                            return -1;
+                        }
+                    }
+                }
+            }
+
+            if (currentHex.label !== goalHex.label) {
+                for (let i=0;i<currentHex.tokenIDs.length;i++) {
+                    let unit2 = UnitArray[currentHex.tokenIDs[i]];
+                    if (unit2.player !== player) {
+                        return -1;
+                    }
+                }
+            } else {
+                if (group === "Vehicle") {
+                    for (let i=0;i<currentHex.tokenIDs.length;i++) {
+                        let unit2 = UnitArray[currentHex.tokenIDs[i]];
+                        if (unit2.player !== player && unit2.status === "Concealed") {
+                            return -1;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (artFire[currentHex.label] && totalDistance > 1) {
+            //avoid artillery fire unless moving singly
+            return -1;
+        }
+
+
+
+        if (currentHex.elevation > prevHex.elevation) {
+            if (group === "Infantry") {hexCost++};
+            if (group === "Vehicle") {
+                if (currentHex.terrain.includes("Road")) {
+                    hexCost += 2;
+                } else {
+                    hexCost += 4;
+                }
+            }
+        }
+    
+        //crossing obstacles here
+    
+        if (group === "Vehicle") {
+            let theta = Angle(prevHex.cube.angle(currentHex.cube));
+            theta = Angle(theta - rotation);
+            if (totalDistance === 1) {
+                if (theta >= 120 && theta <= 240) {
+log("rear travel")
+                    //rear travel of 1, side travel with distance 1 was errored out
+                    hexCost *= 4;
+               }
+            } else if (totalDistance > 1) {
+                if (theta > 60 && theta <= 120) {
+                    hexCost++;
+                    rotation += 60;
+                } 
+                if (theta >= 240 && theta < 300) {
+                    hexCost++;
+                    rotation -= 60;
+                }
+                if (theta > 120 && theta < 180) {
+                    hexCost += 2;
+                    rotation += 120;
+                }
+                if (theta >= 180 && theta < 240) {
+                    hexCost += 2;
+                    rotation -=  120;
+                }
+            }
+        }
+log("final hexCost: " + hexCost)
+
+        let results = {
+            hexCost: hexCost,
+            rotation: rotation,
+        }
+        return results;
     }
-    outputCard.body.push(defenderText);
-    outputCard.body.push("[hr]");
-
-    combatArray = {
-        attacker: attacker,
-        defender: defender,
-        defenderStatus: defenderStatus,
-        results: {},
-    }
-
-    //calculate CR. Returns CR and tips - tips pulled out in output
-    combatArray.attCRResults = CR(attacker,defender,"Attacker");
-    combatArray.defCRResults = CR(defender,attacker,defenderStatus);
-    AttackRolls();
-    CCOutput();
-
-    //move below into CCOutput
-    attacker.Damage();
-    if (attacker.token.get(SM.immobilized) === true && attacker.type !== "Walker") {
-        outputCard.body.push(attacker.name + " is Immobilized and Destroyed");
-        attacker.Detroyed();
-    }
-    if (attacker.token.get(SM.disabled) === true && attacker.type !== "Infantry") {
-        outputCard.body.push(attacker.name + " is Disabled and Destroyed");
-        attacker.Detroyed();
-    }
-    defender.Damage();
-    if (defender.token.get(SM.immobilized) === true && defender.type !== "Walker") {
-        outputCard.body.push(defender.name + " is Immobilized and Destroyed");
-        defender.Detroyed();
-    }
-    if (defender.token.get(SM.disabled) === true && defender.type !== "Infantry") {
-        outputCard.body.push(defender.name + " is Disabled and Destroyed");
-        defender.Detroyed();
-    }
-
-    PrintCard();
-
-
-}
-
-
-const CCOutput = () => {
-    log(combatArray)
-
-
-}
