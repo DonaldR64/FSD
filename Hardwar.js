@@ -1364,6 +1364,8 @@ const CC = (() => {
 
     const NextTurn = () => {
         let turn = state.Hardwar.turn;
+
+
         turn++;
         //reset unit activations, clear various status markers
         let toClear = ["alert","digin","spotting","counter"];
@@ -1379,8 +1381,9 @@ const CC = (() => {
                 _.each(toClear,marker => {
                     unit.token.set(SM[marker],false);
                 })
-
-
+                let location = new Point(unit.token.get("left"),unit.token.get("top"));
+                let hexLabel = location.label();
+                unit.startHexLabel = hexLabel;
             } else {
                 sendChat("","No Token for " + unit.name + "?")
             }
@@ -3005,48 +3008,271 @@ const CR = (unit1,unit2,combatStatus) => {
     }
 
 
-
-
-    const changeGraphic = (obj,prev) => {
+    const changeGraphic = (tok,prev) => {
         RemoveLines();
-
-        let id = obj.get("id");
-        let unit = UnitArray[id];
-
-        if (unit) {
-            let location = new Point(obj.get("left"),obj.get("top"));
-            let newHexLabel = location.toCube().label();
-            if (newHexLabel !== unit.hexLabel) {
-                let index = HexMap[unit.hexLabel].tokenIDs.indexOf(id);
-                if (index > -1) {
-                    HexMap[unit.hexLabel].tokenIDs.splice(index,1);
-                }
-                HexMap[newHexLabel].tokenIDs.push(id);
-                unit.hexLabel = newHexLabel;
-            }
-        }
-
-
-
         //fix the token size in case accidentally changed while game running - need check that game is running
         if (state.Hardwar.turn === 0) {return};
-        let name = obj.get("name");
-        if (obj.get("width") !== prev.width || obj.get("height") !== prev.height) {
-            obj.set({
+        if (tok.get("width") !== prev.width || tok.get("height") !== prev.height) {
+            tok.set({
                 width: prev.width,
                 height: prev.height,
             })
         }
+        let id = tok.get("id");
+        let unit = UnitArray[id];
+        if (!unit) {return};
+        let newLocation = new Point(tok.get("left"),tok.get("top"));
+        let startHex = HexMap[unit.startHexLabel]; //set at start of activation or turn
+        let goalHex = HexMap[newLocation.label()];
+        let mobility = parseInt(unit.mobility);
+        if (order === "Patrol Move") {
+            mobility *= 2;
+        }
+        if (order === "Rapid Move") {
+            mobility *= 3;
+        }
+        let paved = false;
+        if (startHex.traits.includes("Paved") && goalHex.traits.includes("Paved")) {
+            paved = true;
+        }
+        let rough = false
+        let difficult = false;
+        let hazardous = false;
 
-        //MOvement routine
+        let nodes = 1;
+        let explored = [];
+        let frontier = [{
+            label: startHex.label,
+            cost: 0,
+            estimate: startHex.cube.distance(goalHex.cube),
+        }]
+
+        while (frontier.length > 0) {
+            //sort paths in frontier by cost,lowest cost first
+            //choose lowest cost path from the frontier
+            //if more than one, choose one with highest cost  
+            frontier.sort(function(a,b) {
+                return a.estimate - b.estimate || b.cost - a.cost; //2nd part used if estimates are same
+            })
+            let node = frontier.shift();
+            let nodeHex = HexMap[node.label];
+            nodes++
+            //add this node to explored paths
+            explored.push(node);
+            //if this node reaches goal, end loop
+            if (node.label === goalHex.label) {
+                break;
+            }
+            //generate possible next steps
+            let next = HexMap[node.label].cube.neighbours();
+            //for each possible next step
+            for (let i=0;i<next.length;i++) {
+                //calculate the cost of the next step 
+                //by adding the step's cost to the node's cost
+                let stepCube = next[i];
+                let stepHexLabel = stepCube.label();
+                let stepHex = HexMap[stepHexLabel];
+                if (!stepHex) {continue};
+                let costResults = HexCost(stepHex);
+                if (costResults === -1) {continue}; //impassable
+                let cost = costResult + node.cost;
+                //check if this step has already been explored
+                let isExplored = (explored.find(e=> {
+                    return e.label === stepHexLabel
+                }));
+                //avoid repeated nodes during the calculation of neighbours
+                let isFrontier = (frontier.find(e=> {
+                    return e.label === stepHexLabel
+                }));
+                //if this step has not been explored
+                if (!isExplored && !isFrontier) {
+                    let est = cost + stepHex.cube.distance(goalHex.cube);
+                    //add the step to the frontier, using the cost and distance
+                    frontier.push({
+                        label: stepHex.label,
+                        cost: cost,
+                        estimate: est,
+                    });
+                }
+            }
+        }
+
+        //If there are no paths left to explore or hit target hex
+        if (explored.length > 0) {
+            array = [];
+            results = [];
+            explored.sort((a,b) => {
+                return b.cost - a.cost;
+            })
+            let last = explored.shift(); //end hex
+            array.push(last);
+            let finished = explored.length > 0 ? false:true;
+    
+            while (finished === false) {
+                let lowestCost = last.cost;
+                let current = 0;
+                for (let i=0;i<explored.length;i++) {
+                    let next = explored[i];
+                    if (HexMap[next.label].cube.distance(HexMap[last.label].cube) === 1 && next.cost < lowestCost) {
+                        lowestCost = next.cost;
+                        current = i;
+                    }
+                }
+                last = explored[current];
+                explored.splice(current,1);
+                array.push(last);
+                if (last.label === startHex.label) {
+                    finished = true;
+                }
+            }
+            array.reverse();
+log(array)
+            //redo costs based on this final path
+            //place markers
+/*
+
+
+            let prevHex = HexMap[array[0].label];
+            if (unit.moveCost === 0) {
+                let markerID = CreateMarker(prevHex,"Move",array[0].cost);
+                let move = {
+                    hexLabel: array[0].label,
+                    mapLabel: array[0].mapLabel,
+                    cost: 0,
+                    rotation: array[0].tokenRotation,
+                    markerID: markerID,
+                    flagged: false,
+                }
+                moveArray.push(move);
+            }
+
+            for (let i=1;i<array.length;i++) {
+                let nextHex = HexMap[array[i].label];
+                let costResults = HexCost(nextHex,rotation);
+                let hexCost = costResults.hexCost;
+                let init = rotation;
+                rotation = costResults.rotation;
+                if (cost + hexCost > movement) {
+                    break;
+                }
+                if (init !== rotation && unit.token.get(SM.moved) === false) {
+                    unit.token.set(SM.rotate,true);
+                } 
+                cost += hexCost;
+                let markerID = CreateMarker(nextHex,"Move",cost);
+                unit.hexLabel = array[i].label;
+                let flagged = CheckConcealment(unit);
+                let move = {
+                    hexLabel: array[i].label,
+                    mapLabel: array[i].mapLabel,
+                    cost: cost,
+                    rotation: rotation,
+                    markerID: markerID,
+                    flagged: flagged,
+                }
+                moveArray.push(move);
+                lastHex = nextHex;
+            }
+*/
+        } else {
+            sendChat("","No Path")
+        }
 
 
 
+
+
+
+        //Booleans - rough,difficult,hazard,paved etc - and paved is turned true earlier, based on initial hex (plus mobility +1 for starting on paved)
+        //if starts on paved, add 1 to mobility and if wheeled gets Rapid Move macro added in start
+        //if final path has entered rough etc, check/roll for damage as appropriate
+
+        const HexCost = (hex) => {
+            let cost = 1;
+            let rate = 1;
+            if (unit.order === "Patrol Move") {rate = 2};
+            if (unit.order === "Rapid Move") {rate = 3};
+
+
+            //Aircraft
+            if (unit.type === "Aircraft" && unit.airHeight > 0) {
+                if (hex.label === finalHex.label) {
+                    if (hex.traits.includes("Rough") || hex.traits.includes("Dangerous") || hex.traits.includes("Hazardous")) {
+                        cost += rate;
+                    }
+                    if (hex.traits.includes("Impassable") || hex.traits.includes("Building")) {
+                        cost = -1;
+                    }
+                }
+                return cost;
+            }
+
+            if (hex.traits.includes("Impassable")) {
+                cost = -1;
+                return cost;
+            }
+            if (hex.tokenIDs.length > 0) {
+                cost = -1;
+                return cost;
+            }
+            if (hex.traits.includes("Building") && unit.traits.includes("Infantry") === false) {
+                cost = -1;
+                return cost;
+            }
+        if (hex.traits.includes("Paved") === false && paved === true) {
+                cost += rate;
+                if (unit.traits.includes("Rapid") === false && unit.order === "Rapid Move") {
+                    cost = -1;
+                    return cost;
+                    //cant leave road if moving Rapid as Wheeled
+                }
+            }
+
+
+            if (unit.traits.includes("Tracked")) {
+                if (unit.fired === true && hex.traits.includes("Hazardous")) {
+                    cost = -1;
+                    return cost;
+                }
+                if (hex.traits.includes("Difficult") && rough === false) {
+                    cost += rate;
+                    rough = true;
+                }
+                if (hex.traits.includes("Hazardous") && difficult === false) {
+                    cost += rate;
+                    difficult = true;
+                }
+            } else {
+                if (unit.fired === true && (hex.traits.includes("Hazardous") || hex.traits.includes("Difficult"))) {
+                    cost = -1;
+                    return cost;
+                }
+                if (hex.traits.includes("Rough") && rough === false) {
+                    cost += rate;
+                    rough = true;
+                }
+                if (hex.traits.includes("Difficult") && difficult === false) {
+                    cost += rate;
+                    difficult = true;
+                }
+                if (hex.traits.includes("Hazardous") && hazardous === false) {
+                    cost += rate;
+                    hazardous = true;
+                }
+            }
+
+            return cost;
+        }
 
 
 
 
     }
+
+
+    
+
+
 
     const addGraphic = (obj) => {
         log(obj)
