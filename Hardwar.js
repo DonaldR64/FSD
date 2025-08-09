@@ -669,6 +669,7 @@ const CC = (() => {
             this.abilities = aa.abilities || " ";
 
             this.order = "";
+            this.fired = false;
 
 
             UnitArray[id] = this;
@@ -1868,19 +1869,36 @@ log(result)
 
         currentUnitID = id;
         unit.order = order;
+        unit.fired = false;
         let mobility = unit.mobility;
         unit.startHexLabel = unit.hexLabel; //track distance
 
         actions--;
-        if (order === "Advance") {
-            outputCard.body.push("The Unit may Move and Fire in either Order.");
-            outputCard.body.push("The Target must be in LOS from the starting position");
-            outputCard.body.push("Cautious Move: " + mobility + " MP, gaining Alert");
-            outputCard.body.push("Patrol Move: " + (mobility * 2) + " MP");
+        if (order === "Cautious Move") {
+            if (unit.traits.includes("Tracked") || unit.traits.includes("Air")) {
+                outputCard.body.push("The Unit may Move and Fire in either order");
+            } else {
+                outputCard.body.push("As long as Difficult Ground is not entered, the Unit may Shoot");
+
+            }
+            outputCard.body.push("(The Target must be in LOS from the starting position)");
+            outputCard.body.push("The Unit has " + mobility + " MP, and gains Alert");
+            unit.token.set(SM.alert,true);
+        }
+        if (order === "Patrol Move") {
+            outputCard.body.push("As long as Difficult Ground is not entered, the Unit may Shoot");
+            outputCard.body.push("(The Target must be in LOS from the starting position)");
+            outputCard.body.push("The Unit has " + (mobility * 2) + " MP");
         }
         if (order === "Rapid Move") {
-            outputCard.body.push("The Unit may Rapid Move but not Fire");
+            //only certain units with rapid trait get this
+            //wheeled that start on paved get, redo their macro in start
+            outputCard.body.push("The Unit may Move but not Fire");
             outputCard.body.push((mobility * 3) + " MP, only one turn at beginning or end of movement");
+            outputCard.body.push("One extra turn can be done if entirely on Paved");
+            if (unit.traits.includes("Rapid") === false) {
+                outputCard.body.push("Rapid Movement only possible if stays on Paved");
+            }
         }
         if (order === "Stand and Fire") {
             outputCard.body.push("The Unit Stands and Fires");
@@ -2119,6 +2137,7 @@ log(result)
         FX(weapon.fx,attacker,defender);
         //sound
         PlaySound(weapon.sound);
+        attacker.fired = true;
 
         if (losResult.indirect === "Spotter") {
             let spotter = UnitArray[losResult.spotterID];
