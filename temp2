@@ -1,86 +1,77 @@
 //place inside aStar for variables to be accessible
-//unit, hex,
-//Booleans - rough,difficult,hazard,paved
+//Booleans - rough,difficult,hazard,paved etc - and paved is turned true earlier, based on initial hex (plus mobility +1 for starting on paved)
 //if starts on paved, add 1 to mobility and if wheeled gets Rapid Move macro added in start
 //if final path has entered rough etc, check/roll for damage as appropriate
 
-
 const HexCost = () => {
-    let rate = 1;
     let cost = 1;
+    let rate = 1;
     if (unit.order === "Patrol Move") {rate = 2};
     if (unit.order === "Rapid Move") {rate = 3};
+
+
+    //Aircraft
     if (unit.type === "Aircraft" && unit.airHeight > 0) {
         if (currentHex.label === finalHex.label) {
             if (currentHex.traits.includes("Rough") || currentHex.traits.includes("Dangerous") || currentHex.traits.includes("Hazardous")) {
                 cost += rate;
             }
+            if (currentHex.traits.includes("Impassable") || currentHex.traits.includes("Building")) {
+                cost = 100000;
+            }
         }
         return cost;
     }
 
-    if (currentHex.traits.includes("Rough") && unit.traits.includes("Tracked") === false && roughCost === false) {
-        rough = true;
-        //costs 1 M for 1st Rough hex entered
-        cost += rate;
-    }
-    if (currentHex.traits.includes("Paved") === false && paved === true) {
-        if (unit.traits.includes("Rapid") === false && unit.order === "Rapid Move") {
-            //wheeled on road using rapid, cant leave essentially
-            cost = 100000;
-        } else {
-            cost += rate;
-            //started on paved, now leaving, so loses the 1 M, essentially rate increase
-        }
-    }
-//////
-    if (currentHex.traits.includes("Difficult" && unit.traits.includes("Tracked") === false) || currentHex.traits.includes("Hazardous")) {
-            if ((order === "Cautious Move" || order === "Patrol Move") && unit.fired === true) {
-                //unit fired and so cannot enter Difficult ground
-                cost = 100000;
-                return cost;
-            }
-    }
-
-    if (currentHex.traits.includes("Difficult")) {
-        if (unit.traits.includes("Tracked")) {
-            if (rough === false) {
-                //treated as Rough
-                rough = true;
-                //costs 1 M for 1st Difficult hex entered
-                cost += rate;
-            }
-        } else if (danger === false) {
-            danger = true;
-            //costs 1 M for 1st Difficult hex entered
-            cost += rate;
-        }
-    }
-    if (currentHex.traits.includes("Hazardous")) {
-        if (unit.traits.includes("Tracked")) {
-            if (danger === false) {
-                //treated as Difficult
-                danger = true;
-                //costs 1 M for 1st Difficult hex entered
-                cost += rate;
-            }
-        } else if (hazard === false) {
-            hazard = true;
-            //costs 1 M for 1st Hazardous hex entered
-            cost += rate;
-        }
-    }
     if (currentHex.traits.includes("Impassable")) {
         cost = 100000;
+        return cost;
     }
     if (currentHex.traits.includes("Building") && unit.traits.includes("Infantry") === false) {
         cost = 100000;
+        return cost;
+    }
+   if (currentHex.traits.includes("Paved") === false && paved === true) {
+        cost += rate;
+        if (unit.traits.includes("Rapid") === false && unit.order === "Rapid Move") {
+            cost = 100000;
+            return cost;
+            //cant leave road if moving Rapid as Wheeled
+        }
     }
 
 
+    if (unit.traits.includes("Tracked")) {
+        if (unit.fired === true && currentHex.traits.includes("Hazardous")) {
+            cost = 100000;
+            return cost;
+        }
+        if (currentHex.traits.includes("Difficult") && rough === false) {
+            cost += rate;
+            rough = true;
+        }
+        if (currentHex.traits.includes("Hazardous") && difficult === false) {
+            cost += rate;
+            difficult = true;
+        }
+    } else {
+        if (unit.fired === true && (currentHex.traits.includes("Hazardous") || currentHex.traits.includes("Difficult"))) {
+            cost = 100000;
+            return cost;
+        }
+        if (currentHex.traits.includes("Rough") && rough === false) {
+            cost += rate;
+            rough = true;
+        }
+        if (currentHex.traits.includes("Difficult") && difficult === false) {
+            cost += rate;
+            difficult = true;
+        }
+        if (currentHex.traits.includes("Hazardous") && hazardous === false) {
+            cost += rate;
+            hazardous = true;
+        }
+    }
 
-
-
-
-
+    return cost;
 }
