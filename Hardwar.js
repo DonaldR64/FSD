@@ -79,6 +79,7 @@ const CC = (() => {
     let combatArray = {};
     let stats = {};
     let statKeys = ["armour","defence","mobility","firepower"];
+    let moveInfo = {};
 
     let outputCard = {title: "",subtitle: "",side: "",body: [],buttons: [],};
 
@@ -1878,10 +1879,10 @@ log(result)
 
         actions--;
         if (order === "Cautious Move") {
-            if (unit.traits.includes("Tracked") || unit.traits.includes("Air")) {
+            if (unit.abilities.includes("Tracked") || unit.abilities.includes("Air")) {
                 outputCard.body.push("The Unit may Move and Fire in either order");
             } else {
-                outputCard.body.push("As long as Difficult Ground is not entered, the Unit may Shoot");
+                outputCard.body.push("As long as Difficult Ground is not entered, the Unit may Fire");
 
             }
             outputCard.body.push("(The Target must be in LOS from the starting position)");
@@ -1889,7 +1890,7 @@ log(result)
             unit.token.set(SM.alert,true);
         }
         if (order === "Patrol Move") {
-            outputCard.body.push("As long as Difficult Ground is not entered, the Unit may Shoot");
+            outputCard.body.push("As long as Difficult Ground is not entered, the Unit may Fire");
             outputCard.body.push("(The Target must be in LOS from the starting position)");
             outputCard.body.push("The Unit has " + (mobility * 2) + " MP");
         }
@@ -3021,14 +3022,15 @@ const CR = (unit1,unit2,combatStatus) => {
         let id = tok.get("id");
         let unit = UnitArray[id];
         if (!unit) {return};
+
         let newLocation = new Point(tok.get("left"),tok.get("top"));
         let startHex = HexMap[unit.startHexLabel]; //set at start of activation or turn
         let goalHex = HexMap[newLocation.label()];
         let mobility = parseInt(unit.mobility);
-        if (order === "Patrol Move") {
+        if (unit.order === "Patrol Move") {
             mobility *= 2;
         }
-        if (order === "Rapid Move") {
+        if (unit.order === "Rapid Move") {
             mobility *= 3;
         }
         let paved = false;
@@ -3046,6 +3048,13 @@ const CR = (unit1,unit2,combatStatus) => {
             cost: 0,
             estimate: startHex.cube.distance(goalHex.cube),
         }]
+        moveInfo = {
+            unit: unit,
+            paved: paved,
+            rough: rough,
+            difficult: difficult,
+            hazardous: hazardous,
+        }
 
         while (frontier.length > 0) {
             //sort paths in frontier by cost,lowest cost first
@@ -3055,7 +3064,6 @@ const CR = (unit1,unit2,combatStatus) => {
                 return a.estimate - b.estimate || b.cost - a.cost; //2nd part used if estimates are same
             })
             let node = frontier.shift();
-            let nodeHex = HexMap[node.label];
             nodes++
             //add this node to explored paths
             explored.push(node);
@@ -3073,8 +3081,8 @@ const CR = (unit1,unit2,combatStatus) => {
                 let stepHexLabel = stepCube.label();
                 let stepHex = HexMap[stepHexLabel];
                 if (!stepHex) {continue};
-                let costResults = HexCost(stepHex);
-                if (costResults === -1) {continue}; //impassable
+                let costResult = HexCost(stepHex);
+                if (costResult === -1) {continue}; //impassable
                 let cost = costResult + node.cost;
                 //check if this step has already been explored
                 let isExplored = (explored.find(e=> {
@@ -3179,98 +3187,92 @@ log(array)
         }
 
 
-
-
-
-
-        //Booleans - rough,difficult,hazard,paved etc - and paved is turned true earlier, based on initial hex (plus mobility +1 for starting on paved)
-        //if starts on paved, add 1 to mobility and if wheeled gets Rapid Move macro added in start
-        //if final path has entered rough etc, check/roll for damage as appropriate
-
-        const HexCost = (hex) => {
-            let cost = 1;
-            let rate = 1;
-            if (unit.order === "Patrol Move") {rate = 2};
-            if (unit.order === "Rapid Move") {rate = 3};
-
-
-            //Aircraft
-            if (unit.type === "Aircraft" && unit.airHeight > 0) {
-                if (hex.label === finalHex.label) {
-                    if (hex.traits.includes("Rough") || hex.traits.includes("Dangerous") || hex.traits.includes("Hazardous")) {
-                        cost += rate;
-                    }
-                    if (hex.traits.includes("Impassable") || hex.traits.includes("Building")) {
-                        cost = -1;
-                    }
-                }
-                return cost;
-            }
-
-            if (hex.traits.includes("Impassable")) {
-                cost = -1;
-                return cost;
-            }
-            if (hex.tokenIDs.length > 0) {
-                cost = -1;
-                return cost;
-            }
-            if (hex.traits.includes("Building") && unit.traits.includes("Infantry") === false) {
-                cost = -1;
-                return cost;
-            }
-        if (hex.traits.includes("Paved") === false && paved === true) {
-                cost += rate;
-                if (unit.traits.includes("Rapid") === false && unit.order === "Rapid Move") {
-                    cost = -1;
-                    return cost;
-                    //cant leave road if moving Rapid as Wheeled
-                }
-            }
-
-
-            if (unit.traits.includes("Tracked")) {
-                if (unit.fired === true && hex.traits.includes("Hazardous")) {
-                    cost = -1;
-                    return cost;
-                }
-                if (hex.traits.includes("Difficult") && rough === false) {
-                    cost += rate;
-                    rough = true;
-                }
-                if (hex.traits.includes("Hazardous") && difficult === false) {
-                    cost += rate;
-                    difficult = true;
-                }
-            } else {
-                if (unit.fired === true && (hex.traits.includes("Hazardous") || hex.traits.includes("Difficult"))) {
-                    cost = -1;
-                    return cost;
-                }
-                if (hex.traits.includes("Rough") && rough === false) {
-                    cost += rate;
-                    rough = true;
-                }
-                if (hex.traits.includes("Difficult") && difficult === false) {
-                    cost += rate;
-                    difficult = true;
-                }
-                if (hex.traits.includes("Hazardous") && hazardous === false) {
-                    cost += rate;
-                    hazardous = true;
-                }
-            }
-
-            return cost;
-        }
-
-
-
-
     }
 
 
-    
+    //Booleans - rough,difficult,hazard,paved etc - and paved is turned true earlier, based on initial hex (plus mobility +1 for starting on paved)
+    //if starts on paved, add 1 to mobility and if wheeled gets Rapid Move macro added in start
+    //if final path has entered rough etc, check/roll for damage as appropriate
+
+    const HexCost = (hex) => {
+        let unit = moveInfo.unit;
+        let cost = 1;
+        let rate = 1;
+        if (unit.order === "Patrol Move") {rate = 2};
+        if (unit.order === "Rapid Move") {rate = 3};
+
+        //Aircraft
+        if (unit.type === "Aircraft" && unit.airHeight > 0) {
+            if (hex.label === finalHex.label) {
+                if (hex.traits.includes("Rough") || hex.traits.includes("Dangerous") || hex.traits.includes("Hazardous")) {
+                    cost += rate;
+                }
+                if (hex.traits.includes("Impassable") || hex.traits.includes("Building")) {
+                    cost = -1;
+                }
+            }
+            return cost;
+        }
+
+        if (hex.traits.includes("Impassable")) {
+            cost = -1;
+            return cost;
+        }
+        if (hex.tokenIDs.length > 0) {
+            cost = -1;
+            return cost;
+        }
+        if (hex.traits.includes("Building") && unit.abilities.includes("Infantry") === false) {
+            cost = -1;
+            return cost;
+        }
+        if (hex.traits.includes("Paved") === false && moveInfo.paved === true) {
+            cost += rate;
+            if (unit.abilities.includes("Rapid") === false && unit.order === "Rapid Move") {
+                cost = -1;
+                return cost;
+                //cant leave road if moving Rapid as Wheeled
+            }
+        }
+
+
+        if (unit.abilities.includes("Tracked")) {
+            if (unit.fired === true && hex.traits.includes("Hazardous")) {
+                cost = -1;
+                return cost;
+            }
+            if (hex.traits.includes("Difficult") && moveInfo.rough === false) {
+                cost += rate;
+                moveInfo.rough = true;
+            }
+            if (hex.traits.includes("Hazardous") && moveInfo.difficult === false) {
+                cost += rate;
+                moveInfo.difficult = true;
+            }
+        } else {
+            if (unit.fired === true && (hex.traits.includes("Hazardous") || hex.traits.includes("Difficult"))) {
+                cost = -1;
+                return cost;
+            }
+            if (hex.traits.includes("Rough") && moveInfo.rough === false) {
+                cost += rate;
+                moveInfo.rough = true;
+            }
+            if (hex.traits.includes("Difficult") && moveInfo.difficult === false) {
+                cost += rate;
+                moveInfo.difficult = true;
+            }
+            if (hex.traits.includes("Hazardous") && moveInfo.hazardous === false) {
+                cost += rate;
+                moveInfo.hazardous = true;
+            }
+        }
+        return cost;
+    }
+
+
+
+
 
 
 
