@@ -133,6 +133,9 @@ section {
   grid-area: dam;
   background-color: white;
 }
+.dam h4 {
+  color: black;
+}
 
 .daminfo {
     grid-area: daminfo;
