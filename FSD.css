@@ -24,7 +24,7 @@ input[type="hidden"][name="attr_faction"] ~ .mysheet {
     background-color: lightgray;
 }
 input[type="hidden"][name="attr_faction"][value="Tech"] ~ .mysheet {
-    background-color: black;
+    background-color: orange;
 }
 input[type="hidden"][name="attr_faction"][value="Conglomerate"] ~ .mysheet {
     background-color: grey;
