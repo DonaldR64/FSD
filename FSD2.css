@@ -135,19 +135,15 @@ section {
   background-color: white;
 }
 
-
-.damageinfo{
-  grid-area: damageinfo;
-  display: grid;
-  grid-gap: 2px;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  background-color: white;
-  text-align: center;
-  align-items: center;
+.daminfo {
+    grid-area: daminfo;
+    display: grid;
+    grid-gap: 2px;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: auto;
+    background-color: white;
+    text-align: center;
 }
-
-
 .common {
   grid-area: common;
   background-color: white;
