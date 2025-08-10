@@ -41,7 +41,6 @@ main {
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"common   common    header   header"
                       "common   common    att   att"
-                      "common   common    att   att"
                       "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon"
                       "damage   damage    damage   damage";
