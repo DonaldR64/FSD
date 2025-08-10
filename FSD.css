@@ -136,8 +136,8 @@ section {
 }
 
 
-.damageinfo{
-  grid-area: damageinfo;
+.daminfo{
+  grid-area: daminfo;
   display: grid;
   grid-gap: 2px;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
