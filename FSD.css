@@ -39,12 +39,13 @@ main {
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"header   header    header   header"
-                      "common   common    common   damage"
-                      "common   common    common   damage"
-                      "att      att       att      att"
+  grid-template-areas:"common   common    header   header"
+                      "common   common    att   att"
+                      "common   common    att   att"
                       "weapon   weapon    weapon   weapon"
-                      "weapon   weapon    weapon   weapon";
+                      "weapon   weapon    weapon   weapon"
+                      "damage   damage    damage   damage";
+
 }
 
 
@@ -159,8 +160,8 @@ section {
     grid-area: attinfo;
     display: grid;
     grid-gap: 2px;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
     background-color: white;
     text-align: center;
 }
