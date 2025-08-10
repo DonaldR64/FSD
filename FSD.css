@@ -27,7 +27,7 @@ input[type="hidden"][name="attr_faction"][value="Tech"] ~ .mysheet {
     background-color: black;
 }
 input[type="hidden"][name="attr_faction"][value="Conglomerate"] ~ .mysheet {
-    background-color: yellow;
+    background-color: grey;
 }
 
 
@@ -132,8 +132,7 @@ section {
 
 .damage {
   grid-area: damage;
-  flex-direction: center;
-  border-style: none;
+  background-color: white;
 }
 
 
@@ -160,7 +159,7 @@ section {
     grid-area: attinfo;
     display: grid;
     grid-gap: 2px;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     background-color: white;
     text-align: center;
