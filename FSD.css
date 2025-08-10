@@ -293,8 +293,8 @@ input[type="hidden"][value="Equipped"].system6-status ~ .system6{
   grid-area: damageinfo;
   display: grid;
   grid-gap: 2px;
-  grid-template-columns: auto;
-  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: 2fr;
   background-color: white;
   text-align: center;
   align-items: center;
