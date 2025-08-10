@@ -40,10 +40,9 @@ main {
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"common   common    header   header"
-                      "common   common    att      att"
+                      "common   common    att      dam"
                       "weapon   weapon    weapon   weapon"
-                      "weapon   weapon    weapon   weapon"
-                      "damage   damage    damage   damage";
+                      "weapon   weapon    weapon   weapon";
 
 }
 
@@ -130,8 +129,8 @@ section {
   color: white;
 }
 
-.damage {
-  grid-area: damage;
+.dam {
+  grid-area: dam;
   background-color: white;
 }
 
