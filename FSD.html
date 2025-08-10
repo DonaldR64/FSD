@@ -53,7 +53,6 @@
                 <th>Equipped</th>
                 <th>Cost</th>
                 <th>Name</th>
-                <th>Type</th>
                 <th>Range</th>
                 <th>Damage</th>
                 <th>Special</th>
@@ -68,12 +67,7 @@
                         <option value = "Equipped">Equipped</option>
                     </select></td>
                     <td><input type="text" name="attr_system1cost"></td>
-                    <td><input type="text" name="attr_system1name"></td>
-                    <td><select name="attr_system1type">
-                        <option value="" selected disabled hidden>Choose here</option>
-                        <option value="Weapon">Weapon</option>
-                        <option value="Ability">Ability</option>
-                    </select></td>      
+                    <td><input type="text" name="attr_system1name"></td>   
                     <td><input type="text" name="attr_system1range"></td>
                     <td><input type="text" name="attr_system1damage"></td>
                     <td><input type="text" name="attr_system1special"></td>
@@ -86,12 +80,7 @@
                         <option value = "Equipped">Equipped</option>
                     </select></td>
                     <td><input type="text" name="attr_system2cost"></td>
-                    <td><input type="text" name="attr_system2name"></td>
-                    <td><select name="attr_system2type">
-                        <option value="" selected disabled hidden>Choose here</option>
-                        <option value="Weapon">Weapon</option>
-                        <option value="Ability">Ability</option>
-                    </select></td>      
+                    <td><input type="text" name="attr_system2name"></td> 
                     <td><input type="text" name="attr_system2range"></td>
                     <td><input type="text" name="attr_system2damage"></td>
                     <td><input type="text" name="attr_system2special"></td>
@@ -104,12 +93,7 @@
                         <option value = "Equipped">Equipped</option>
                     </select></td>
                     <td><input type="text" name="attr_system3cost"></td>
-                    <td><input type="text" name="attr_system3name"></td>
-                    <td><select name="attr_system3type">
-                        <option value="" selected disabled hidden>Choose here</option>
-                        <option value="Weapon">Weapon</option>
-                        <option value="Ability">Ability</option>
-                    </select></td>      
+                    <td><input type="text" name="attr_system3name"></td>   
                     <td><input type="text" name="attr_system3range"></td>
                     <td><input type="text" name="attr_system3damage"></td>
                     <td><input type="text" name="attr_system3special"></td>
@@ -122,12 +106,7 @@
                         <option value = "Equipped">Equipped</option>
                     </select></td>
                     <td><input type="text" name="attr_system4cost"></td>
-                    <td><input type="text" name="attr_system4name"></td>
-                    <td><select name="attr_system4type">
-                        <option value="" selected disabled hidden>Choose here</option>
-                        <option value="Weapon">Weapon</option>
-                        <option value="Ability">Ability</option>
-                    </select></td>      
+                    <td><input type="text" name="attr_system4name"></td>     
                     <td><input type="text" name="attr_system4range"></td>
                     <td><input type="text" name="attr_system4damage"></td>
                     <td><input type="text" name="attr_system4special"></td>
@@ -140,12 +119,7 @@
                         <option value = "Equipped">Equipped</option>
                     </select></td>
                     <td><input type="text" name="attr_system5cost"></td>
-                    <td><input type="text" name="attr_system5name"></td>
-                    <td><select name="attr_system5type">
-                        <option value="" selected disabled hidden>Choose here</option>
-                        <option value="Weapon">Weapon</option>
-                        <option value="Ability">Ability</option>
-                    </select></td>      
+                    <td><input type="text" name="attr_system5name"></td>      
                     <td><input type="text" name="attr_system5range"></td>
                     <td><input type="text" name="attr_system5damage"></td>
                     <td><input type="text" name="attr_system5special"></td>
@@ -158,12 +132,7 @@
                         <option value = "Equipped">Equipped</option>
                     </select></td>
                     <td><input type="text" name="attr_system6cost"></td>
-                    <td><input type="text" name="attr_system6name"></td>
-                    <td><select name="attr_system6type">
-                        <option value="" selected disabled hidden>Choose here</option>
-                        <option value="Weapon">Weapon</option>
-                        <option value="Ability">Ability</option>
-                    </select></td>      
+                    <td><input type="text" name="attr_system6name"></td>     
                     <td><input type="text" name="attr_system6range"></td>
                     <td><input type="text" name="attr_system6damage"></td>
                     <td><input type="text" name="attr_system6special"></td>
@@ -225,8 +194,8 @@
                 <div class="weaponinfo">
                     <div><span>System</span></div>
                     <div><span>Cost</span></div>
+                    <div><span>Ready</span></div>
                     <div><span>Name</span></div>
-                    <div><span>Type</span></div>
                     <div><span>Range</span></div>
                     <div><span>Damage</span></div>
                     <div><span>Special</span></div>
@@ -235,8 +204,8 @@
                 <div class="system1">
                     <h4><span>1</span></h4>
                     <h4><span name="attr_system1cost"></span></h4>
+                    <h4><span name="attr_system1ready"></span></h4>
                     <h4><span name="attr_system1name"></span></h4>
-                    <h4><span name="attr_system1type"></span></h4>
                     <h4><span name="attr_system1range"></span></h4>
                     <h4><span name="attr_system1damage"></span></h4>
                     <h4><span name="attr_system1special"></span></h4>
@@ -245,8 +214,8 @@
                 <div class="system2">
                     <h4><span>2</span></h4>
                     <h4><span name="attr_system2cost"></span></h4>
+                    <h4><span name="attr_system2ready"></span></h4>
                     <h4><span name="attr_system2name"></span></h4>
-                    <h4><span name="attr_system2type"></span></h4>
                     <h4><span name="attr_system2range"></span></h4>
                     <h4><span name="attr_system2damage"></span></h4>
                     <h4><span name="attr_system2special"></span></h4>
@@ -255,6 +224,7 @@
                 <div class="system3">
                     <h4><span>3</span></h4>
                     <h4><span name="attr_system3cost"></span></h4>
+                    <h4><span name="attr_system3ready"></span></h4>
                     <h4><span name="attr_system3name"></span></h4>
                     <h4><span name="attr_system3type"></span></h4>
                     <h4><span name="attr_system3range"></span></h4>
@@ -265,8 +235,8 @@
                 <div class="system4">
                     <h4><span>4</span></h4>
                     <h4><span name="attr_system4cost"></span></h4>
+                    <h4><span name="attr_system4ready"></span></h4>
                     <h4><span name="attr_system4name"></span></h4>
-                    <h4><span name="attr_system4type"></span></h4>
                     <h4><span name="attr_system4range"></span></h4>
                     <h4><span name="attr_system4damage"></span></h4>
                     <h4><span name="attr_system4special"></span></h4>
@@ -275,8 +245,8 @@
                 <div class="system5">
                     <h4><span>5</span></h4>
                     <h4><span name="attr_system5cost"></span></h4>
+                    <h4><span name="attr_system5ready"></span></h4>
                     <h4><span name="attr_system5name"></span></h4>
-                    <h4><span name="attr_system5type"></span></h4>
                     <h4><span name="attr_system5range"></span></h4>
                     <h4><span name="attr_system5damage"></span></h4>
                     <h4><span name="attr_system5special"></span></h4>
@@ -285,8 +255,8 @@
                 <div class="system6">
                     <h4><span>6</span></h4>
                     <h4><span name="attr_system6cost"></span></h4>
+                    <h4><span name="attr_system6ready"></span></h4>
                     <h4><span name="attr_system6name"></span></h4>
-                    <h4><span name="attr_system6type"></span></h4>
                     <h4><span name="attr_system6range"></span></h4>
                     <h4><span name="attr_system6damage"></span></h4>
                     <h4><span name="attr_system6special"></span></h4>
