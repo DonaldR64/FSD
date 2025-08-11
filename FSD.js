@@ -677,8 +677,6 @@ const CC = (() => {
             }
             this.abilities = abilities;
 
-            this.systemNumbers = systemNumbers;
-
             let drt = {};
             let systems = {};
             for (let i=1;i<7;i++) {
@@ -694,7 +692,10 @@ const CC = (() => {
                         system: system,
                     }
                     if (!systems[system]) {
-                        systems[system] = status;
+                        systems[system] = {
+                            system: systemNumbers[system],
+                            status: status,
+                        }
                     }
                 })
             }
