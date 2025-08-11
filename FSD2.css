@@ -42,7 +42,7 @@ main {
   grid-template-areas:"common   common    header   header"
                       "common   common    att      dam"
                       "weapon   weapon    weapon   weapon"
-                      "weapon   weapon    weapon   weapon";
+                      "abil     abil      abil      abil";
 
 }
 
@@ -186,12 +186,121 @@ section {
   grid-area: weaponinfo;
   display: grid;
   grid-gap: 2px;
-  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 3fr;
   grid-template-rows: 1fr;
   background-color: white;
   text-align: center;
   align-items: center;
 }
+
+/* Weapon 1 */
+input[type="hidden"][value="Off"].weapon1-status ~ .weapon1{
+    display: none;
+}
+input[type="hidden"][value="Equipped"].weapon1-status ~ .weapon1{
+    display: grid;
+}
+.weapon1 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+    grid-template-rows: 1;
+    background-color: white;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+/* Weapon 2 */
+input[type="hidden"][value="Off"].weapon2-status ~ .weapon2{
+    display: none;
+}
+input[type="hidden"][value="Equipped"].weapon2-status ~ .weapon2{
+    display: grid;
+}
+.weapon2 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+    grid-template-rows: 1;
+    background-color: white;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+/* Weapon 3 */
+input[type="hidden"][value="Off"].weapon3-status ~ .weapon3{
+    display: none;
+}
+input[type="hidden"][value="Equipped"].weapon3-status ~ .weapon3{
+    display: grid;
+}
+.weapon3 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+    grid-template-rows: 1;
+    background-color: white;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+/* Weapon 4 */
+input[type="hidden"][value="Off"].weapon4-status ~ .weapon4{
+    display: none;
+}
+input[type="hidden"][value="Equipped"].weapon4-status ~ .weapon4{
+    display: grid;
+}
+.weapon4 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+    grid-template-rows: 1;
+    background-color: white;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+/* Weapon 5 */
+input[type="hidden"][value="Off"].weapon5-status ~ .weapon5{
+    display: none;
+}
+input[type="hidden"][value="Equipped"].weapon5-status ~ .weapon5{
+    display: grid;
+}
+.weapon5 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+    grid-template-rows: 1;
+    background-color: white;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+
+
+.abilities {
+  grid-area: abil;
+  background-color:  white;
+}
+
+.abilityinfo{
+  grid-area: abilityinfo;
+  display: grid;
+  grid-gap: 2px;
+  grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
+  grid-template-rows: 1fr;
+  background-color: white;
+  text-align: center;
+  align-items: center;
+}
+
 
 /* System 1 */
 input[type="hidden"][value="Off"].system1-status ~ .system1{
@@ -203,7 +312,7 @@ input[type="hidden"][value="Equipped"].system1-status ~ .system1{
 .system1 {
     display: grid;
     grid-gap: 1px;
-  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+  grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
@@ -221,7 +330,7 @@ input[type="hidden"][value="Equipped"].system2-status ~ .system2{
 .system2 {
     display: grid;
     grid-gap: 1px;
-  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+  grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
@@ -239,7 +348,7 @@ input[type="hidden"][value="Equipped"].system3-status ~ .system3{
 .system3 {
     display: grid;
     grid-gap: 1px;
-  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+  grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
@@ -257,7 +366,7 @@ input[type="hidden"][value="Equipped"].system4-status ~ .system4{
 .system4 {
     display: grid;
     grid-gap: 1px;
-  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+  grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
@@ -275,25 +384,7 @@ input[type="hidden"][value="Equipped"].system5-status ~ .system5{
 .system5 {
     display: grid;
     grid-gap: 1px;
-  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
-    grid-template-rows: 1;
-    background-color: white;
-    text-align: center;
-    align-items: center;
-    padding: 3px;
-}
-
-/* System 6 */
-input[type="hidden"][value="Off"].system6-status ~ .system6{
-    display: none;
-}
-input[type="hidden"][value="Equipped"].system6-status ~ .system6{
-    display: grid;
-}
-.system6 {
-    display: grid;
-    grid-gap: 1px;
-  grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 5fr;
+  grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
