@@ -28,6 +28,8 @@
             <br>
             <label>Notes:</label><input type="text" name="attr_notes">
             <br>
+            <label>Extra Rules:</label><input type="text" name="attr_special">
+            <br>
             <label>Points:</label><input type="number" name="attr_points">
         </div>
     </div>
@@ -57,11 +59,13 @@
         <h3>Systems</h3>
 
         <div class="weapons">
+            <h3>Weapons</h3>
             <table>
             <thead>
                 <tr>
                 <th>Equipped</th>
-                <th>Cost</th>
+                <th>System #</th>
+                <th>AD</th>
                 <th>Ready</th>
                 <th>Name</th>
                 <th>Range</th>
@@ -73,93 +77,185 @@
             </thead>
             <tbody>
                 <tr>
-                    <td><select name="attr_system1equipped">
+                    <td><select name="attr_weapon1equipped">
                         <option value = "Off">Off</option>
                         <option value = "Equipped">Equipped</option>
                     </select></td>
-                    <td><input type="text" name="attr_system1cost"></td>
-                    <td><input type="text" name="attr_system1ready"></td>
-                    <td><input type="text" name="attr_system1name"></td>   
-                    <td><input type="text" name="attr_system1range"></td>
-                    <td><input type="text" name="attr_system1damage"></td>
-                    <td><input type="text" name="attr_system1special"></td>
-                    <td><input type="text" name="attr_system1fx"></td>
-                    <td><input type="text" name="attr_system1sound"></td>                
+                    <td><input type="text" name="attr_weapon1systemnum"></td>
+                    <td><input type="text" name="attr_weapon1ad"></td>
+                    <td><input type="text" name="attr_weapon1ready"></td>
+                    <td><input type="text" name="attr_weapon1name"></td>   
+                    <td><input type="text" name="attr_weapon1range"></td>
+                    <td><input type="text" name="attr_weapon1damage"></td>
+                    <td><input type="text" name="attr_weapon1special"></td>
+                    <td><input type="text" name="attr_weapon1fx"></td>
+                    <td><input type="text" name="attr_weapon1sound"></td>                
                 </tr>
                <tr>
-                    <td><select name="attr_system2equipped">
+                    <td><select name="attr_weapon2equipped">
                         <option value = "Off">Off</option>
                         <option value = "Equipped">Equipped</option>
                     </select></td>
-                    <td><input type="text" name="attr_system2cost"></td>
-                    <td><input type="text" name="attr_system2ready"></td>
-                    <td><input type="text" name="attr_system2name"></td> 
-                    <td><input type="text" name="attr_system2range"></td>
-                    <td><input type="text" name="attr_system2damage"></td>
-                    <td><input type="text" name="attr_system2special"></td>
-                    <td><input type="text" name="attr_system2fx"></td>
-                    <td><input type="text" name="attr_system2sound"></td>                
+                    <td><input type="text" name="attr_weapon2systemnum"></td>
+                    <td><input type="text" name="attr_weapon2ad"></td>
+                    <td><input type="text" name="attr_weapon2ready"></td>
+                    <td><input type="text" name="attr_weapon2name"></td> 
+                    <td><input type="text" name="attr_weapon2range"></td>
+                    <td><input type="text" name="attr_weapon2damage"></td>
+                    <td><input type="text" name="attr_weapon2special"></td>
+                    <td><input type="text" name="attr_weapon2fx"></td>
+                    <td><input type="text" name="attr_weapon2sound"></td>                
                 </tr>
                 <tr>
-                    <td><select name="attr_system3equipped">
+                    <td><select name="attr_weapon3equipped">
                         <option value = "Off">Off</option>
                         <option value = "Equipped">Equipped</option>
                     </select></td>
-                    <td><input type="text" name="attr_system3cost"></td>
-                    <td><input type="text" name="attr_system3ready"></td>
-                    <td><input type="text" name="attr_system3name"></td>   
-                    <td><input type="text" name="attr_system3range"></td>
-                    <td><input type="text" name="attr_system3damage"></td>
-                    <td><input type="text" name="attr_system3special"></td>
-                    <td><input type="text" name="attr_system3fx"></td>
-                    <td><input type="text" name="attr_system3sound"></td>                
+                    <td><input type="text" name="attr_weapon3systemnum"></td>
+                    <td><input type="text" name="attr_weapon3ad"></td>
+                    <td><input type="text" name="attr_weapon3ready"></td>
+                    <td><input type="text" name="attr_weapon3name"></td>   
+                    <td><input type="text" name="attr_weapon3range"></td>
+                    <td><input type="text" name="attr_weapon3damage"></td>
+                    <td><input type="text" name="attr_weapon3special"></td>
+                    <td><input type="text" name="attr_weapon3fx"></td>
+                    <td><input type="text" name="attr_weapon3sound"></td>                
                 </tr>
                 <tr>
-                    <td><select name="attr_system4equipped">
+                    <td><select name="attr_weapon4equipped">
                         <option value = "Off">Off</option>
                         <option value = "Equipped">Equipped</option>
                     </select></td>
-                    <td><input type="text" name="attr_system4cost"></td>
-                    <td><input type="text" name="attr_system4ready"></td>
-                    <td><input type="text" name="attr_system4name"></td>     
-                    <td><input type="text" name="attr_system4range"></td>
-                    <td><input type="text" name="attr_system4damage"></td>
-                    <td><input type="text" name="attr_system4special"></td>
-                    <td><input type="text" name="attr_system4fx"></td>
-                    <td><input type="text" name="attr_system4sound"></td>                
+                    <td><input type="text" name="attr_weapon4systemnum"></td>
+                    <td><input type="text" name="attr_weapon4ad"></td>
+                    <td><input type="text" name="attr_weapon4ready"></td>
+                    <td><input type="text" name="attr_weapon4name"></td>     
+                    <td><input type="text" name="attr_weapon4range"></td>
+                    <td><input type="text" name="attr_weapon4damage"></td>
+                    <td><input type="text" name="attr_weapon4special"></td>
+                    <td><input type="text" name="attr_weapon4fx"></td>
+                    <td><input type="text" name="attr_weapon4sound"></td>                
                 </tr>
                 <tr>
-                    <td><select name="attr_system5equipped">
+                    <td><select name="attr_weapon5equipped">
                         <option value = "Off">Off</option>
                         <option value = "Equipped">Equipped</option>
                     </select></td>
-                    <td><input type="text" name="attr_system5cost"></td>
-                    <td><input type="text" name="attr_system5ready"></td>
-                    <td><input type="text" name="attr_system5name"></td>      
-                    <td><input type="text" name="attr_system5range"></td>
-                    <td><input type="text" name="attr_system5damage"></td>
-                    <td><input type="text" name="attr_system5special"></td>
-                    <td><input type="text" name="attr_system5fx"></td>
-                    <td><input type="text" name="attr_system5sound"></td>                
+                    <td><input type="text" name="attr_weapon5systemnum"></td>
+                    <td><input type="text" name="attr_weapon5ad"></td>
+                    <td><input type="text" name="attr_weapon5ready"></td>
+                    <td><input type="text" name="attr_weapon5name"></td>      
+                    <td><input type="text" name="attr_weapon5range"></td>
+                    <td><input type="text" name="attr_weapon5damage"></td>
+                    <td><input type="text" name="attr_weapon5special"></td>
+                    <td><input type="text" name="attr_weapon5fx"></td>
+                    <td><input type="text" name="attr_weapon5sound"></td>                
                 </tr>
-                <tr>
-                    <td><select name="attr_system6equipped">
-                        <option value = "Off">Off</option>
-                        <option value = "Equipped">Equipped</option>
-                    </select></td>
-                    <td><input type="text" name="attr_system6cost"></td>
-                    <td><input type="text" name="attr_system6ready"></td>
-                    <td><input type="text" name="attr_system6name"></td>     
-                    <td><input type="text" name="attr_system6range"></td>
-                    <td><input type="text" name="attr_system6damage"></td>
-                    <td><input type="text" name="attr_system6special"></td>
-                    <td><input type="text" name="attr_system6fx"></td>
-                    <td><input type="text" name="attr_system6sound"></td>                
-                </tr>
+
 
             </tbody>
             </table>    
         </div>    
+
+
+        <div class="Abilities">
+            <h3>Abilities</h3>
+            <table>
+            <thead>
+                <tr>
+                <th>Equipped</th>
+                <th>System #</th>
+                <th>AD</th>
+                <th>Ready</th>
+                <th>Name</th>
+                <th>Special</th>
+                <th>F/X</th>
+                <th>Sound</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><select name="attr_ability1equipped">
+                        <option value = "Off">Off</option>
+                        <option value = "Equipped">Equipped</option>
+                    </select></td>
+                    <td><input type="text" name="attr_ability1systemnum"></td>
+                    <td><input type="text" name="attr_ability1ad"></td>
+                    <td><input type="text" name="attr_ability1ready"></td>
+                    <td><input type="text" name="attr_ability1name"></td>   
+                    <td><input type="text" name="attr_ability1range"></td>
+                    <td><input type="text" name="attr_ability1damage"></td>
+                    <td><input type="text" name="attr_ability1special"></td>
+                    <td><input type="text" name="attr_ability1fx"></td>
+                    <td><input type="text" name="attr_ability1sound"></td>                
+                </tr>
+               <tr>
+                    <td><select name="attr_ability2equipped">
+                        <option value = "Off">Off</option>
+                        <option value = "Equipped">Equipped</option>
+                    </select></td>
+                    <td><input type="text" name="attr_ability2systemnum"></td>
+                    <td><input type="text" name="attr_ability2ad"></td>
+                    <td><input type="text" name="attr_ability2ready"></td>
+                    <td><input type="text" name="attr_ability2name"></td> 
+                    <td><input type="text" name="attr_ability2range"></td>
+                    <td><input type="text" name="attr_ability2damage"></td>
+                    <td><input type="text" name="attr_ability2special"></td>
+                    <td><input type="text" name="attr_ability2fx"></td>
+                    <td><input type="text" name="attr_ability2sound"></td>                
+                </tr>
+                <tr>
+                    <td><select name="attr_ability3equipped">
+                        <option value = "Off">Off</option>
+                        <option value = "Equipped">Equipped</option>
+                    </select></td>
+                    <td><input type="text" name="attr_ability3systemnum"></td>
+                    <td><input type="text" name="attr_ability3ad"></td>
+                    <td><input type="text" name="attr_ability3ready"></td>
+                    <td><input type="text" name="attr_ability3name"></td>   
+                    <td><input type="text" name="attr_ability3range"></td>
+                    <td><input type="text" name="attr_ability3damage"></td>
+                    <td><input type="text" name="attr_ability3special"></td>
+                    <td><input type="text" name="attr_ability3fx"></td>
+                    <td><input type="text" name="attr_ability3sound"></td>                
+                </tr>
+                <tr>
+                    <td><select name="attr_ability4equipped">
+                        <option value = "Off">Off</option>
+                        <option value = "Equipped">Equipped</option>
+                    </select></td>
+                    <td><input type="text" name="attr_ability4systemnum"></td>
+                    <td><input type="text" name="attr_ability4ad"></td>
+                    <td><input type="text" name="attr_ability4ready"></td>
+                    <td><input type="text" name="attr_ability4name"></td>     
+                    <td><input type="text" name="attr_ability4range"></td>
+                    <td><input type="text" name="attr_ability4damage"></td>
+                    <td><input type="text" name="attr_ability4special"></td>
+                    <td><input type="text" name="attr_ability4fx"></td>
+                    <td><input type="text" name="attr_ability4sound"></td>                
+                </tr>
+                <tr>
+                    <td><select name="attr_ability5equipped">
+                        <option value = "Off">Off</option>
+                        <option value = "Equipped">Equipped</option>
+                    </select></td>
+                    <td><input type="text" name="attr_ability5systemnum"></td>
+                    <td><input type="text" name="attr_ability5ad"></td>
+                    <td><input type="text" name="attr_ability5ready"></td>
+                    <td><input type="text" name="attr_ability5name"></td>      
+                    <td><input type="text" name="attr_ability5range"></td>
+                    <td><input type="text" name="attr_ability5damage"></td>
+                    <td><input type="text" name="attr_ability5special"></td>
+                    <td><input type="text" name="attr_ability5fx"></td>
+                    <td><input type="text" name="attr_ability5sound"></td>                
+                </tr>
+
+
+            </tbody>
+            </table>    
+        </div>    
+
+
     </div>    
 
 
@@ -178,6 +274,7 @@
             <h1><span name="attr_character_name"></span></h1>
             <h3><span name="attr_faction"></span> <span name="attr_type"></span></h3>
             <h3><span name="attr_notes"></span></h3>
+            <h3><span name="attr_special"></span></h3>
             <h3><span name="attr_points"></span><span> pts</span></h3>
           </section>
 
@@ -241,76 +338,67 @@
           </section>
 
           <section class="weapon">
-            <h2>Weapons and Abilities</h2>
+            <h2>Weapons</h2>
                 <div class="weaponinfo">
                     <h3><span>System</span></h3>
-                    <h3><span>Cost</span></h3>
+                    <h3><span>AD</span></h3>
                     <h3><span>Status</span></h3>
                     <h3><span>Name</span></h3>
                     <h3><span>Range</span></h3>
                     <h3><span>Damage</span></h3>
                     <h3><span>Special</span></h3>
                 </div>
-                <input type="hidden" name="attr_system1equipped" class="system1-status" value="Off">
-                <div class="system1">
-                    <h4><span>1</span></h4>
-                    <h4><span name="attr_system1cost"></span></h4>
-                    <h4><span name="attr_system1ready"></span></h4>
-                    <h4><span name="attr_system1name"></span></h4>
-                    <h4><span name="attr_system1range"></span></h4>
-                    <h4><span name="attr_system1damage"></span></h4>
-                    <h4><span name="attr_system1special"></span></h4>
+                <input type="hidden" name="attr_weapon1equipped" class="weapon1-status" value="Off">
+                <div class="weapon1">
+                    <h4><span name="attr_weapon1systemnum"></span></h4>
+                    <h4><span name="attr_weapon1ad"></span></h4>
+                    <h4><span name="attr_weapon1ready"></span></h4>
+                    <h4><span name="attr_weapon1name"></span></h4>
+                    <h4><span name="attr_weapon1range"></span></h4>
+                    <h4><span name="attr_weapon1damage"></span></h4>
+                    <h4><span name="attr_weapon1special"></span></h4>
                 </div>
-                <input type="hidden" name="attr_system2equipped" class="system2-status" value="Off">
-                <div class="system2">
-                    <h4><span>2</span></h4>
-                    <h4><span name="attr_system2cost"></span></h4>
-                    <h4><span name="attr_system2ready"></span></h4>
-                    <h4><span name="attr_system2name"></span></h4>
-                    <h4><span name="attr_system2range"></span></h4>
-                    <h4><span name="attr_system2damage"></span></h4>
-                    <h4><span name="attr_system2special"></span></h4>
+                <input type="hidden" name="attr_weapon2equipped" class="weapon2-status" value="Off">
+                <div class="weapon2">
+                    <h4><span name="attr_weapon2systemnum"></span></h4>
+                    <h4><span name="attr_weapon2ad"></span></h4>
+                    <h4><span name="attr_weapon2ready"></span></h4>
+                    <h4><span name="attr_weapon2name"></span></h4>
+                    <h4><span name="attr_weapon2range"></span></h4>
+                    <h4><span name="attr_weapon2damage"></span></h4>
+                    <h4><span name="attr_weapon2special"></span></h4>
                 </div>
-                <input type="hidden" name="attr_system3equipped" class="system3-status" value="Off">
-                <div class="system3">
-                    <h4><span>3</span></h4>
-                    <h4><span name="attr_system3cost"></span></h4>
-                    <h4><span name="attr_system3ready"></span></h4>
-                    <h4><span name="attr_system3name"></span></h4>
-                    <h4><span name="attr_system3range"></span></h4>
-                    <h4><span name="attr_system3damage"></span></h4>
-                    <h4><span name="attr_system3special"></span></h4>
+                <input type="hidden" name="attr_weapon3equipped" class="weapon3-status" value="Off">
+                <div class="weapon3">
+                    <h4><span name="attr_weapon3systemnum"></span></h4>
+                    <h4><span name="attr_weapon3ad"></span></h4>
+                    <h4><span name="attr_weapon3ready"></span></h4>
+                    <h4><span name="attr_weapon3name"></span></h4>
+                    <h4><span name="attr_weapon3range"></span></h4>
+                    <h4><span name="attr_weapon3damage"></span></h4>
+                    <h4><span name="attr_weapon3special"></span></h4>
                 </div>
-                <input type="hidden" name="attr_system4equipped" class="system4-status" value="Off">
-                <div class="system4">
-                    <h4><span>4</span></h4>
-                    <h4><span name="attr_system4cost"></span></h4>
-                    <h4><span name="attr_system4ready"></span></h4>
-                    <h4><span name="attr_system4name"></span></h4>
-                    <h4><span name="attr_system4range"></span></h4>
-                    <h4><span name="attr_system4damage"></span></h4>
-                    <h4><span name="attr_system4special"></span></h4>
+                <input type="hidden" name="attr_weapon4equipped" class="weapon4-status" value="Off">
+                <div class="weapon4">
+                    <h4><span name="attr_weapon4systemnum"></span></h4>
+                    <h4><span name="attr_weapon4ad"></span></h4>
+                    <h4><span name="attr_weapon4ready"></span></h4>
+                    <h4><span name="attr_weapon4name"></span></h4>
+                    <h4><span name="attr_weapon4range"></span></h4>
+                    <h4><span name="attr_weapon4damage"></span></h4>
+                    <h4><span name="attr_weapon4special"></span></h4>
                 </div>
-                <input type="hidden" name="attr_system5equipped" class="system5-status" value="Off">
-                <div class="system5">
-                    <h4><span>5</span></h4>
-                    <h4><span name="attr_system5cost"></span></h4>
-                    <h4><span name="attr_system5ready"></span></h4>
-                    <h4><span name="attr_system5name"></span></h4>
-                    <h4><span name="attr_system5range"></span></h4>
-                    <h4><span name="attr_system5damage"></span></h4>
-                    <h4><span name="attr_system5special"></span></h4>
+                <input type="hidden" name="attr_weapon5equipped" class="weapon5-status" value="Off">
+                <div class="weapon5">
+                    <h4><span name="attr_weapon5systemnum"></span></h4>
+                    <h4><span name="attr_weapon5ad"></span></h4>
+                    <h4><span name="attr_weapon5ready"></span></h4>
+                    <h4><span name="attr_weapon5name"></span></h4>
+                    <h4><span name="attr_weapon5range"></span></h4>
+                    <h4><span name="attr_weapon5damage"></span></h4>
+                    <h4><span name="attr_weapon5special"></span></h4>
                 </div>
-                <input type="hidden" name="attr_system6equipped" class="system6-status" value="Off">
-                <div class="system6">
-                    <h4><span>6</span></h4>
-                    <h4><span name="attr_system6cost"></span></h4>
-                    <h4><span name="attr_system6ready"></span></h4>
-                    <h4><span name="attr_system6name"></span></h4>
-                    <h4><span name="attr_system6range"></span></h4>
-                    <h4><span name="attr_system6damage"></span></h4>
-                    <h4><span name="attr_system6special"></span></h4>
-                </div>
+
 
           </section>
         </main>
