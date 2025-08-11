@@ -1,12 +1,6 @@
 const CC = (() => {
-    const version = '2025.7.21';
+    const version = '2025.8.11';
     if (!state.FSD) {state.FSD = {}};
-
-    const MapAreas = {};
-
-    const areaColours = {
-        
-    }
 
     const pageInfo = {};
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
@@ -80,19 +74,9 @@ const CC = (() => {
 
 
     let UnitArray = {};
-    let DeckInfo = {};
-    let PlayerHands = {};
     let PlayerInfo = {};
-    let MasterCardList = {};
-    let MCList2 = {};
-    let playedCardInfo = {};
-    let currentCardIDs = [];
-    let objectiveInfo = [{},{},{},{},{}];
-    let currentPlayer = 0;
-    let triggerFlag = false; //prevent triggers within trigger or time events
-    let fireFlag = false;
-    let orderNumber = [0,0];
-    let activePlayer = -1;
+    let currentUnitID = "";
+    let combatArray = {};
 
     let outputCard = {title: "",subtitle: "",side: "",body: [],buttons: [],};
 
@@ -116,23 +100,21 @@ const CC = (() => {
     }
 
     const Factions = {
-        "Soviet": {
-            "image": "https://s3.amazonaws.com/files.d20.io/images/324272729/H0Ea79FLkZIn-3riEhuOrA/thumb.png?1674441877",
-            "backgroundColour": "#FF0000",
+        "Tech": {
+            "image": "",
+            "backgroundColour": "orange",
             "titlefont": "Anton",
             "fontColour": "#000000",
-            "borderColour": "#FFFF00",
+            "borderColour": "#000000",
             "borderStyle": "5px groove",
-            "objectiveImages": ["https://s3.amazonaws.com/files.d20.io/images/445304877/D8ucERb5s8nd0DOIsl9CMQ/thumb.png?1750123755","https://s3.amazonaws.com/files.d20.io/images/445304874/dJ6xVWhfLCm4Uou48vnCfg/thumb.png?1750123755","https://s3.amazonaws.com/files.d20.io/images/445304876/4odiUvSOkxHf00qcx1ppmA/thumb.png?1750123755","https://s3.amazonaws.com/files.d20.io/images/445304868/igTVJFTaZwvaxTmPsfkCkw/thumb.png?1750123756","https://s3.amazonaws.com/files.d20.io/images/445304873/d_CPIui5A3wFCIKGDPHbIg/thumb.png?1750123755"],
         },
-        "German": {
-            "image": "https://s3.amazonaws.com/files.d20.io/images/329415788/ypEgv2eFi-BKX3YK6q_uOQ/thumb.png?1677173028",
-            "backgroundColour": "#000000",
+        "Conglomerate": {
+            "image": "",
+            "backgroundColour": "#grey",
             "titlefont": "Bokor",
-            "fontColour": "#FFFFFF",
+            "fontColour": "#000000",
             "borderColour": "#000000",
             "borderStyle": "5px double",
-            "objectiveImages": ["https://s3.amazonaws.com/files.d20.io/images/445304878/7sv6_pVqHCFGbGiWCuqbzg/thumb.png?1750123755","https://s3.amazonaws.com/files.d20.io/images/445304871/FIF-LpYU5qgw9JBsP2dJLw/thumb.png?1750123755","https://s3.amazonaws.com/files.d20.io/images/445304865/YuJzFMH6lFfsuyTYx6bVOw/thumb.png?1750123755","https://s3.amazonaws.com/files.d20.io/images/445304875/StDmyn9pVDrtwEyTE-frIw/thumb.png?1750123755","https://s3.amazonaws.com/files.d20.io/images/445304883/Y_Vl02FG29U-l1Vc6f1WUw/thumb.png?1750123758"],
 
         },
 
@@ -149,6 +131,41 @@ const CC = (() => {
         },
 
     };
+
+    const SM = {
+        
+    }
+
+
+
+
+
+    //height is height of terrain element
+    //elevation is 0 by default
+    //traits pull out mobility or Los features
+
+    const TerrainInfo = {
+        "Woods": {name: "Woods",height: 2, traits: ["Broken","Blocking"]},
+        "Scrub": {name: "Scrub",height: 1, traits: ["Fragile","Obscuring"]},
+
+        "Building 1": {name: "Building", height: 1, traits: ["Traversable","Blocking"]},
+
+        "Rubble": {name: "Rubble",height: 0, traits: ["Broken","Obscuring"]},
+
+        "Ruins": {name: "Ruins",height: 1, traits: ["Traversable","Obscuring"]},
+
+
+        "Hill 1": {name: "Hill 1",height: 0,elevation:1},
+        "Hill 2": {name: "Hill 2",height: 0, elevation:2},
+        "Hill 3": {name: "Hill 3",height: 0, elevation:3},
+
+    }
+
+
+
+
+
+
 
 
     const simpleObj = (o) => {
@@ -185,6 +202,27 @@ const CC = (() => {
         }
     };
 
+    const FX = (fxname,model1,model2) => {
+        //model2 is target, model1 is shooter
+        //if its an area effect, model1 isnt used
+        if (fxname.includes("System")) {
+            //system fx
+            fxname = fxname.replace("System-","");
+            if (fxname.includes("Blast")) {
+                fxname = fxname.replace("Blast-","");
+                spawnFx(model2.token.get("left"),model2.token.get("top"), fxname);
+            } else {
+                spawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxname);
+            }
+        } else {
+            let fxType =  findObjs({type: "custfx", name: fxname})[0];
+            if (fxType) {
+                spawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxType.id);
+            }
+        }
+    }
+
+
     const translatePoly = (poly) => {
         //translate points in a pathv2 polygon to map points
         let vertices = [];
@@ -211,6 +249,16 @@ const CC = (() => {
         })
         return vertices;
     }
+
+
+
+
+
+
+
+
+
+
 
 
     //Retrieve Values from character Sheet Attributes
@@ -264,6 +312,7 @@ const CC = (() => {
                 });            
             }
         }
+        return attributeobj.id;
     };
 
     const DeleteAttribute = (characterID,attributeName) => {
@@ -515,28 +564,146 @@ const CC = (() => {
             this.tokenIDs = [];
             this.cube = offset.toCube();
             this.label = offset.label();
+
+            this.traits = ["Open"];
+            this.elevation = 0;
+            this.terrainHeight = 0;
+            this.edges = {};
+            _.each(DIRECTIONS,a => {
+                this.edges[a] = "Open";
+            })
+            this.terrain = ["Open"]
+
+
             HexMap[this.label] = this;
         }
     }
 
     class Unit {
-        constructor(token) {
-            let id = token.get("id");
+        constructor(id) {
+            let token = findObjs({_type:"graphic", id: id})[0];
             let location = new Point(token.get("left"),token.get("top"));
             let cube = location.toCube();
             let label = cube.label();
             let charID = token.get("represents");
             let char = getObj("character", charID); 
-            let faction = Attribute(char,"faction") || "Neutral";
 
+            let aa = AttributeArray(charID);
+  
+
+            this.token = token;
             this.name = token.get("name");
             this.charName = char.get("name");
             this.id = id;
+            this.charID = charID;
             this.hexLabel = label;
-            this.faction = faction;
+            this.startHexLabel = label; //used to track movement
+
+            this.faction = aa.faction || "Neutral";
+            this.player = (this.faction === "Neutral") ? 2:(state.FSD.factions[0] === this.faction)? 0:1;
+
+            this.type = aa.type;
+
+            this.command = parseInt(aa.command) || 0;
+            this.defense = parseInt(aa.defense) || 0;
+            this.save = parseInt(aa.save) || 0;
+            let move = parseInt(aa.move);
+            let systemNumbers = {};
+
+            let weapons = [];
+            for (let i=0;i<5;i++) {
+                let w=i+1;
+                let prefix = "weapon" + w;
+                let wname = aa[prefix + "name"];
+                let wequip = aa[prefix + "equipped"];
+                if (!wequip || wequip === undefined || wequip === "Off") {continue};
+                if (!wname || wname === undefined || wname === null) {continue};
+                let sn = aa[prefix + "systemnum"];
+                systemNumbers[sn] = prefix;
+                let wready = aa[prefix + "ready"] || "🔴";
+                let wad = aa[prefix + "ad"] || "Free";
+                let wspecial = aa[prefix + 'special'] || " ";
+
+                let weapon = {
+                    name: wname,
+                    ad: wad,
+                    ready: wready,
+                    sn: sn,
+                    range: aa[prefix + "range"],
+                    damage: aa[prefix + "damage"],
+                    special: wspecial,
+                    fx: aa[prefix + "fx"],
+                    sound: aa[prefix + "sound"],
+                }
+                weapons.push(weapon);
+            }
+            this.weapons = weapons;
+
+            let abilities = [];
+            for (let i=0;i<5;i++) {
+                let w=i+1;
+                let prefix = "ability" + w;
+                let aname = aa[prefix + "name"];
+                let aequip = aa[prefix + "equipped"];
+                if (!aequip || aequip === undefined || aequip === "Off") {continue};
+                if (!aname || aname === undefined || aname === null) {continue};
+                let sn = aa[prefix + "systemnum"];
+                systemNumbers[sn] = prefix;
+                let aready = aa[prefix + "ready"] || "🔴";
+                let aad = aa[prefix + "ad"] || "Free";
+                let aspecial = aa[prefix + 'special'] || " ";
+
+                let ability = {
+                    name: aname,
+                    ad: aad,
+                    ready: aready,
+                    sn: sn,
+                    special: aspecial,
+                    fx: aa[prefix + "fx"],
+                    sound: aa[prefix + "sound"],
+                }
+                abilities.push(ability);
+            }
+            this.weapons = abilities;
+
+
+
             UnitArray[id] = this;
             HexMap[label].tokenIDs.push(id);
+
+
+
+
+
+
         }
+
+
+        Damage () {
+            
+
+
+
+        }
+
+
+        Destroyed () {
+            
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 
 
@@ -557,10 +724,8 @@ const CC = (() => {
             sendChat("","No Token Selected");
             return;
         };
-        //!AddAbilities;?{Type|Marker|Squad|Team|Weapon};?{faction|Soviet|German|American};
         let type = msg.content.split(";")[1];
         let faction = msg.content.split(";")[2];
-        let side = (Axis.includes(faction)) ? "Axis":"Allies";
 
         let id = msg.selected[0]._id;
         let token = findObjs({_type:"graphic", id: id})[0];
@@ -571,75 +736,6 @@ const CC = (() => {
             return;
         }
         let char = getObj("character", charID);   
-
-        AttributeSet(charID,"faction",faction);
-        AttributeSet(charID,"type",type);
-        AttributeSet(charID,"side",side);
-
-
-        let abilityName,action;
-        let abilArray = findObjs({_type: "ability", _characterid: charID});
-        //clear old abilities
-        for(let a=0;a<abilArray.length;a++) {
-            abilArray[a].remove();
-        } 
-
-
-
-        if (type === "Marker") {
-            size = 40;
-            abilityName = "Flip";
-            action = "!Flip";
-            AddAbility(abilityName,action,charID);
-        }
-        if (type === "Weapon" || type === "Squad" || type === "Team" || type === "Leader") {
-            abilityName = "Break/Rally";
-            action = "!Flip";
-            AddAbility(abilityName,action,charID);       
-        }
-        if (type === "Weapon") {
-            size = 50;
-            abilityName = "Remove";
-            action = "!Casualty";
-            AddAbility(abilityName,action,charID);
-        }
-        if (type === "Squad" || type === "Team" || type === "Leader") {
-            size = 70;
-            abilityName = "Suppress";
-            action = "!AddMarker;Suppress";
-            AddAbility(abilityName,action,charID);
-            abilityName = "Veteran";
-            action = "!AddMarker;Veteran";
-            AddAbility(abilityName,action,charID);
-            abilityName = "Casualty";
-            action = "!Casualty";
-            AddAbility(abilityName,action,charID);
-        }
-
-
-
-
-
-        if (type === "Squad") {
-            abilityName = "Deploy";
-            action = "!Deploy;Deploy";
-            AddAbility(abilityName,action,charID);  
-            abilityName = "Light Wounds";
-            action = "!Deploy;Light";
-            AddAbility(abilityName,action,charID);  
-        }
-
-
-        token.set({
-            width: size,
-            height: size,
-            disableSnapping: true,
-            disableTokenMenu: true,
-        })
-
-
-        setDefaultTokenForCharacter(char,token);
-
 
 
         sendChat("","Abilities Added")
@@ -832,20 +928,6 @@ const CC = (() => {
         let startTime = Date.now();
         HexMap = {};
 
-        //define areas with lines
-        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
-        _.each(paths,path => {
-            let colour = path.get("stroke").toLowerCase();
-            let type = areaColours[colour];
-            if (type) {
-                let centre = new Point(Math.round(path.get("x")), Math.round(path.get("y")));
-                let vertices = translatePoly(path);
-                MapAreas[type] = {'vertices': vertices, 'centre': centre};
-            }
-        });
-
-
-
         let startX = HexInfo.pixelStart.x;
         let startY = HexInfo.pixelStart.y;
         let halfToggleX = HexInfo.halfToggleX;
@@ -869,8 +951,10 @@ const CC = (() => {
                 halfToggleY = -halfToggleY;
             }
         }
+        AddTerrain();    
+        //AddEdges();
+        //AddRoads();
         //AddTokens();        
-        //AddTerrain();    
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
@@ -884,38 +968,38 @@ const CC = (() => {
         let tokens = findObjs({_pageid: Campaign().get("playerpageid"),_type: "graphic",_subtype: "token",layer: "map",});
         _.each(tokens,token => {
             let name = token.get("name");
-            if (name === "Smoke" || name === "Dispersed Smoke") {
-                let centre = new Point(token.get("left"),token.get('top'));
-                let centreLabel = centre.toCube().label();
-                let hex = HexMap[centreLabel];
-                if (name === "Smoke") {
-                    hex.smoke = true;
-                } else {
-                    hex.smoke = "Dispersed";
-                }
-                hex.smokeID = token.id;
-            }
+    log(name)
             let terrain = TerrainInfo[name];
             if (terrain) {
+                if (!terrain.elevation) {terrain.elevation = 0};
                 let centre = new Point(token.get("left"),token.get('top'));
                 let centreLabel = centre.toCube().label();
                 let hex = HexMap[centreLabel];
-                let keys = Object.keys(terrain);
-                _.each(keys,key => {
-                    hex[key] = terrain[key];
-                })        
+                if (hex.terrain.includes("Open")) {
+                    hex.terrain = [];
+                    hex.traits = [];
+                }
+                if (hex.terrain.includes(terrain.name) === false) {
+                    hex.terrain.push(terrain.name);
+                }
+                hex.elevation = Math.max(hex.elevation,terrain.elevation);
+                hex.terrainHeight = Math.max(terrain.height, hex.terrainHeight);
+                if (terrain.traits) {
+                    hex.traits = hex.traits.concat(terrain.traits);
+                }
             }
         })
-        AddRivers();
-        AddRoads();
+
     }
 
 
-    const AddRivers = () => {
-        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
+    const AddEdges = () => {
 
+ //add other types from edgeinfo
+
+        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
         _.each(paths,path => {
-            let types = {"#0000ff": "River","#000000": "Bridge"};
+            let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge","#980000": "Wall"};
             let type = types[path.get("stroke").toLowerCase()];
             if (type) {
                 let vertices = translatePoly(path);
@@ -934,7 +1018,8 @@ const CC = (() => {
                     for (let j=0;j<neighbourCubes.length;j++) {
                         let k = j+3;
                         if (k> 5) {k-=6};
-                        let hex2 = HexMap[neighbourCubes[j].label()];
+                        let hl2 = neighbourCubes[j].label();
+                        let hex2 = HexMap[hl2];
                         if (!hex2) {continue}
                         let pt4 = hex2.centre;
                         let intersect = lineLine(pt1,pt2,pt3,pt4);
@@ -954,7 +1039,7 @@ const CC = (() => {
     
     const AddRoads = () => {
         let roads = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",}).filter(el => {
-            return el.get("stroke").toLowerCase() === "#ffffff";
+            return el.get("stroke").toLowerCase() === "#ffff00";
         });
         _.each(roads,road => {
             let vertices = translatePoly(road);
@@ -963,10 +1048,20 @@ const CC = (() => {
                 let cube2 = vertices[i+1].toCube();
                 let interCubes = cube1.linedraw(cube2);
                 _.each(interCubes, cube => {
-                    HexMap[cube.label()].road = true;
+                    let interHex = HexMap[cube.label()];
+                    if (interHex.traits.includes("Road") === false) {
+                        interHex.traits.push("Paved");
+                        interHex.terrain.push("Road");
+                    }
                 })
-                HexMap[cube1.label()].road = true;
-                HexMap[cube2.label()].road = true;
+                if (HexMap[cube1.label()].traits.includes("Road") === false) {
+                    HexMap[cube1.label()].traits.push("Paved");
+                    HexMap[cube1.label()].terrain.push("Road");
+                }
+                if (HexMap[cube2.label()].traits.includes("Road") === false) {
+                    HexMap[cube2.label()].traits.push("Paved");
+                    HexMap[cube2.label()].terrain.push("Road");
+                }
             }
         })
     }
@@ -991,7 +1086,7 @@ const CC = (() => {
         tokens.forEach((token) => {
             let character = getObj("character", token.get("represents"));   
             if (character) {
-                let unit = new Unit(token);
+                let unit = new Unit(token.id);
             }   
         });
 
@@ -1000,8 +1095,6 @@ const CC = (() => {
 
         let elapsed = Date.now()-start;
         log(`${c} token${s} checked in ${elapsed/1000} seconds - ` + Object.keys(UnitArray).length + " placed in Unit Array");
-
-
 
     }
 
@@ -1022,46 +1115,62 @@ const CC = (() => {
     }
 
 
+    const PlaceTarget = (msg) => {
+        let Tag = msg.split(";");
+        let id = Tag[0];
+        let type = Tag[1];
+        let unit = UnitArray[id];
 
-
-
-
-
-    const TokensInArea = (type,areas) => {
-        //find all tokens of a type in an array of areas
-        //send back an array of same
-        let array = [];
-        if (Array.isArray(areas) === false) {
-            areas = [areas];
-        }
-        _.each(areas,area => {
-            let zone = MapAreas[area];
-            let tokens = findObjs({_pageid:  Campaign().get("playerpageid") ,_type: "graphic"});
-            _.each(tokens,token => {
-                let name = token.get("name");
-                let x = token.get("left");
-                let y = token.get("top");
-                if (x < zone.vertices[0].x || x > zone.vertices[1].x || y < zone.vertices[0].y || y > zone.vertices[1].y) {
-                    return;
-                };
-                log(name)
-                if (areas[0] === "Elite" || areas[0] === "Line" || areas[0] === "Green") {
-                    name = name.split(" ");
-                    if (type === "Axis" && Axis.includes(name[0])) {
-                        array.push(name);
-                    } else if (type !== "Axis" && Axis.includes(name[0]) === false) {
-                        array.push(name);
-                    }
-                }
-                if (type === "fate") {
-                    array.push(name);
-                }
-                if (type === "casualty") {
-                    array.push(name);
-                }
+        if (type === "Relay") {
+            let charID = "-OWqqZirwy4ocuhD9Llb";
+            let img = "https://files.d20.io/images/105823565/P035DS5yk74ij8TxLPU8BQ/thumb.png?1582679991";           
+            img = getCleanImgSrc(img);
+            let newToken = createObj("graphic", {
+                left: unit.token.get("left"),
+                top: unit.token.get("top"),
+                width: 50,
+                height: 50, 
+                pageid: Campaign().get("playerpageid"),
+                imgsrc: img,
+                layer: "objects",
+                represents: charID,
+                name: "Marker",
             })
-        })
-        return array;
+            let newUnit = new Unit(newToken.id);
+            newUnit.targettingUnitID = id;
+            log(newUnit)
+        }
+
+        
+
+
+
+
+    }
+
+    const Mark = (msg) => {
+        let id = msg.selected[0]._id;
+        let unit = UnitArray[id];
+        if (!unit) {return}
+        let targettingUnit = UnitArray[unit.targettingUnitID];
+        let los = LOS(targettingUnit,unit);
+        SetupCard(targettingUnit,"Mark Coordinates",targettingUnit.faction);
+        if (los.los === false) {
+            outputCard.body.push("Not in LOS, Reposition");
+        } else {
+            let token = findObjs({_type:"graphic", id: id})[0];
+            let newImg = "https://files.d20.io/images/307909216/Cqm8z6ZX2WPDQkodhdLVqQ/thumb.png?1665016507";
+            newImg = getCleanImgSrc(newImg);
+            token.set({
+                imgsrc: newImg,
+                layer: "map",
+            })        
+            toFront(token);
+            let player = UnitArray[currentUnitID].player;
+            state.FSD.rangedIn[player].push(token.get("id"));
+            outputCard.body.push("Coordinates Marked");
+        }
+        PrintCard();
     }
 
 
@@ -1118,144 +1227,27 @@ const CC = (() => {
 
 
 
-	summonToken = function(character,left,top,currentSide,size){
-        if (!currentSide) {currentSide = 0};
-        if (!size) {size = 70};
-		character.get('defaulttoken',function(defaulttoken){
-		    const dt = JSON.parse(defaulttoken);
-            let img;
-            if (dt.sides) {
-                sides = dt.sides.split("|")
-                img = sides[currentSide] || dt.imgsrc;
-            } else {
-                img = dt.imgsrc;
-            }
-            img = tokenImage(img);
-			if(dt && img){
-				dt.imgsrc=img;
-				dt.left=left;
-				dt.top=top;
-				dt.pageid = pageInfo.page.get('id');
-                dt.layer = "objects";
-                dt.width = size;
-                dt.height = size;
-                dt.currentSide = currentSide;
-                log(dt)
-                let newToken = createObj("graphic", dt);
-                newToken.set({
-                    disableSnapping: true,
-                    disableTokenMenu: true,
-                })
-                return newToken.get("id");
-			} else {
-				sendChat('','/w gm Cannot create token for <b>'+character.get('name')+'</b>');
-			}
-		});
-	};
-
-
-    const TokenInfo = (msg) => {
+    const HexData = (msg) => {
+        if (!msg.selected) {return};
         let id = msg.selected[0]._id;
         let token = findObjs({_type:"graphic", id: id})[0];
-        log(token)
-
-
-    }
-
-
-    const BuildDecks = () => {
-        DeckInfo = {};
-        PlayerHands = {};
-        MasterCardList = {};
-        let decks = findObjs({_type: "deck"});
-        let hands = findObjs({_type: "hand"});
-
-        log(decks)
-
-        _.each(decks,deck => {
-            let deckID = deck.get("id");
-            let deckName = deck.get("name");
-            if (deckName !== "Playing Cards") {
-                let cardIDs = deck.get("currentDeck").split(",");
-                let cards = {};
-                let faction,side,ci;
-                _.each(cardIDs,cardID => {
-                    let card = findObjs({_type: "card", id:cardID})[0];
-                    let cardName = card.get("name") || "Unknown";
-                    cards[cardID] = cardName;
-                    if (deckName.includes("German")) {
-                        ci = GermanFate[cardName];
-                        faction = "German";
-                        side = "Axis";
-                    } else if (deckName.includes("Soviet")) {
-                        ci = SovietFate[cardName];
-                        faction = "Soviet";
-                        side = "Allies";
-                    }
-
-
-            if (!ci) {
-                ci = {'order': 'Nil','action': 'Nil','event': 'Nil','hex': 'Nil','totalRoll': 12,'whiteRoll': 6,'redRoll': 6,'trigger': false,}
+        let point = new Point(token.get("left"),token.get("top"));
+        let label = point.label();
+        let hex = HexMap[label];
+        SetupCard("Info","","Neutral");
+        outputCard.body.push("Terrain: " + hex.terrain);
+        outputCard.body.push("Elevation: " + hex.elevation);
+        outputCard.body.push("Height of Terrain: " + hex.terrainHeight);
+        outputCard.body.push("Traits: " + hex.traits);
+        for (let i=0;i<6;i++) {
+            let edge = hex.edges[DIRECTIONS[i]];
+            if (edge !== "Open") {
+                outputCard.body.push(edge + " on " + DIRECTIONS[i] + " Edge");
             }
-
-                    MasterCardList[cardID] = {
-                        deckID: deckID,
-                        deckName: deckName,
-                        faction: faction,
-                        side: side,
-                        name: cardName,
-                        id: cardID,
-                        order: ci.order,
-                        action: ci.action,
-                        event: ci.event,
-                        hex: ci.hex,
-                        totalRoll: ci.totalRoll,
-                        whiteRoll: ci.whiteRoll,
-                        redRoll: ci.redRoll,
-                        trigger: ci.trigger,
-                    };
-
-                    MCList2[cardName] = cardID;
-                })
-                DeckInfo[deckName] = {
-                    name: deckName,
-                    id: deckID,
-                    cards: cards,
-                }
-
-
-
-            }
-        })
-        _.each(hands,hand => {
-            let handID = hand.get("id");
-            let playerID = hand.get("parentid");
-            PlayerHands[playerID] = handID;
-        })
-
-
-
-    }
-
-
-    const DrawCard = (msg) => {
-        let playerID = msg.playerid;
-        let deckType = msg.content.split(";")[1];
-        let side = state.FSD.players[playerID];
-        let deckName = side + " " + deckType;
-        DrawCard2(playerID,deckName);
-    }
-
-    const DrawCard2 = (playerID,deckName) => {
-        let deck = DeckInfo[deckName];  
-        let cardID = drawCard(deck.id);
-        log(cardID)
-        if (cardID === false) {
-            return false;
         }
-        giveCardToPlayer(cardID, playerID);
-        return true;
+        PrintCard();
     }
+
 
 
     const DrawLine = (hex1,hex2) => {
@@ -1298,6 +1290,68 @@ const CC = (() => {
         })
     }
 
+    const NextTurn = () => {
+        let turn = state.FSD.turn;
+
+
+        turn++;
+        //reset unit activations, clear various status markers
+        let toClear = ["alert","digin","spotting","counter"];
+        _.each(UnitArray,unit => {
+            let actions = 2; // ? adjust
+            if (unit.token) {
+                unit.token.set({
+                    aura1_color: "#00FF00",
+                    bar1_value: actions,
+                })
+                unit.token.set(SM.alert,false);   
+                unit.order = "";
+                _.each(toClear,marker => {
+                    unit.token.set(SM[marker],false);
+                })
+                let location = new Point(unit.token.get("left"),unit.token.get("top"));
+                let hexLabel = location.label();
+                unit.startHexLabel = hexLabel;
+            } else {
+                sendChat("","No Token for " + unit.name + "?")
+            }
+        })
+        //remove ranged in markers
+        let rangedInMarkers = state.FSD.rangedIn;
+        for (let i=0;i<2;i++) {
+            let markers = rangedInMarkers[i];
+            _.each(markers,markerID => {
+                let unit = UnitArray[markerID];
+                if (unit) {delete UnitArray[markerID]};
+                let token = findObjs({_type:"graphic", id: markerID})[0];
+                if (token) {token.remove()};
+            })
+        }
+        state.FSD.rangedIn = [[],[]];
+//remove smoke
+
+        let unitNumbers = [0,0];
+        _.each(UnitArray,unit => {
+            if (unit.faction === state.FSD.factions[0]) {
+                unitNumbers[0]++;
+            } else if (unit.faction === state.FSD.factions[1]) {
+                unitNumbers[1]++;
+            }
+        })
+        SetupCard("Turn " + turn,"","Neutral");
+        if (unitNumbers[0] < unitNumbers[1]) {
+            outputCard.body.push(state.FSD.factions[0] + " has the Initiative");
+        } else if (unitNumbers[1] < unitNumbers[0]) {
+            outputCard.body.push(state.FSD.factions[1] + " has the Initiative");
+        } else {
+            outputCard.body.push("Roll for Initiative");
+        }
+        PrintCard();
+        state.FSD.turn = turn;
+    }
+
+
+
 
 
 
@@ -1308,158 +1362,1850 @@ const CC = (() => {
         LoadPage();
         BuildMap();
 
-        _.each(DeckInfo,info => {
-            let deckID = info.id;
-            recallCards(deckID);
-            sendChat("","Shuffled " + info.name);
-            shuffleDeck(deckID);
-        })
-
-
 
         state.FSD = {
             playerIDs: ["",""],
             players: {},
-            Factions: ["",""],
-            handSize: [0,0],
-            forceType: ["",""], //green, line, elite
-            stance: ["",""], //attacker, defender, recon
-            fateDeckIDs: ["",""], //ids of deck
-            objectivesInPlay: ["A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X"],
-            hiddenObjectives: [[],[]],
-            scenarioName: "",
+            factions: ["",""],
             lines: [],
-            cards: [72,72],
+            turn: 0,
+            rangedIn: [[],[]],
         }
 
 
 
 
 
-        sendChat("","Cleared State/Arrays, rebuilt and shuffled Decks");
+        sendChat("","Cleared State/Arrays");
+    }
+
+    const AddUnits = (msg) => {
+        if (!msg.selected) {
+            sendChat("","No Tokens Selected");
+            return
+        }
+        _.each(msg.selected,element => {
+            let id = element._id;
+            let token = findObjs({_type:"graphic", id: id})[0];
+            token.set({
+                tooltip: "",
+                aura1_color: "#00FF00",
+                aura1_radius: 0.1,
+                tint_color: "transparent",
+                statusmarkers: "",
+                gmnotes: "",
+                rotation: 0,
+            })
+
+            let unit = new Unit(id);          
+            if (state.FSD.factions[0] === "") {
+                state.FSD.factions[0] = unit.faction;
+            } else if (state.FSD.factions[0] !== unit.faction && state.FSD.factions[1] === "") {
+                state.FSD.factions[1] = unit.faction;
+            } 
+            let player = (state.FSD.factions[0] == unit.faction) ? 0:1;
+            
+            unit.player = player;
+
+            //reset stats
+            unit.firepower = unit.firepowerMax;
+            unit.mobility = unit.mobilityMax;
+            unit.armour = unit.armourMax;
+            unit.defence = unit.defenceMax;
+            unit.damage = 12;
+            AttributeSet(unit.charID,"firepower",unit.firepower);
+            AttributeSet(unit.charID,"mobility",unit.mobility);
+            let armID = AttributeSet(unit.charID,"armour",unit.armour);
+            AttributeSet(unit.charID,"defence",unit.defence);
+            let damID = AttributeSet(unit.charID,"damage",unit.damage);
+
+
+
+            //set hp and activations
+            token.set({
+                bar1_value: 2,//mayneed to change based on units activations
+                bar1_max: "",
+                bar3_value: unit.armour,
+                bar3_max: unit.armour,
+                bar3_link: armID,
+                bar2_value: unit.damage, 
+                bar2_max: "",
+                bar2_link: damID,
+                bar_location: "overlap_bottom",
+
+            })
+
+            if (unit.abilities.includes("Active Camouflage")) {
+                token.set(SM.camo,true);
+            }
+
+
+
+        })
+
+
     }
 
 
 
 
-    const playedCard = (obj) => {
-        toFront(obj);
-        let cardID = obj.get("cardid"); 
-        let ci = MasterCardList[cardID];
-        log(ci.name + " From " + ci.deckName);
-        obj.set("name",ci.name);
-        let faction = ci.deckName.replace(" Fate Deck","");
-        let side = (Axis.includes(faction)) ? "Axis":"Allies";
-        let x = obj.get("left");
-        let y = obj.get("top");
-        let zones = ["Order","Action"];
-        let flag = (ci.name.includes("Initiative")) ? true:false;
 
-        for (let i=0;i<2;i++) {
-            let type = zones[i];
-            let zone = MapAreas[side + " " + type];
-            if (x >= zone.vertices[0].x && x <= zone.vertices[1].x && y >= zone.    vertices[0].y && y <= zone.vertices[1].y) {
-                PlaceCard2(obj,type); 
-                flag = true;
+    //line line collision where line1 is pt1 and 2, line2 is pt 3 and 4
+    const lineLine = (pt1,pt2,pt3,pt4) => {
+        //calculate the direction of the lines
+        uA = ( ((pt4.x-pt3.x)*(pt1.y-pt3.y)) - ((pt4.y-pt3.y)*(pt1.x-pt3.x)) ) / ( ((pt4.y-pt3.y)*(pt2.x-pt1.x)) - ((pt4.x-pt3.x)*(pt2.y-pt1.y)) );
+        uB = ( ((pt2.x-pt1.x)*(pt1.y-pt3.y)) - ((pt2.y-pt1.y)*(pt1.x-pt3.x)) ) / ( ((pt4.y-pt3.y)*(pt2.x-pt1.x)) - ((pt4.x-pt3.x)*(pt2.y-pt1.y)) );
+        if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
+            intersection = {
+                x: (pt1.x + (uA * (pt2.x-pt1.x))),
+                y: (pt1.y + (uA * (pt2.y-pt1.y)))
+            }
+            return intersection;
+        }
+        return;
+    }
+   
+
+
+    const TargetAngle = (shooter,target) => {
+        let shooterHex = HexMap[shooter.hexLabel];
+        let targetHex = HexMap[target.hexLabel];
+
+        //angle from shooter's hex to target's hex
+        let phi = Angle(shooterHex.cube.angle(targetHex.cube));
+        let theta = Angle(shooter.token.get("rotation"));
+        let gamma = Angle(phi - theta);
+        return gamma;
+    }
+
+    const CheckLOS = (msg) => {
+        let Tag = msg.content.split(";");
+        let shooterID = Tag[1];
+        let targetID = Tag[2];
+        let shooter = UnitArray[shooterID];
+        if (!shooter) {
+            sendChat("","Not valid shooter");
+            return;
+        }
+        let target = UnitArray[targetID];
+        if (!target) {
+            sendChat("","Not valid target");
+            return;
+        }
+        let distance;
+
+        SetupCard(shooter.name,"LOS",shooter.faction);
+        for (let i=0;i<shooter.weapons.length;i++) {
+                outputCard.body.push("[hr]");
+            let weapon = shooter.weapons[i];
+            let losResult = LOS(shooter,target,weapon);
+            distance = losResult.distance;
+            outputCard.body.push("[U]" + weapon.name + "[/u]");
+            if (losResult.los === false) {
+                outputCard.body.push(losResult.losReason);
+            } else if (losResult.los === true && losResult.lof === false) {
+                outputCard.body.push("In LOS but Out of Arc of Fire");
+            } else if (losResult.los === true && losResult.lof === true) {
+                outputCard.body.push("In LOS and LOF");
+                outputCard.body.push("Cover is " + losResult.cover);
+            } 
+            if (losResult.indirect !== false) {
+                if (losResult.indirect === "No LOS") {
+                    outputCard.body.push("Firing Indirect, 1/2 FP");
+                }
+                if (losResult.indirect === "Marker") {
+                    outputCard.body.push("Firing Indirect at Marker, -1 FP");
+                }
+                if (losResult.indirect === "Spotter") {
+                    outputCard.body.push("Firing Indirect, using Spotter");
+                }
+            }
+
+
+
+
+            outputCard.body.push("[hr]");
+        }
+        outputCard.body.push("Distance is " + distance);
+        outputCard.body.push("Target's Armour is " + target.armour);
+        PrintCard();
+    }
+
+
+    const LOS = (shooter,target,weapon) => {
+        if (!weapon) {
+            weapon = {abilities: " "};
+        }
+        let los = true;
+        let losReason = "";
+        let losBlock = "";
+        let lof = true;
+        let water = "";
+        let cover = 0;
+        if (weapon.abilities.includes("Smart")) {
+            cover = -2;
+        }
+
+        if (target.token.get(SM.camo) === true) {
+            cover += 2; 
+        }
+
+
+        let shooterHex = HexMap[shooter.hexLabel];
+        let targetHex = HexMap[target.hexLabel];
+        let distance = shooterHex.cube.distance(targetHex.cube);
+        let spotterID = "";
+        //AOV and AOF angles
+        let aov = AOV(shooter,target);
+        let aof = AOF(shooter,target);
+
+        if (aov === false) {
+            los = false;
+            losReason = "Out of Arc of Vision";
+        }  
+        if (aof === false) {
+            lof = false;
+        }
+
+        //check los now incl cover
+        let sH = shooter.type === "Walker" ? shooter.class/2:shooter.class/5;
+        let tH = target.type === "Walker" ? shooter.class/2:shooter.class/5;
+        // ? crouching if used
+
+        let shooterElevation = shooterHex.elevation;
+        let targetElevation = targetHex.elevation;
+        if (shooter.type === "Aircraft") {
+            shooterElevation = shooter.airheight;
+        }
+        if (target.type === "Aircraft") {
+            targetElevation = target.airheight;
+        }
+        if (target.type === "Aircraft" && weapon.abilities.includes("AA") === false) {
+            //add height to distance unless weapon has AA
+            distance += Math.abs(targetElevation - shooterElevation);
+        }
+
+        let pt1 = new Point(0,shooterElevation + sH);
+        let pt2 = new Point(distance,targetElevation + tH);
+
+        let interCubes = shooterHex.cube.linedraw(targetHex.cube);
+
+        for (let i=1;i<interCubes.length;i++) {
+            let label = interCubes[i].label();
+            let interHex = HexMap[label];
+
+            //check for hills
+            let pt3 = new Point(i,0);
+            let pt4 = new Point(i,interHex.elevation)
+            let pt5 = lineLine(pt1,pt2,pt3,pt4);
+
+
+            if (pt5) {
+                los = false;
+                losReason = "Blocked by Elevation at " + label;
+                losBlock = label;
                 break;
             }
-        }
-        if (flag === false) {
-            SetupCard(ci.name,"",faction);
-            ButtonInfo("Play To?","!PlaceCard;?{Play To|Order|Action|Discard};" + cardID);
-            PrintCard();
-        }
-
-
-
-    }
-
-    const PlaceCard = (msg) => {
-        let Tag = msg.content.split(";");
-        let type = Tag[1];
-        let cardID = Tag[2];
-        let obj = findObjs({_pageid:  Campaign().get("playerpageid"), layer: "objects", cardid: cardID})[0];
-        if (type === "Discard") {
-            obj.remove();
-        } else {          
-            PlaceCard2(obj,type);
-        }
-    }
-
-    const PlaceCard2 = (obj,type) => {
-        let cardID = obj.get("cardid"); 
-        let ci = MasterCardList[cardID];
-        let side = ci.side;
-        let faction = ci.faction;
-        let zone = MapAreas[side + " " + type];
-        obj.set({
-            left: zone.centre.x,
-            top: zone.centre.y,
-        })
-        playedCardInfo = {
-            id: cardID,
-            faction: faction,
-            type: type,
-        }
-        Order();
-    }
-
-
-
-    const changeGraphic = (obj,prev) => {
-        RemoveLines();
-        let cardID = obj.get("cardid");
-        let ci = MasterCardList[cardID];
-        if (ci && currentCardIDs.includes(cardID) === false) {
-            playedCard(obj);
-        }
-
-        let id = obj.get("id");
-        let unit = UnitArray[id];
-
-        if (unit) {
-            let location = new Point(obj.get("left"),obj.get("top"));
-            let newHexLabel = location.toCube().label();
-            if (newHexLabel !== unit.hexLabel) {
-                let index = HexMap[unit.hexLabel].tokenIDs.indexOf(id);
-                if (index > -1) {
-                    HexMap[unit.hexLabel].tokenIDs.splice(index,1);
+            //check for terrain in hex
+            pt3 = new Point(i,interHex.elevation);
+            pt4 = new Point(i,interHex.elevation + interHex.terrainHeight);
+            pt5 = lineLine(pt1,pt2,pt3,pt4);
+            if (pt5) {
+                if (interHex.traits.includes("Foliage")) {cover++};
+                if (interHex.traits.includes("Smoke")) {cover += 2};
+                if (interHex.traits.includes("Open Structure")) {cover += 3};
+                if (interHex.traits.includes("Solid")) {
+                    los = false;
+                    losReason = "Blocked by Terrain at " + label;
+                    losBlock = label;
+                    break;
                 }
-                HexMap[newHexLabel].tokenIDs.push(id);
-                unit.hexLabel = newHexLabel;
+                if (cover > 5 && losBlock === "") {
+                    los = false;
+                    losReason = "Blocked by Cover at " + label;
+                    losBlock = label;
+                    break;
+                }
+
+            }
+
+            //check for terrain on hex side
+            let delta = interCubes[i-1].subtract(interCubes[i]);
+            let dir;
+            for (let i=0;i<6;i++) {
+                let d = HexInfo.directions[DIRECTIONS[i]];
+                if (delta.q === d.q && delta.r === d.r) {
+                    dir = DIRECTIONS[i];
+                    break;
+                }
+            }            
+            let edge = interHex.edges[dir];
+            if (edge !== "Open") {
+                let terrain = EdgeInfo[edge];
+            log(terrain)
+                pt3 = new Point(i,terrain.elevation);
+                pt4 = new Point(i,terrain.elevation + terrain.terrainHeight);
+                pt5 = lineLine(pt1,pt2,pt3,pt4);
+                if (pt5) {
+            log("Intersects")
+                    if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
+                        cover++;
+                        if (cover > 5 && losBlock === "") {
+                            los = false;
+                            losReason = "Blocked by Cover at " + label;
+                            losBlock = label;
+                        }                        
+                    }
+                }
+            }
+        }
+
+        if (target.airheight === 0) {
+            //target hexside
+            let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
+            let dir;
+            for (let i=0;i<6;i++) {
+                let d = HexInfo.directions[DIRECTIONS[i]];
+                if (delta.q === d.q && delta.r === d.r) {
+                    dir = DIRECTIONS[i];
+                    break;
+                }
+            }     
+            let edge = targetHex.edges[dir];
+            if (edge !== "Open") {
+                let terrain = EdgeInfo[edge];
+                if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
+                    cover++;
+                    if (cover > 5 && losBlock === "") {
+                        los = false;
+                        losReason = "Blocked by Cover at " + targetHex.label + " Edge";
+                        losBlock = label;
+                    }
+                }
+            }
+
+            //target hex
+            if (targetHex.traits.includes("Foliage")) {cover++};
+            if (targetHex.traits.includes("Smoke")) {cover += 2};
+            if (targetHex.traits.includes("Open Structure") || targetHex.traits.includes("Solid")) {cover += 3};
+
+            if (targetHex.traits.includes("Water")) {
+                //partially submerged or fully submerged
+                //partially = +1 cover 
+                //fully = +2 cover / depth - only for submersible units
+                //water will also have a depth, most units can't go in unless depth is 0
+                //pass back something also for things like exploding dice, flamethrowers, laser etc which have different effects
+
+
+            }
+            if (target.token.get(SM.digin) === true) {
+                cover += 3;
+            }
+        }
+
+        if (cover > 5 && losBlock === "") {
+            los = false;
+            losReason = "Blocked by Cover"
+            losBlock = targetHex.label;
+        }
+
+        cover = Math.max(0,cover);
+
+        //indirect or guided weapons check
+        let indirect = false;
+        if (los === false && (weapon.abilities.includes("Indirect") || weapon.abilities.includes("Guided"))) {
+            //check for spotter
+            _.each(UnitArray,spotter => {
+                if (spotter.faction === shooter.faction) {
+                    if (spotter.token.get(SM.spotting) === true) {
+                        let spotterLOS = LOS(spotter,target);
+                        if (spotterLOS.los === true) {
+                            los = true;
+                            indirect = "Spotter"
+                            spotterID = spotter.id;
+                            if (weapon.abilities.includes("Guided")) {
+                                distance = spotterLOS.distance;
+                                cover = spotterLOS.cover;
+                            }
+                        }
+                    }
+                }
+            })
+            //check for markers
+            if (los === false && weapon.abilities.includes("Indirect")) {
+                los = true;
+                indirect = "No LOS";
+                _.each(state.FSD.rangedIn[shooter.player],markerID => {
+                    let marker = UnitArray[markerID];
+                    let d = HexMap[marker.hexLabel].cube.distance(targetHex.cube);
+                    if (d < 2) {
+                        indirect = "Marker";
+                    }
+                })
+            }
+        }
+
+        let result = {
+            los: los,
+            losReason: losReason,
+            losBlock: losBlock,
+            lof: lof,
+            distance: distance,
+            cover: cover,
+            water: water,
+            indirect: indirect,
+            spotterID: spotterID,
+        }
+
+log(result)
+
+
+        return result;
+    }
+
+
+
+
+    const Activate = (msg) => {
+        let id = msg.selected[0]._id;
+        if (!id) {return};
+        let order = msg.content.split(";")[1];
+        let unit = UnitArray[id];
+        SetupCard(unit.name,order,unit.faction);
+        let errorMsg = [];
+        let actions = parseInt(unit.token.get("bar1_value"));
+        if (actions === 0) {
+            errorMsg.push("Unit has no further actions left");
+        }
+        if (actions === 1 && order === "Aimed Shot") {
+            errorMsg.push("Unit needs 2 orders to take an Aimed Shot");
+        }
+        if (order === "Full Strike") {
+            let fired = (unit.token.get("tint_color") === "transparent" ) ? false:true;
+            if (fired === true) {
+                errorMsg.push("Unit has to Reload/Recharge first");
+            } else if (unit.firepower <= 1) {
+                errorMsg.push("Unit unable to Full Strike due to Damage");
             }
         }
 
 
+        if (errorMsg.length > 0) {
+            _.each(errorMsg,msg => {
+                outputCard.body.push(msg);
+            })
+            PrintCard();
+            return;
+        }
 
+        currentUnitID = id;
+        unit.order = order;
+        unit.fired = false;
+        let mobility = unit.mobility;
+        unit.startHexLabel = unit.hexLabel; //track distance
+
+        actions--;
+        if (order === "Cautious Move") {
+            if (unit.abilities.includes("Tracked") || unit.abilities.includes("Air")) {
+                outputCard.body.push("The Unit may Move and Fire in either order");
+            } else {
+                outputCard.body.push("As long as Difficult Ground is not entered, the Unit may Fire");
+
+            }
+            outputCard.body.push("(The Target must be in LOS from the starting position)");
+            outputCard.body.push("The Unit has " + mobility + " MP, and gains Alert");
+            unit.token.set(SM.alert,true);
+        }
+        if (order === "Patrol Move") {
+            outputCard.body.push("As long as Difficult Ground is not entered, the Unit may Fire");
+            outputCard.body.push("(The Target must be in LOS from the starting position)");
+            outputCard.body.push("The Unit has " + (mobility * 2) + " MP");
+        }
+        if (order === "Rapid Move") {
+            //only certain units with rapid trait get this
+            //wheeled that start on paved get, redo their macro in start
+            outputCard.body.push("The Unit may Move but not Fire");
+            outputCard.body.push((mobility * 3) + " MP, only one turn at beginning or end of movement");
+            outputCard.body.push("One extra turn can be done if entirely on Paved");
+            if (unit.traits.includes("Rapid") === false) {
+                outputCard.body.push("Rapid Movement only possible if stays on Paved");
+            }
+        }
+        if (order === "Stand and Fire") {
+            outputCard.body.push("The Unit Stands and Fires");
+        } 
+        if (order === "Aimed Shot") {
+            outputCard.body.push("The Unit takes one action to aim and a 2nd to Fire. Other Units may React before it fires");
+            actions--;
+        }
+        if (order === "Guard") {
+            outputCard.body.push("The Unit goes on Guard and ends its Turn");
+            actions = 0;
+            unit.token.set("aura1_color","#800080");
+        }
+        if (order === "Charge") {
+            outputCard.body.push("The Unit may charge an enemy Unit");
+            outputCard.body.push("The Unit may turn at the beginning of its turn, then must charge in a straight line at the target");
+            outputCard.body.push("Cautious Move: " + mobility + " MP, gaining Alert");
+            outputCard.body.push("Patrol Move: " + (mobility * 2) + " MP");
+            outputCard.body.push("Rapid Move: " + (mobility * 3) + " MP");
+        }
+        if (order === "Mark Coordinates") {
+            outputCard.body.push("Place the Target Icon on a Hex, then activate it");
+            outputCard.body.push("That Hex will be marked until the end of the turn");
+            let msg = unit.id + ";" + "Relay"
+            PlaceTarget(msg);
+        }
+        if (order === "Full Strike") {
+            outputCard.body.push("F will be temporarily increased by 2");
+            outputCard.body.push("After which it will be reduced by 2");
+            outputCard.body.push("Until the unit Reloads");
+            unit.token.set(SM.fullstrike,true);  
+            unit.token.set(SM.fullstrikeused,true);  
+        }
+        if (order === "Reload" || order === "Recharge") {
+            let success = false;
+            let rolls = [];
+            let target = parseInt(unit.damage);
+            for (let i=0;i<unit.defence;i++) {
+                let roll = randomInteger(12);
+                rolls.push(roll);
+                if (roll > target) {
+                    success === true
+                }
+            }
+            rolls.sort((a,b) =>  b-a);
+            let tip = "Rolls: " + rolls + " vs. >" + target;
+            tip = '[🎲](#" class="showtip" title="' + tip + ')';
+            if (success === true) {
+                if (order === "Recharge") {
+                    outputCard.body.push("The Unit Recharges its Jump Jets");
+                    unit.token.set(SM.jumpjetused,false);
+                } else if (order === "Reload") {
+                    outputCard.body.push("The Unit Reloads/Recharges its Weapons Systems");
+                    unit.token.set(SM.fullstrikeused,false);
+                    unit.firepower = Math.min(unit.firepower +2,unit.firepowerMax);
+                    AttributeSet(unit.charID,"firepower",unit.firepower);
+                }
+            } else {
+                outputCard.body.push("The Unit was unable to fully " + order + " this action");
+            }
+        }
+
+        if (order === "Countermeasures") {
+            outputCard.body.push("The Unit Deploys Countermeasures");
+            outputCard.body.push("Any Nearby Artillery Markers are Removed");
+            outputCard.body.push("The Unit Cannot be Spotted this Turn");
+            unit.token.set(SM.counter,true);
+            let other = (unit.player === 0) ? 1:0
+            for (let i=0;i<state.FSD.rangedIn[other];i++) {
+                let marker = state.FSD.rangedIn[other][i];
+                let d = HexMap[marker.hexLabel].cube.distance(HexMap[unit.hexLabel].cube);
+                if (d < 2) {
+                    marker.token.remove();
+                    delete UnitArray[markerID];
+                    state.FSD.rangedIn[other].splice(i,1);
+                }
+            }
+        }
+
+        actions = Math.max(0,actions);
+        if (actions === 0 && order !== "Guard") {
+            unit.token.set("aura1_color","#000000");
+        }
+        unit.token.set("bar1_value",actions);
+        PrintCard();
+    }
+
+
+
+
+
+
+
+
+
+
+
+    const Fire = (msg) => {
+        let Tag = msg.content.split(";");
+        let attackerID = Tag[1];
+        let attacker = UnitArray[attackerID];
+        let defenderID = Tag[2];
+        let defender = UnitArray[defenderID];
+        let weaponNum = Tag[3];
+        let weapon = attacker.weapons[weaponNum];
+        let order = attacker.order;
+
+        let losResult = LOS(attacker,defender,weapon);
+        let firepower = attacker.firepower;
+        let fpTip = "FP: " + firepower;
+        if (order === "Advance" && attacker.abilities.includes("Bracing Mass") === false) {
+            firepower = Math.round(firepower/2);
+            fpTip += "<br>Advance = 1/2 FP";
+        } else if (order === "Aimed Shot") {
+            firepower++;
+            fpTip += "<br>Aimed Shot";
+        }
+        if (attacker.token.get(SM.fullstrike) === true) {
+            firepower += 2;
+            fpTip += "<br>Full Strike +2F";
+        }
+        if (attacker.abilities.includes("Sat-Lock") && defender.mobility <= 3) {
+            firepower += 1;
+            fpTip += "<br>Sat-Lock +1F";
+        }
+
+
+
+        let defence = defender.defence;
+        let dTip = "Defence: " + defence;
+        if (weapon.abilities.includes("XMG")) {
+            defence--;
+            dTip += "<br>XMG -1D";
+        }
+        if (defender.abilities.includes("Agile")) {
+            defence++;
+            dTip += "<br>Agile +1D";
+        }
+
+
+
+
+
+        SetupCard(attacker.name,weapon.name,attacker.faction);
+        let errorMsg = [];
+
+        if (order === "Rapid Move" || order === "Charge") {
+            errorMsg.push("Cannot Fire while on " + order);
+        }
+
+        if (losResult.los === false && losResult.indirect === false) {
+            errorMsg.push("No LOS To Target");
+            errorMsg.push(losResult.losReason);
+        }
+        if (losResult.los === true && losResult.lof === false) {
+            errorMsg.push("In LOS but Out of Arc of Fire");
+        }
+
+        if (losResult.indirect !== false) {
+            if (weapon.abilities.includes("Indirect")) {
+                if (losResult.indirect === "No LOS") {
+                    firepower = Math.round(firepower/2);
+                    fpTip += "<br>1/2 FP - No LOS/Indirect";
+                } else if (losResult.indirect === "Spotter") {
+                    fpTip += "<br>Full FP - Spotter/Indirect";
+                } else if (losResult.indirect === "Marker") {
+                    firepower--;
+                    fpTip += "<br>-1 FP, Marker/Indirect"
+                }
+            }
+            if (weapon.abilities.includes("Spotter")) {
+                fpTip += "<br>Guided - Distance and Cover from Spotter";
+            }
+        }
+
+        if (errorMsg.length > 0) {
+            _.each(errorMsg,msg => {
+                outputCard.body.push(msg);
+            })
+            PrintCard();
+            return;
+        }
+        
+        let distance = losResult.distance;
+        //AA and Aircraft here
+        let cover = losResult.cover; //smart is factored in LOS function already
+        let armour = defender.armour;
+        let nTip = "Distance: " + distance + "<br>Cover: " + cover + "<br>Armour: " + armour;
+
+        if (weapon.abilities.includes("Gatling")) {
+            armour = Math.max(0,armour - 2);
+            nTip += "<br>Gatling: -2 Armour incl.";
+        }
+        if (defender.token.get(SM.camo) === true) {
+            nTip += "<br>Active Camo: +2 Cover incl.";
+        }
+
+
+
+        let needed = distance + cover + armour;
+
+
+
+        fpTip = '[⚔️](#" class="showtip" title="' + fpTip + ')';
+        nTip = '[◎](#" class="showtip" title="' + nTip + ')';
+        dTip = '[🛡️](#" class="showtip" title="' + dTip + ')';
+
+        outputCard.body.push(fpTip + " Firepower: " + firepower + " Dice");
+        outputCard.body.push(nTip + " Target: " + needed + "+");
+        outputCard.body.push(dTip + " Defence: " + defence + " Dice");
+        outputCard.body.push("[hr]");
+
+        combatArray = {
+            attacker: attacker,
+            defender: defender,
+            weapon: weapon,
+            firepower: firepower,
+            defence: defence,
+            needed: needed,
+            totalHits: 0,
+            ranged: true,
+            results: {},
+        };
+
+
+
+
+        AttackRolls();
+        RangedOutput();
+        if (currentUnitID === attacker.id) {
+            defender.Damage();
+        }
+        PrintCard();
+
+        //fx
+        FX(weapon.fx,attacker,defender);
+        //sound
+        PlaySound(weapon.sound);
+        attacker.fired = true;
+
+        if (losResult.indirect === "Spotter") {
+            let spotter = UnitArray[losResult.spotterID];
+            spotter.token.set(SM.spotting,false);
+        }
+        if (attacker.token.get(SM.fullstrike) === true) {
+            attacker.token.set(SM.fullstrike,false);
+            attacker.token.set(SM.fullstrikeused,true);
+            attacker.firepower -= 2;
+            AttributeSet(attacker.charID,"firepower",attacker.firepower);
+        }
+
+
+    }
+
+
+    const AttackRolls = () => {
+
+        let attacker = combatArray.attacker;
+        let defender = combatArray.defender;
+        let weapon = combatArray.weapon || {abilities: " "};
+        let rangedFlag = combatArray.ranged;
+        let attDice,defDice,attTarget,defTarget,roll,aTip,dTip;
+
+        if (rangedFlag === true) {
+            attDice = combatArray.firepower;
+            defDice = combatArray.defence;
+            attTarget = combatArray.needed;
+            aTip = "";
+            dTip = "";
+        } else {
+            attDice = combatArray.attCRResults.cr;
+            attTarget = combatArray.attCRResults.target;
+            aTip = combatArray.attCRResults.tip;
+
+            defDice = combatArray.defCRResults.cr;
+            defTarget = combatArray.defCRResults.target;
+            dTip = combatArray.defCRResults.tip;
+        }
+
+        let attackRolls = [];
+        let defenceRolls = [];
+
+        for (let i=0;i<attDice;i++) {
+            roll = randomInteger(12);
+            attackRolls.push(roll);
+        }
+        for (let i=0;i<defDice;i++) {
+            roll = randomInteger(12);
+            defenceRolls.push(roll);
+        }
+        attackRolls.sort();
+        defenceRolls.sort();
+
+        if (rangedFlag === true) {
+            if (weapon.abilities.includes("Dual")) {
+                if (attackRolls[0] < 7) {
+                    aTip += "<br>Dual: " + attackRolls[0];
+                    attackRolls[0] = randomInteger(12);
+                    aTip += "->" + attackRolls[0];
+                    attackRolls.sort();
+                }
+            }
+            if (defender.abilities.includes("Point Defence")) {
+                for (let i=0;i<defenceRolls.length;i++) {
+                    let test = defenceRolls[i];
+                    if (attackRolls.includes(test) === false) {
+                        dTip += "<br>Point Defence: " + test;
+                        defenceRolls[i] = randomInteger(12);
+                        dTip += "->" + defenceRolls[i];
+                        defenceRolls.sort();
+                        break;
+                    }
+                }
+            }
+            if (attacker.abilities.includes("Assisted Targetting")) {
+                for (let i=0;i<attackRolls.length;i++) {
+                    let test = attackRolls[i];
+                    if (defenceRolls.includes(test) === true) {
+                        aTip += "<br>Assisted Targetting: " + test;
+                        attackRolls[i] = randomInteger(12);
+                        aTip += "->" + attackRolls[i];
+                        attackRolls.sort();
+                        break;
+                    }
+                }
+            }
+        }
+
+        let originalAttackRolls = DeepCopy(attackRolls).sort((a,b) => b-a); //used for output
+        let originalDefenceRolls = DeepCopy(defenceRolls).sort((a,b) => b-a); //used for output
+        let explodingAttackRolls = []; //output
+        let explodingDefenceRolls = []; //output
+        let cancelledRolls = []; //used for output
+
+        //cancel out any augments before exploding - only done on initial rolls
+        let a12count = attackRolls.filter(num => num === 12).length;
+        let d12count = defenceRolls.filter(num => num === 12).length;
+        let a11count = 0;
+        let d11count = 0;
+        let min = Math.min(a12count,d12count);
+        for (let i=0;i<min;i++) {
+            cancelledRolls.push(12);
+            let pos = attackRolls.indexOf(12);
+            if (pos > -1) {
+                attackRolls.splice(pos,1);
+            }
+            pos = defenceRolls.indexOf(12);
+            if (pos > -1) {
+                defenceRolls.splice(pos,1);
+            }
+        }
+        a12count -= min;
+        d12count -= min;
+        
+        if (weapon.abilities.includes("Laser") && rangedFlag === true) {
+            aTip += "<br>Laser: Augments on 11 or 12";
+            a11count = attackRolls.filter(num => num === 11).length;
+            d11count = defenceRolls.filter(num => num === 11).length
+            min = Math.min(a11count,d11count);
+            for (let i=0;i<min;i++) {
+                cancelledRolls.push(11)
+                let pos = attackRolls.indexOf(11);
+                if (pos > -1) {
+                    attackRolls.splice(pos,1);
+                }
+                pos = defenceRolls.indexOf(11);
+                if (pos > -1) {
+                    defenceRolls.splice(pos,1);
+                }
+            }
+            a11count -= min;
+            d11count -= min;
+        }
+
+        let attAugment = a12count + a11count;
+        let defAugment = d12count; //defence only explodes on 12
+
+        //explode any augment dice, and cancel out any matching for defence
+        for (let i=0;i<attAugment;i++) {
+            do {
+                roll = randomInteger(12);
+                attackRolls.push(roll);
+                explodingAttackRolls.push(roll);
+            }
+            while (roll === 12);
+        }
+        for (let i=0;i<defAugment;i++) {
+            do {
+                roll = randomInteger(12);
+                defenceRolls.push(roll);
+                explodingDefenceRolls.push(roll);
+            }
+            while (roll === 12);
+        }
+        attackRolls.sort();
+        defenceRolls.sort();
+        explodingAttackRolls.sort((a,b) => b-a);
+        explodingDefenceRolls.sort((a,b) => b-a);
+
+        //cancel out rolls now
+        let finalDefenceRolls = [];
+        _.each(defenceRolls,roll => {
+            let pos = attackRolls.indexOf(roll);
+            if (pos > -1) {
+                attackRolls.splice(pos,1);
+                cancelledRolls.push(roll)
+            } else {
+                finalDefenceRolls.push(roll);
+            }
+        })
+        finalDefenceRolls = finalDefenceRolls.sort((a,b) => b - a);
+        attackRolls.sort((a,b) => b - a); //sort highest to lowest for this
+        defenceRolls = DeepCopy(finalDefenceRolls);
+        cancelledRolls.sort();
+
+        //output shows original rolls
+        combatArray.output = {
+            aTip: aTip,
+            dTip: dTip,
+            originalAttackRolls: originalAttackRolls,
+            originalDefenceRolls: originalDefenceRolls,
+            explodingAttackRolls: explodingAttackRolls,
+            explodingDefenceRolls: explodingDefenceRolls,
+            cancelledRolls: cancelledRolls,
+            finalAttackRolls: DeepCopy(attackRolls),
+            finalDefenceRolls: finalDefenceRolls,
+        }
+
+        //divide into ranged - only attacker can hit, vs CC, where both can get hits
+
+        if (rangedFlag === true) {
+            combatArray.results = GroupAttackRolls(attackRolls,attTarget);
+        } else {
+            combatArray.attResults = GroupAttackRolls(attackRolls,attTarget);
+            combatArray.defResults = GroupAttackRolls(defenceRolls,defTarget);
+        }
+
+    }
+
+
+    const GroupAttackRolls = (attackRolls,target) => {
+        let groups = [];
+        let unassignedRolls = [];
+
+        if (attackRolls.length > 0) {
+            //assign criticals to their own groups initially
+            do {
+                roll = attackRolls.shift();
+                if (roll) {
+                    let nextRoll = attackRolls[0];
+                    if (nextRoll && roll === nextRoll) {
+                        roll = attackRolls.shift();
+                        let info = {
+                            sum: roll * 2,
+                            critical: true,
+                            needed: Math.max(0,target - (roll * 2)),
+                            rolls: [roll,roll],
+                        }
+                        groups.push(info);
+                    } else {
+                        unassignedRolls.push(roll);
+                    }
+                }
+            } while (attackRolls.length > 0);
+            groups.sort((a,b) => a.needed - b.needed);
+            unassignedRolls.sort((a,b) => a - b);
+
+            //fill with unassigned, searching for best # (exact or higher) or using lowest and re-searching
+            for (let i=0;i<groups.length;i++) {
+                let group = groups[i];
+                if (group.needed > 0 && unassignedRolls.length > 0) {
+                    do {
+                        let pos = 0;
+                        //defaults to lowest roll unless finds exact match or higher in unassigned rolls
+                        for (let p=0;p<unassignedRolls.length;p++) {
+                            if (unassignedRolls[p] >= group.needed) {
+                                pos = p;
+                                break;
+                            } 
+                        }
+                        roll = parseInt(unassignedRolls.splice(pos,1));
+                        group.rolls.push(roll);
+                        group.sum += roll;
+                        group.needed = Math.max(0,target - group.sum);
+                    } while (group.needed > 0 && unassignedRolls.length > 0);
+                }
+            }
+
+            //critical groups now filled or no more unassignedRolls
+            //if further unassignedRolls, assign these to groups
+            //start with highest # as a group, searching for best # (exact or higher) or using lowest and re-searching
+            if (unassignedRolls.length > 0) {
+                do {
+                    roll = parseInt(unassignedRolls.pop());
+                    let info = {
+                        sum: roll,
+                        needed: Math.max(0,target - roll),
+                        rolls: [roll],
+                        critical: false,
+                    }
+
+                    if (info.needed > 0 && unassignedRolls.length > 0) {
+                        do {
+                            let pos = 0;
+                            //defaults to lowest roll unless finds exact match or higher in unassigned rolls
+                            for (let p=0;p<unassignedRolls.length;p++) {
+                                if (unassignedRolls[p] >= info.needed) {
+                                    pos = p;
+                                    break;
+                                } 
+                            }
+                            roll = parseInt(unassignedRolls.splice(pos,1));
+                            info.rolls.push(roll);
+                            info.sum += roll;
+                            info.needed = Math.max(0,target - info.sum);
+                        } while (info.needed > 0 && unassignedRolls.length > 0);
+                    }
+                    groups.push(info);
+                } while (unassignedRolls.length > 0);
+            }
+
+        }
+
+        let noncriticals = [];
+        let criticals = [];
+        let weapon = combatArray.weapon || {abilities: " "};
+        let railgunUsed = false;
+
+        _.each(groups,group => {
+            let rolls = "[" + group.rolls.sort((a,b) => b-a).toString() + "]";
+            if (group.needed === 0) {
+                if (group.critical === true) {
+                    criticals.push(rolls);
+                } else {
+                    if (weapon.abilities.includes("Railgun") && railgunUsed === false) {
+                        criticals.push("Railgun - " + rolls);
+                        railgunUsed = true;
+                    } else {
+                        noncriticals.push(rolls);
+                    }
+                }
+            }
+        })
+
+        if (weapon.abilities.includes("Plasma Accelerator") && (criticals.length + noncriticals.length) > 0) {
+            noncriticals.push("Plasma Accelerator - +1 Hit");
+        }
+
+        if (weapon.abilities.includes("EMP") && (criticals.length + noncriticals.length) > 0) {
+            noncriticals = ["EMP - 1 Hit" + attackRolls.toString()];
+            criticals = [];
+        }
+
+        results = {
+            criticals: criticals,
+            noncriticals: noncriticals,
+        }
+        return results;
+    }
+
+
+
+
+
+    const RangedOutput = () => {
+        //build dice roll tip output
+        let tip = "Attack Rolls<br>" + combatArray.output.originalAttackRolls.toString();
+        if (combatArray.output.explodingAttackRolls.length > 0) {
+            tip += " + " + combatArray.output.explodingAttackRolls.toString();
+        }
+        tip += combatArray.output.aTip;
+        tip += "<br>--------------------------";
+        tip += "<br>Defence Rolls<br>" + combatArray.output.originalDefenceRolls.toString();
+        if (combatArray.output.explodingDefenceRolls.length > 0) {
+            tip += " + " + combatArray.output.explodingDefenceRolls.toString();
+        }
+        tip += combatArray.output.dTip;
+        if (combatArray.output.cancelledRolls.length > 0) {
+            tip += "<br>--------------------------";
+            tip += "<br>Cancelled Rolls: " + combatArray.output.cancelledRolls.toString();
+        }
+        if (combatArray.output.finalAttackRolls.length > 0) {
+            tip += "<br>--------------------------";
+            tip += "<br>Final Attack Rolls: " + combatArray.output.finalAttackRolls.toString();
+        }
+        tip = '[🎲](#" class="showtip" title="' + tip + ')';
+        outputCard.body.push(tip + " " + "[U]Results[/u]");
+
+        let noncriticals = combatArray.results.noncriticals;
+        let criticals = combatArray.results.criticals;
+        let totalHits = noncriticals.length + criticals.length;
+        combatArray.results.totalHits = totalHits;
+        let weapon = combatArray.weapon;
+        let s;
+
+        if (totalHits > 0) {
+            if (combatArray.output.cancelledRolls.length > 0) {
+                s = (combatArray.output.cancelledRolls.length === 1) ? "":"s";
+                outputCard.body.push("Active Defences Defeated " + combatArray.output.cancelledRolls.length + " Attack" + s)
+            }
+            if (weapon.abilities.includes("EMP")) {
+                outputCard.body.push("No Damage is Done");
+                outputCard.body.push("But the Target loses all Actions");
+                outputCard.body.push("And any ongoing abilities such as Guard or Spotting");
+//apply
+
+            } else {
+                if (noncriticals.length > 0) {
+                    s = (noncriticals.length > 1) ? "s":"";
+                    let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+                    outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+                }
+                if (criticals.length > 0) {
+                    s = (criticals.length > 1) ? "s":"";
+                    let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+                    outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+                }
+                outputCard.body.push("Total: " + totalHits + " Hull Damage");
+                if (weapon.abilities.includes("Ion")) {
+                    outputCard.body.push("The Target also loses 1 Action if it has any");
+//apply
+                }
+                outputCard.body.push("[hr]");
+                outputCard.body.push("[U]Stat Damage[/u]");
+                StatDamage(combatArray.defender,criticals.length,noncriticals.length);
+                _.each(statKeys,key => {
+                    let damage = combatArray.defender[key] - stats[key];
+                    if (damage > 0) {
+                        let name = key.charAt(0).toUpperCase() + key.slice(1);
+                        outputCard.body.push(name + ": " + damage);
+                    }
+                })
+                combatArray.statDamage = stats;
+
+
+
+
+            }
+
+
+
+
+
+        } else {
+                if (combatArray.output.finalAttackRolls === 0) {
+                    outputCard.body.push("All Attacks Defeated by Active Defences");
+                } else {
+                    if (combatArray.output.cancelledRolls > 0) {
+                        s = (combatArray.output.cancelledRolls.length === 1) ? "":"s";
+                        outputCard.body.push("Active Defences Defeated " + combatArray.output.cancelledRolls + " Attack" + s)
+                        outputCard.body.push("The Remainder Missed");
+                    } else {
+                        outputCard.body.push("All Attacks Missed");
+                    }
+                }
+        }
+    }
+
+
+const CloseCombat = (msg) => {
+    let Tag = msg.content.split(";");
+    let attackerID = Tag[1];
+    let defenderID = Tag[2];
+    let attacker = UnitArray[attackerID];
+    let defender = UnitArray[defenderID];
+    let distance = HexMap[attacker.hexLabel].cube.distance(HexMap[defender.hexLabel].cube);
+    if (distance > 1) {
+        sendChat("","Not in Base to Base Contact");
+        return;
+    }
+
+
+    let defenderStatus = "Passive";
+    let defenderText = " is a PASSIVE Defender";
+    SetupCard("Close Combat","",attacker.faction);
+
+    if (defender.token.get(SM.disabled) === true) {
+        outputCard.body.push("Defender was Deactivated and so Destroyed");
+        defenderStatus = "Destroyed";
+    }
+    if (defender.token.get(SM.immobilized) === true && (defender.type === "Vehicle" || defender.type === "Aircraft")) {
+        outputCard.body.push("Defender " + defender.type + " was Immobilized and so Destroyed");
+        defenderStatus = "Destroyed";
+    }
+
+
+    if (defenderStatus === "Destroyed") {
+        PrintCard();
+        defender.Destroyed();
+        return;
+    }
+
+
+    //aircraft charging
+
+
+
+
+
+
+
+    if (defender.token.get("aura1_color") === "#800080") {
+        //is on guard
+        defenderStatus = "Active";
+        defenderText = " is on Guard and is an ACTIVE Defender"
+        if (defender.hexLabel !== defender.startHexLabel) {
+            //defender countercharged
+            defenderStatus = "Attacker";
+            defenderText = " Countercharges and is treated as an Attacker as well";
+        }
+        defender.token.set("aura1_color") === "#000000";
+    } else {
+        let defActions = parseInt(defender.token.get("bar1_value"));
+        if (defActions > 0) {
+            defenderText = " Spends an Action to be an ACTIVE Defender";
+            defender.token.set("bar1_value",defActions - 1);
+            defenderStatus = "Active";
+        }
+    }
+
+    combatArray = {
+        attacker: attacker,
+        defender: defender,
+        defenderStatus: defenderStatus,
+        defenderText: defenderText,
+        results: {},
+    }
+
+    //calculate CR. Returns CR and tips - tips pulled out in output
+    combatArray.attCRResults = CR(attacker,defender,"Attacker");
+    combatArray.defCRResults = CR(defender,attacker,defenderStatus);
+    AttackRolls();
+    CCOutput(); //also applies damage while in routine
+    PrintCard();
+
+
+}
+
+
+const CCOutput = () => {
+    let defenderDestroyed = false;
+    let attackerDestroyed = false;
+    let tip = combatArray.output.aTip;
+    tip = '[🎲](#" class="showtip" title="' + tip + ')';
+    outputCard.body.push(tip + " " + combatArray.attacker.name + " Charges in with " + combatArray.attCRResults.cr + " Dice");
+    tip = combatArray.output.dTip;
+    tip = '[🎲](#" class="showtip" title="' + tip + ')';
+    outputCard.body.push(tip + " " + combatArray.defender.name + combatArray.defenderText + " with " + combatArray.defCRResults.cr + " Dice");
+    outputCard.body.push("[hr]");
+     //build dice roll tip output
+    tip = "Attack Rolls<br>" + combatArray.output.originalAttackRolls.toString();
+    if (combatArray.output.explodingAttackRolls.length > 0) {
+        tip += " + " + combatArray.output.explodingAttackRolls.toString();
+    }
+    tip += "<br>--------------------------";
+    tip += "<br>Defence Rolls<br>" + combatArray.output.originalDefenceRolls.toString();
+    if (combatArray.output.explodingDefenceRolls.length > 0) {
+        tip += " + " + combatArray.output.explodingDefenceRolls.toString();
+    }
+    if (combatArray.output.cancelledRolls.length > 0) {
+        tip += "<br>--------------------------";
+        tip += "<br>Cancelled Rolls: " + combatArray.output.cancelledRolls.toString();
+    }
+    if (combatArray.output.finalAttackRolls.length > 0) {
+        tip += "<br>--------------------------";
+        tip += "<br>Final Attack Rolls: " + combatArray.output.finalAttackRolls.toString();
+    }
+    if (combatArray.output.finalDefenceRolls.length > 0) {
+        tip += "<br>--------------------------";
+        tip += "<br>Final Defence Rolls: " + combatArray.output.finalDefenceRolls.toString();
+    }
+    tip = '[🎲](#" class="showtip" title="' + tip + ')';
+    outputCard.body.push(tip + " [U]Results[/u]");
+
+    //attacker
+    outputCard.body.push(combatArray.attacker.name + ":")
+    let noncriticals = combatArray.attResults.noncriticals;
+    let criticals = combatArray.attResults.criticals;
+    let attHits = noncriticals.length + criticals.length;
+    let s;
+    if (attHits > 0) {
+        if (noncriticals.length > 0) {
+            s = (noncriticals.length > 1) ? "s":"";
+            let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+            outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+        }
+        if (criticals.length > 0) {
+            s = (criticals.length > 1) ? "s":"";
+            let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+            outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+        }
+        outputCard.body.push("Total: " + attHits + " Hull Damage");
+        outputCard.body.push("[U]Stat Damage[/u]");
+        StatDamage(combatArray.defender,criticals.length,noncriticals.length);
+        _.each(statKeys,key => {
+            let damage = combatArray.defender[key] - stats[key];
+            if (damage > 0) {
+                let name = key.charAt(0).toUpperCase() + key.slice(1);
+                outputCard.body.push(name + ": " + damage);
+            }
+        })
+        combatArray.statDamage = stats;
+        combatArray.results.totalHits = attHits;
+        defenderDestroyed = combatArray.defender.Damage();
+    } else {
+        outputCard.body.push("No Hits were Scored");
+    }
+    outputCard.body.push("[hr]")
+
+    //defender
+    outputCard.body.push(combatArray.defender.name + ":")
+    noncriticals = combatArray.defResults.noncriticals;
+    criticals = combatArray.defResults.criticals;
+    let defHits = noncriticals.length + criticals.length;
+    if (defHits > 0) {
+        if (criticals.length > 0) {
+            s = (criticals.length > 1) ? "s":"";
+            let cTip = '[🎲](#" class="showtip" title="' + criticals.toString() + ')';
+            outputCard.body.push(cTip + " " + criticals.length + " Critical Hit" + s);
+        }
+        if (noncriticals.length > 0) {
+            s = (noncriticals.length > 1) ? "s":"";
+            let cTip = '[🎲](#" class="showtip" title="' + noncriticals.toString() + ')';
+            outputCard.body.push(cTip + " " + noncriticals.length + " Hit" + s);
+            if (combatArray.defenderStatus === "Passive") {
+                outputCard.body.push("[Ignored for Damage Purposes]");
+                noncriticals = [];
+                defHits = criticals.length;
+            }
+        }
+        outputCard.body.push("Total: " + defHits + " Hull Damage");
+        outputCard.body.push("[U]Stat Damage[/u]");
+        StatDamage(combatArray.attacker,criticals.length,noncriticals.length);
+        _.each(statKeys,key => {
+            let damage = combatArray.attacker[key] - stats[key];
+            if (damage > 0) {
+                let name = key.charAt(0).toUpperCase() + key.slice(1);
+                outputCard.body.push(name + ": " + damage);
+            }
+        })
+        combatArray.statDamage = stats;
+        combatArray.results.totalHits = attHits;
+        attackerDestroyed = combatArray.attacker.Damage();
+    } else {
+        outputCard.body.push("No Hits were Scored");
+    }
+
+
+    //resolution
+    outputCard.body.push("[hr]");
+    outputCard.body.push("[U]Resolution[/u]")
+    if (attackerDestroyed === false) {
+        if (combatArray.attacker.token.get(SM.immobilized) === true && combatArray.attacker.type !== "Walker") {
+            outputCard.body.push(combatArray.attacker.name + " was Immobilized and Destroyed");
+            combatArray.attacker.Destroyed();
+            attackerDestroyed = true;
+        }
+        if (combatArray.attacker.token.get(SM.disabled) === true && combatArray.attacker.type !== "Troopers") {
+            outputCard.body.push(combatArray.attacker.name + " was Disabled and Destroyed");
+            combatArray.attacker.Destroyed();
+            attackerDestroyed = true;
+        }
+    }
+
+    if (defenderDestroyed === false) {
+        if (combatArray.defender.token.get(SM.immobilized) === true && combatArray.defender.type !== "Walker") {
+            outputCard.body.push(combatArray.defender.name + " was Immobilized and Destroyed");
+            combatArray.defender.Destroyed();
+            defenderDestroyed = true;
+        }
+        if (combatArray.defender.token.get(SM.disabled) === true && combatArray.defender.type !== "Troopers") {
+            outputCard.body.push(combatArray.defender.name + " was Disabled and Destroyed");
+            combatArray.defender.Destroyed();
+            defenderDestroyed = true;
+        }
+    }
+
+    if (attackerDestroyed === false && defenderDestroyed === false) {
+        if (combatArray.attacker.type === "Aircraft" && combatArray.defender !== "Aircraft") {
+            if (defHits > attHits) {
+                outputCard.body.push(combatArray.attacker.name + " Crashes and is Destroyed");
+                combatArray.attacker.Destroyed();
+                attackerDestroyed = true;
+            } else {
+                outputCard.body.push(combatArray.attacker.name + " Is Immobilized and Landed");
+                combatArray.attacker.token.set(SM.immobilized, true);
+    //set height token
+                combatArray.attacker.airheight = 0;
+            }
+        }
+    }
+
+    //did either die?
+   if (attackerDestroyed === true || defenderDestroyed === true) {   
+        if (attackerDestroyed === true && defenderDestroyed === true) {
+            outputCard.body.push("Both Combatants Destroyed");
+        } else if (attackerDestroyed === true) {
+            outputCard.body.push(combatArray.defender.name + " Wins the Combat");
+        } else if (defenderDestroyed === true) {
+            outputCard.body.push(combatArray.attacker.name + " Wins the Combat");
+        }
+        return;
+    }
+    let text1;
+    let text2 = ", both Combatants pull back 1 Hex";
+    if (attHits === defHits) {
+        text1 = "Combat is a Tie";
+    } else if (attHits > defHits) {
+        text1 = combatArray.attacker.name + " Wins the Battle";
+        if (combatArray.attacker.type !== "Aircraft") {
+            text2 = " and can choose to Pull Back 1 Hex, Push the Loser Back 1 Hex or remain in Close Combat";
+        }
+    } else if (defHits > attHits) {
+        text1 = combatArray.defender.name + " Wins the Battle";
+        if (combatArray.defender.type !== "Aircraft") {
+            text2 = " and can choose to Pull Back 1 Hex, Push the Loser Back 1 Hex or remain in Close Combat";
+        }
+    }
+    outputCard.body.push(text1 + text2);
+
+
+}
+
+
+
+
+const CR = (unit1,unit2,combatStatus) => {
+    let cr = parseInt(unit1.class)
+    let crTip = "Base: C " + cr;
+    //charging or countercharging
+    let delta = 0;
+    if (combatStatus === "Attacker") {
+        let move = HexMap[unit1.hexLabel].cube.distance(HexMap[unit1.startHexLabel].cube) + delta;
+        if (move > 0) {
+            cr +=1;
+            crTip += "<br>Charging +1 C"
+            //gravity assisted here
+            if (unit1.type === "Aircraft") {
+                let height1 = unit1.airheight;
+                let height2 = HexMap[unit2.hexLabel].elevation;
+                if (unit2.type === "Aircraft") {
+                    height2 = unit2.airheight;
+                }
+                delta = height1 - height2;
+                if (delta > 0) {
+                    cr++;
+                    crTip += "<br>Jump Jet Assisted Charge +1 C";
+                }
+            }
+            if (unit1.abilities.includes("Jump Jets") && unit1.type === "Walker" && unit1.token.get("tint_color") === "transparent") {
+                cr++;
+                crTip += "<br>Jump Jet Assisted Charge +1 C";
+            }
+
+            //movement
+            let moveC = Math.floor(move/4);
+            if (moveC > 0) {
+                cr += moveC;
+                crTip += "<br>" + move + " Hexes Movement +" + moveC + " C";
+            }
+            //In AOV?
+            if (AOV(unit2,unit1) === false) {
+                cr++;
+                crTip += "<br>Outside Defenders AOV +1 C";
+            }
+        }
+
+        //walker or vehicle
+        if (unit1.type === "Walker" || unit1.type === "Vehicle") {
+            cr++;
+            crTip += "<br>Unit is a " + unit1.type + " +1 C";
+        }
+        if (unit1.abilities.includes("Ramming")) {
+            cr++;
+            crTip += "<br>Unit has a Ramming Attachment +1 C";
+        }
+    }
+    if (unit1.abilities.includes("Close Combat")) {
+        cr++;
+        crTip += "<br>Unit has a Close Combat Attachment +1 C";
+    }
+    if (unit2.abilities.includes("Shield")) {
+        cr--;
+        crTip += "<br>Opponent has a Shield -1 C";
+    }
+    if (unit1.type === "Aircraft") {
+        cr--;
+        crTip += "<br>Unit is an Aircraft -1 C";
+    }
+    if (unit1.type === "Walker" && unit1.token.get(SM.immobilized) === true) {
+        cr--;
+        crTip += "<br>Unit is an Immobilized Walker -1 C";
+    }
+
+    let target = parseInt(unit2.class) + parseInt(unit2.armour);
+    crTip += "<br>Target: " + target;
+    crTip += "<br>[Class " + unit2.class + " + Armour " + unit2.armour + "]"; 
+
+
+    let results = {
+        cr: cr,
+        tip: crTip,
+        target: target,
+    }
+    
+    return results;
+}
+
+
+
+    const AOV = (subject,target) => {       
+        let result = false;
+        let angle = TargetAngle(subject,target);
+        let halfaov = 90;
+        if (subject.type === "Air" && subject.abilities.includes("Fixed Wing")) {
+            halfaov = 180;
+        }
+        if (subject.abilities.includes("Alert") || subject.token.get(SM.alert) === true) {
+            halfaov = 180;
+        }
+        if (angle <= halfaov || angle >= (360 - halfaov)) {
+            result = true;
+        }
+        return result;
+    }
+
+    const AOF = (subject,target) => {       
+        let result = false;
+        let angle = TargetAngle(subject,target);
+        let halfaof = 90;
+        if (subject.type === "Air" && subject.abilities.includes("Fixed Wing")) {
+            halfaof= 45;
+        }
+        if (angle <= halfaof || angle >= (360 - halfaof)) {
+            result = true;
+        }
+        return result;
+    }
+
+
+
+
+
+
+
+
+
+
+    const SumArray = (array) => {
+        //sum an array of numbers
+        let sum = 0;
+        _.each(array,element => {
+            sum += element;
+        })
+        return sum;
+    }
+
+    const StatDamage = (unit,criticals,noncriticals) => {
+        stats = {
+            armour: parseInt(unit.armour) || 0,
+            defence: parseInt(unit.defence) || 0,
+            mobility: parseInt(unit.mobility) || 0,
+            firepower: parseInt(unit.firepower) || 0,
+        }
+    log("Initial")
+    log(stats)
+    log("Criticals")
+        for (let i=0;i<criticals;i++) {
+            LowestStat();
+        }
+    log("NonCriticals")
+        for (let i=0;i<noncriticals;i++) {
+            HighestStat();
+        }
+    log("End")
+    log(stats)
+    }
+
+    const HighestStat = () => {
+        let highestStat;
+        let highest = 0;
+        _.each(statKeys,key => {
+            if (stats[key] > highest && stats[key] > 0) {
+                highest = stats[key];
+                highestStat = key;
+            }
+        })     
+        if (highestStat) {
+            stats[highestStat] = Math.max(0,stats[highestStat] - 1);
+        }
+    }
+    const LowestStat = () => {
+        let lowestStat;
+        let lowest = Infinity;
+        _.each(statKeys,key => {
+            if (stats[key] < lowest && stats[key] > 0) {
+                lowest = stats[key];
+                lowestStat = key;
+            }
+        })     
+        if (lowestStat) {
+            stats[lowestStat] = Math.max(0,stats[lowestStat] - 1);
+        }
+    }
+
+
+    const changeGraphic = (tok,prev) => {
+        RemoveLines();
         //fix the token size in case accidentally changed while game running - need check that game is running
-        return
         if (state.FSD.turn === 0) {return};
-        let name = obj.get("name");
-        if (obj.get("width") !== prev.width || obj.get("height") !== prev.height) {
-            obj.set({
+        if (tok.get("width") !== prev.width || tok.get("height") !== prev.height) {
+            tok.set({
                 width: prev.width,
                 height: prev.height,
             })
         }
+        let id = tok.get("id");
+        let unit = UnitArray[id];
+        if (!unit) {return};
+
+        let newLocation = new Point(tok.get("left"),tok.get("top"));
+        let startHex = HexMap[unit.startHexLabel]; //set at start of activation or turn
+        let goalHex = HexMap[newLocation.label()];
+        let mobility = parseInt(unit.mobility);
+        if (unit.order === "Patrol Move") {
+            mobility *= 2;
+        }
+        if (unit.order === "Rapid Move") {
+            mobility *= 3;
+        }
+        let paved = false;
+        if (startHex.traits.includes("Paved") && goalHex.traits.includes("Paved")) {
+            paved = true;
+        }
+        let rough = false
+        let difficult = false;
+        let hazardous = false;
+
+        let nodes = 1;
+        let explored = [];
+        let frontier = [{
+            label: startHex.label,
+            cost: 0,
+            estimate: startHex.cube.distance(goalHex.cube),
+        }]
+        moveInfo = {
+            unit: unit,
+            paved: paved,
+            rough: rough,
+            difficult: difficult,
+            hazardous: hazardous,
+        }
+
+        while (frontier.length > 0) {
+            //sort paths in frontier by cost,lowest cost first
+            //choose lowest cost path from the frontier
+            //if more than one, choose one with highest cost  
+            frontier.sort(function(a,b) {
+                return a.estimate - b.estimate || b.cost - a.cost; //2nd part used if estimates are same
+            })
+            let node = frontier.shift();
+            nodes++
+            //add this node to explored paths
+            explored.push(node);
+            //if this node reaches goal, end loop
+            if (node.label === goalHex.label) {
+                break;
+            }
+            //generate possible next steps
+            let next = HexMap[node.label].cube.neighbours();
+            //for each possible next step
+            for (let i=0;i<next.length;i++) {
+                //calculate the cost of the next step 
+                //by adding the step's cost to the node's cost
+                let stepCube = next[i];
+                let stepHexLabel = stepCube.label();
+                let stepHex = HexMap[stepHexLabel];
+                if (!stepHex) {continue};
+                let costResult = HexCost(stepHex);
+                if (costResult === -1) {continue}; //impassable
+                let cost = costResult + node.cost;
+                //check if this step has already been explored
+                let isExplored = (explored.find(e=> {
+                    return e.label === stepHexLabel
+                }));
+                //avoid repeated nodes during the calculation of neighbours
+                let isFrontier = (frontier.find(e=> {
+                    return e.label === stepHexLabel
+                }));
+                //if this step has not been explored
+                if (!isExplored && !isFrontier) {
+                    let est = cost + stepHex.cube.distance(goalHex.cube);
+                    //add the step to the frontier, using the cost and distance
+                    frontier.push({
+                        label: stepHex.label,
+                        cost: cost,
+                        estimate: est,
+                    });
+                }
+            }
+        }
+
+        //If there are no paths left to explore or hit target hex
+        if (explored.length > 0) {
+            array = [];
+            results = [];
+            explored.sort((a,b) => {
+                return b.cost - a.cost;
+            })
+            let last = explored.shift(); //end hex
+            array.push(last);
+            let finished = explored.length > 0 ? false:true;
+    
+            while (finished === false) {
+                let lowestCost = last.cost;
+                let current = 0;
+                for (let i=0;i<explored.length;i++) {
+                    let next = explored[i];
+                    if (HexMap[next.label].cube.distance(HexMap[last.label].cube) === 1 && next.cost < lowestCost) {
+                        lowestCost = next.cost;
+                        current = i;
+                    }
+                }
+                last = explored[current];
+                explored.splice(current,1);
+                array.push(last);
+                if (last.label === startHex.label) {
+                    finished = true;
+                }
+            }
+            array.reverse();
+log(array)
+            //redo costs based on this final path
+            //place markers
+/*
+
+
+            let prevHex = HexMap[array[0].label];
+            if (unit.moveCost === 0) {
+                let markerID = CreateMarker(prevHex,"Move",array[0].cost);
+                let move = {
+                    hexLabel: array[0].label,
+                    mapLabel: array[0].mapLabel,
+                    cost: 0,
+                    rotation: array[0].tokenRotation,
+                    markerID: markerID,
+                    flagged: false,
+                }
+                moveArray.push(move);
+            }
+
+            for (let i=1;i<array.length;i++) {
+                let nextHex = HexMap[array[i].label];
+                let costResults = HexCost(nextHex,rotation);
+                let hexCost = costResults.hexCost;
+                let init = rotation;
+                rotation = costResults.rotation;
+                if (cost + hexCost > movement) {
+                    break;
+                }
+                if (init !== rotation && unit.token.get(SM.moved) === false) {
+                    unit.token.set(SM.rotate,true);
+                } 
+                cost += hexCost;
+                let markerID = CreateMarker(nextHex,"Move",cost);
+                unit.hexLabel = array[i].label;
+                let flagged = CheckConcealment(unit);
+                let move = {
+                    hexLabel: array[i].label,
+                    mapLabel: array[i].mapLabel,
+                    cost: cost,
+                    rotation: rotation,
+                    markerID: markerID,
+                    flagged: flagged,
+                }
+                moveArray.push(move);
+                lastHex = nextHex;
+            }
+*/
+        } else {
+            sendChat("","No Path")
+        }
+
 
     }
+
+
+    //Booleans - rough,difficult,hazard,paved etc - and paved is turned true earlier, based on initial hex (plus mobility +1 for starting on paved)
+    //if starts on paved, add 1 to mobility and if wheeled gets Rapid Move macro added in start
+    //if final path has entered rough etc, check/roll for damage as appropriate
+
+    const HexCost = (hex) => {
+        let unit = moveInfo.unit;
+        let cost = 1;
+        let rate = 1;
+        if (unit.order === "Patrol Move") {rate = 2};
+        if (unit.order === "Rapid Move") {rate = 3};
+
+        //Aircraft
+        if (unit.type === "Aircraft" && unit.airHeight > 0) {
+            if (hex.label === finalHex.label) {
+                if (hex.traits.includes("Rough") || hex.traits.includes("Dangerous") || hex.traits.includes("Hazardous")) {
+                    cost += rate;
+                }
+                if (hex.traits.includes("Impassable") || hex.traits.includes("Building")) {
+                    cost = -1;
+                }
+            }
+            return cost;
+        }
+
+        if (hex.traits.includes("Impassable")) {
+            cost = -1;
+            return cost;
+        }
+        if (hex.tokenIDs.length > 0) {
+            cost = -1;
+            return cost;
+        }
+        if (hex.traits.includes("Building") && unit.abilities.includes("Infantry") === false) {
+            cost = -1;
+            return cost;
+        }
+        if (hex.traits.includes("Paved") === false && moveInfo.paved === true) {
+            cost += rate;
+            if (unit.abilities.includes("Rapid") === false && unit.order === "Rapid Move") {
+                cost = -1;
+                return cost;
+                //cant leave road if moving Rapid as Wheeled
+            }
+        }
+
+
+        if (unit.abilities.includes("Tracked")) {
+            if (unit.fired === true && hex.traits.includes("Hazardous")) {
+                cost = -1;
+                return cost;
+            }
+            if (hex.traits.includes("Difficult") && moveInfo.rough === false) {
+                cost += rate;
+                moveInfo.rough = true;
+            }
+            if (hex.traits.includes("Hazardous") && moveInfo.difficult === false) {
+                cost += rate;
+                moveInfo.difficult = true;
+            }
+        } else {
+            if (unit.fired === true && (hex.traits.includes("Hazardous") || hex.traits.includes("Difficult"))) {
+                cost = -1;
+                return cost;
+            }
+            if (hex.traits.includes("Rough") && moveInfo.rough === false) {
+                cost += rate;
+                moveInfo.rough = true;
+            }
+            if (hex.traits.includes("Difficult") && moveInfo.difficult === false) {
+                cost += rate;
+                moveInfo.difficult = true;
+            }
+            if (hex.traits.includes("Hazardous") && moveInfo.hazardous === false) {
+                cost += rate;
+                moveInfo.hazardous = true;
+            }
+        }
+        return cost;
+    }
+
+
+
+
+
+
 
     const addGraphic = (obj) => {
         log(obj)
         RemoveLines();
-        let cardID = obj.get("cardid");
-        let ci = MasterCardList[cardID];
-        if (ci && currentCardIDs.includes(cardID) === false) {
-            playedCard(obj);
-        }
-        let id = obj.get("id");
-        if (!UnitArray[id]) {
-            let character = getObj("character", obj.get("represents"));      
-            if (character) {
-                let unit = new Unit(obj);
-            }
-        }
 
 
 
@@ -1469,10 +3215,12 @@ const CC = (() => {
     const destroyGraphic = (obj) => {
         let name = obj.get("name");
         log(name + " Destroyed")
+        if (UnitArray[obj.get("id")]) {
+            delete UnitArray[obj.get("id")];
+        }
 
 
     }
-
 
 
 
@@ -1488,19 +3236,10 @@ const CC = (() => {
     
         switch(args[0]) {
             case '!Dump':
-                log(MasterCardList)
                 log("State");
                 log(state.FSD);
-                log("Deck Info");
-                log(DeckInfo);
-                log("Map Areas");
-                log(MapAreas);
-                log("Player Hands");
-                log(PlayerHands);
                 log("Units");
                 log(UnitArray)
-                log("Objective Info")
-                log(objectiveInfo)
                 break;
             case '!ClearState':
                 ClearState(msg);
@@ -1508,54 +3247,43 @@ const CC = (() => {
             case '!EndRound':
                 EndRound(msg);
                 break;
-            case '!Flip':
-                Flip(msg);
-                break;
-            case '!PickSides':
-                PickSides(msg);
-                break;
-            case '!Event':
-                Event(msg);
-                break;
-            case '!Objectives':
-                Objectives(msg);
-                break;
             case '!AddAbilities':
                 AddAbilities(msg);
                 break;
             case '!AddMarker':
                 AddMarker(msg);
                 break;
-            case '!Deploy':
-                Deploy(msg);
+            case '!HexData':
+                HexData(msg);
                 break;
-            case '!TokenInfo':
-                TokenInfo(msg);
-                break;
-            case '!AdvanceTime':
-                AdvanceTime(currentPlayer);
-                break;
-            case '!Setup':
-                Setup(msg);
-                break;
-            case '!ShowHidden':
-                ShowHidden(msg);
-                break;
-            case '!PlaceSmoke':
-                PlaceSmoke(msg);
-                break;
-            case '!PlaceCard':
-                PlaceCard(msg);
-                break;
-            case '!LOS':
-                LOS(msg);
+            case '!CheckLOS':
+                CheckLOS(msg);
                 break;
             case '!RemoveLines':
                 RemoveLines();
                 break;
-            case '!Casualty':
-                Casualty(msg);
+            case '!AddUnits':
+                AddUnits(msg);
                 break;
+            case '!NextTurn':
+                NextTurn();
+                break;
+            case '!Activate':
+                Activate(msg);
+                break;
+            case '!Fire':
+                Fire(msg);
+                break;
+            case '!Test':
+                AttackDice();
+                break;
+            case '!Mark':
+                Mark(msg);
+                break;
+            case '!CloseCombat':
+                CloseCombat(msg);
+                break;
+
         }
     };
 
@@ -1569,13 +3297,12 @@ const CC = (() => {
         on('destroy:graphic',destroyGraphic);
     };
     on('ready', () => {
-        log("===> Combat Commander <===");
+        log("===> FSD <===");
         log("===> Software Version: " + version + " <===")
         LoadPage();
         PlayerIDs();
         DefineHexInfo();
         BuildMap();
-        BuildDecks(); //the master array of id and names
         registerEventHandlers();
         sendChat("","API Ready")
         log("On Ready Done")
