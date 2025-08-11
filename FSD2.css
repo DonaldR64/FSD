@@ -162,8 +162,9 @@ section {
 .att {
   grid-area: att;
   background-color: white;
-  display: flex;
+  display: grid;
   justify-content: center;
+  align-items: center;
 }
 
 .atttitle {
@@ -174,11 +175,18 @@ section {
     background-color: white;
     text-align: center; 
 }
-
-
 .attinfo {
+    grid-area: atttitle;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    background-color: white;
+    text-align: center; 
+}
+
+.backup {
     grid-area: attinfo;
-    display: grid;
+    display: flex;
     grid-gap: 2px;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr 1fr;
