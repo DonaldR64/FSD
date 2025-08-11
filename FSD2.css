@@ -14,7 +14,7 @@
 
 .mysheet {
     width: 830px;
-    height: 630px;
+    height: 830px;
 }
 .attributes {
     padding: 15px 0px 0px 15px;
@@ -35,13 +35,15 @@ input[type="hidden"][name="attr_faction"][value="Conglomerate"] ~ .mysheet {
 main {
   display: grid;
   width: 800px;
-  height: 600px;
+  height: 800px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"common   common    header   header"
                       "common   common    att      dam"
                       "weapon   weapon    weapon   weapon"
+                      "weapon   weapon    weapon   weapon"
+                      "abil     abil      abil      abil"
                       "abil     abil      abil      abil";
 
 }
@@ -208,7 +210,6 @@ input[type="hidden"][value="Equipped"].weapon1-status ~ .weapon1{
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
 
 /* Weapon 2 */
@@ -226,7 +227,6 @@ input[type="hidden"][value="Equipped"].weapon2-status ~ .weapon2{
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
 
 /* Weapon 3 */
@@ -244,7 +244,6 @@ input[type="hidden"][value="Equipped"].weapon3-status ~ .weapon3{
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
 
 /* Weapon 4 */
@@ -262,7 +261,6 @@ input[type="hidden"][value="Equipped"].weapon4-status ~ .weapon4{
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
 
 /* Weapon 5 */
@@ -280,7 +278,6 @@ input[type="hidden"][value="Equipped"].weapon5-status ~ .weapon5{
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
 
 
