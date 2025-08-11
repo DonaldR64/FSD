@@ -162,8 +162,9 @@ section {
 .att {
   grid-area: att;
   background-color: white;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  vertical-align: center;
 }
 
 .attinfo {
