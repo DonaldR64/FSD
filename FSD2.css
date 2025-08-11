@@ -93,7 +93,7 @@ section {
 
 .charsheet h1{
   text-align: center;
-  color: white;
+  color: black;
 }
 .charsheet h2{
   text-align: center;
@@ -124,12 +124,11 @@ section {
 .header {
   grid-area: header;
   flex-direction: center;
-  border-style: none;
+  background-color: white;
+    text-align: center;
+
 }
 
-.header h3 {
-  color: white;
-}
 
 .dam {
   grid-area: dam;
