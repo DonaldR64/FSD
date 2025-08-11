@@ -136,6 +136,9 @@ section {
 .dam h4 {
   color: black;
 }
+.dam h3 {
+  color: darkred;
+}
 
 .daminfo {
     grid-area: daminfo;
@@ -163,7 +166,9 @@ section {
   grid-area: att;
   background-color: white;
 }
-
+.att h3 {
+  color: darkred;
+}
 
 .attinfo {
     grid-area: attinfo;
@@ -180,7 +185,9 @@ section {
   grid-area: weapon;
   background-color:  white;
 }
-
+.weapon h3 {
+  color: darkred;
+}
 .weaponinfo{
   grid-area: weaponinfo;
   display: grid;
