@@ -163,7 +163,7 @@ section {
   grid-area: att;
   background-color: white;
   align-items: center;
-
+  vertical-align: center;
 }
 
 .attinfo {
