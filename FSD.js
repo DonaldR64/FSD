@@ -601,13 +601,24 @@ const CC = (() => {
 
             this.faction = aa.faction || "Neutral";
             this.player = (this.faction === "Neutral") ? 2:(state.FSD.factions[0] === this.faction)? 0:1;
+            this.special = aa.special || " ";
+            this.points = parseInt(aa.points) || 0;
 
             this.type = aa.type;
 
             this.command = parseInt(aa.command) || 0;
-            this.defense = parseInt(aa.defense) || 0;
-            this.save = parseInt(aa.save) || 0;
-            let move = parseInt(aa.move);
+            this.defense = parseInt(aa.defense) || 1;
+            let saveInfo = aa.save || 0; // eg d10(3)
+            saveInfo = saveInfo.split("(");
+            let dX = parseInt(saveInfo[0].replace("d",""));
+            let numberDice = parseInt(saveInfo[1].replace(")","")) || 1;
+            let save = {
+                number: numberDice,
+                dX: dX,
+            }
+            this.save = save;
+            this.move = parseInt(aa.move);
+
             let systemNumbers = {};
 
             let weapons = [];
@@ -664,7 +675,14 @@ const CC = (() => {
                 }
                 abilities.push(ability);
             }
-            this.weapons = abilities;
+            this.abilities = abilities;
+
+            let damageInfo = {};
+
+
+            this.damageInfo = damageInfo;
+            this.systemNumbers = systemNumbers;
+
 
 
 
