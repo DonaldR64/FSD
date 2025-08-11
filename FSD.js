@@ -1202,9 +1202,6 @@ const CC = (() => {
 
 
     const ClearState = (msg) => {
-        //rebuild array of card IDs for each deck, will track which ones are played using this
-        //DeckInfo is the master array of full deck
-
         LoadPage();
         BuildMap();
 
