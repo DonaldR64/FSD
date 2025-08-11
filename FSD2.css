@@ -138,6 +138,10 @@ section {
 .dam h4 {
   color: black;
 }
+.dam h3 {
+  color: darkred;
+}
+
 
 
 .daminfo {
@@ -196,7 +200,7 @@ section {
 }
 
 .weaponinfo h4{
-  color: black;
+  color: darkred;
 }
 
 /* Weapon 1 */
@@ -302,7 +306,9 @@ input[type="hidden"][value="Equipped"].weapon5-status ~ .weapon5{
   align-items: center;
 }
 
-
+.abilityinfo h4{
+  color: darkred;
+}
 /* System 1 */
 input[type="hidden"][value="Off"].system1-status ~ .system1{
     display: none;
@@ -312,13 +318,12 @@ input[type="hidden"][value="Equipped"].system1-status ~ .system1{
 }
 .system1 {
     display: grid;
-    grid-gap: 1px;
+  grid-gap: 2px;
   grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
 
 /* System 2 */
@@ -330,13 +335,12 @@ input[type="hidden"][value="Equipped"].system2-status ~ .system2{
 }
 .system2 {
     display: grid;
-    grid-gap: 1px;
+  grid-gap: 2px;
   grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
 
 /* System 3 */
@@ -348,13 +352,12 @@ input[type="hidden"][value="Equipped"].system3-status ~ .system3{
 }
 .system3 {
     display: grid;
-    grid-gap: 1px;
+  grid-gap: 2px;
   grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
 
 /* System 4 */
@@ -366,13 +369,12 @@ input[type="hidden"][value="Equipped"].system4-status ~ .system4{
 }
 .system4 {
     display: grid;
-    grid-gap: 1px;
   grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
+  grid-gap: 2px;
 }
 
 /* System 5 */
@@ -384,11 +386,10 @@ input[type="hidden"][value="Equipped"].system5-status ~ .system5{
 }
 .system5 {
     display: grid;
-    grid-gap: 1px;
+  grid-gap: 2px;
   grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
     grid-template-rows: 1;
     background-color: white;
     text-align: center;
     align-items: center;
-    padding: 3px;
 }
