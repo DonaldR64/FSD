@@ -677,11 +677,31 @@ const CC = (() => {
             }
             this.abilities = abilities;
 
-            let damageInfo = {};
-
-
-            this.damageInfo = damageInfo;
             this.systemNumbers = systemNumbers;
+
+            let drt = {};
+            let systems = {};
+            for (let i=1;i<7;i++) {
+                let rolls = aa["roll" + i];
+                if (!rolls || rolls === null) {continue};
+                rolls = rolls.split(",");
+                _.each(rolls, roll => {
+                    roll = parseInt(roll);
+                    let system = aa["damage" + i];
+                    system = system.replace("System ","");
+                    let status = aa["damage" + i + "status"];
+                    drt[roll] = {
+                        system: system,
+                    }
+                    if (!systems[system]) {
+                        systems[system] = status;
+                    }
+                })
+            }
+
+            this.damageTable = drt;
+            this.systemTable = systems;
+
 
 
 
