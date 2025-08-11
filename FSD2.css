@@ -167,6 +167,16 @@ section {
   align-items: center;
 }
 
+.atttitle {
+    grid-area: atttitle;
+ display: flex;
+  justify-content: center;
+  align-items: center; 
+    background-color: white;
+    text-align: center; 
+}
+
+
 .attinfo {
     grid-area: attinfo;
     display: grid;
