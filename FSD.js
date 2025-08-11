@@ -161,6 +161,18 @@ const CC = (() => {
 
     }
 
+    const EdgeInfo = {
+        "Hedge": {name: "Hedge",height: 0.5, traits: ["Difficult","Foliage","Flammable"]},
+        "Burning Hedge": {name: "Burning Hedge",height: 1.5, traits: ["Dangerous","Smoke"]},
+        "Wall": {name: "Wall",height: 0.5, traits: ["Difficult","Low Structure"]},
+        "Stream": {name: "Stream",height: 0, traits: ["Water","Difficult"]},
+
+
+
+
+    }
+
+
 
 
 
@@ -1000,6 +1012,49 @@ const CC = (() => {
 
 
 
+    const AddEdges = () => {
+
+ //add other types from edgeinfo
+
+        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
+        _.each(paths,path => {
+            let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge","#980000": "Wall"};
+            let type = types[path.get("stroke").toLowerCase()];
+            if (type) {
+                let vertices = translatePoly(path);
+                //work through pairs of vertices
+                for (let i=0;i<(vertices.length -1);i++) {
+                    let pt1 = vertices[i];
+                    let pt2 = vertices[i+1];
+                    let midPt = new Point((pt1.x + pt2.x)/2,(pt1.y + pt2.y)/2);
+                    //find nearest hex to midPt
+                    let hexLabel = midPt.label();
+                    //now run through that hexes neighbours and see what intersects with original line to identify the 2 neighbouring hexes
+                    let hex1 = HexMap[hexLabel];
+                    if (!hex1) {continue}
+                    let pt3 = hex1.centre;
+                    let neighbourCubes = hex1.cube.neighbours();
+                    for (let j=0;j<neighbourCubes.length;j++) {
+                        let k = j+3;
+                        if (k> 5) {k-=6};
+                        let hl2 = neighbourCubes[j].label();
+                        let hex2 = HexMap[hl2];
+                        if (!hex2) {continue}
+                        let pt4 = hex2.centre;
+                        let intersect = lineLine(pt1,pt2,pt3,pt4);
+                        if (intersect) {
+                            if (hex1.edges[DIRECTIONS[j]] !== "Bridge") {
+                                hex1.edges[DIRECTIONS[j]] = type;
+                            }
+                            if (hex2.edges[DIRECTIONS[k]] !== "Bridge") {
+                                hex2.edges[DIRECTIONS[k]] = type;
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    }
 
 
     const AddTerrain = () => {
