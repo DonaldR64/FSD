@@ -169,7 +169,7 @@ section {
 
 .atttitle {
     grid-area: atttitle;
-    display: flex;
+    display: grid;
     justify-content: center;
     align-items: center; 
     background-color: white;
