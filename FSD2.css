@@ -14,7 +14,7 @@
 
 .mysheet {
     width: 830px;
-    height: 730px;
+    height: 630px;
 }
 .attributes {
     padding: 15px 0px 0px 15px;
@@ -35,10 +35,10 @@ input[type="hidden"][name="attr_faction"][value="Conglomerate"] ~ .mysheet {
 main {
   display: grid;
   width: 800px;
-  height: 700px;
+  height: 600px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr;
   grid-template-areas:"common   common    header   header"
                       "common   common    att      dam"
                       "weapon   weapon    weapon   weapon"
