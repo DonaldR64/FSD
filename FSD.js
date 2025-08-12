@@ -132,7 +132,11 @@ const CC = (() => {
 
     };
 
+
+//change - consider up arrow and down arrow for flyers
     const SM = {
+        noe: status_one, //nap of earth for flyer
+        flying: status_flyer, //higher elevation for flyer
         
     }
 
@@ -145,13 +149,13 @@ const CC = (() => {
     //traits pull out mobility or Los features
 
     const TerrainInfo = {
-        "Woods": {name: "Woods",height: 2, traits: ["Broken","Woods"]},
+        "Woods": {name: "Woods",height: 2, traits: ["Broken","Blocking"]},
         "Scrub": {name: "Scrub",height: 1, traits: ["Fragile","Obscuring"]},
-        "Crops": {name: "Crops",height: 0.5, traits: ["Open","Obscuring"]},
+        "Crops": {name: "Crops",height: 0.25, traits: ["Open","Obscuring"]},
 
         "Building 1": {name: "Building", height: 1, traits: ["Traversable","Blocking"]},
 
-        "Rubble": {name: "Rubble",height: 0, traits: ["Broken","Obscuring"]},
+        "Rubble": {name: "Rubble",height: 0.25, traits: ["Broken","Obscuring"]},
 
         "Ruins": {name: "Ruins",height: 1, traits: ["Traversable","Obscuring"]},
 
@@ -166,10 +170,10 @@ const CC = (() => {
     }
 
     const EdgeInfo = {
-        "#00ff00": {name: "Hedge",height: 0.5, traits: ["Fragile","Obscuring"]},
-        "#980000": {name: "Wall",height: 0.5, traits: ["Broken","Obscuring"]},
+        "#00ff00": {name: "Hedge",height: 0.25, traits: ["Fragile","Obscuring"]},
+        "#980000": {name: "Wall",height: 0.25, traits: ["Broken","Obscuring"]},
         "#0000ff": {name: "Stream",height: 0, traits: ["Water","Difficult"]},
-        "#000000": {name: "Bridge",height: 0, traits: ["Open"]},
+        "#000000": {name: "Bridge",height: 0.25, traits: ["Open","Obscuring"]},
     }
 
 
@@ -617,6 +621,18 @@ const CC = (() => {
             this.points = parseInt(aa.points) || 0;
 
             this.type = aa.type;
+            let height = 0; //units own height
+            if (type === "Walker") {
+                height = 1;
+            }
+            if (type === "Vehicle") {
+                height = .5;
+            }
+            if (type === "Behemoth") {
+                height = 2;
+            }
+
+            this.height = height;
 
             this.command = parseInt(aa.command) || 0;
             this.defense = parseInt(aa.defense) || 1;
@@ -1386,6 +1402,12 @@ const CC = (() => {
 
 
 
+
+
+
+
+
+
     //line line collision where line1 is pt1 and 2, line2 is pt 3 and 4
     const lineLine = (pt1,pt2,pt3,pt4) => {
         //calculate the direction of the lines
@@ -1431,66 +1453,58 @@ const CC = (() => {
         let distance;
 
         SetupCard(shooter.name,"LOS",shooter.faction);
-        
+        let losResult = LOS(shooter,target);
+        outputCard.body.push("Distance: " + losResult.distance);
+        if (losResult.los === false) {
+            outputCard.body.push("No LOS to Target");
+            outputCard.body.push(losResult.losReason);
+        } else {
+            outputCard.body.push("LOS to Target");
+            if (losResult.cover === true) {
+                outputCard.body.push("Target Has Cover");
+            }
+        }
         PrintCard();
     }
 
 
     const LOS = (shooter,target,weapon) => {
         if (!weapon) {
-            weapon = {abilities: " "};
+            weapon = {special: " "};
         }
         let los = true;
         let losReason = "";
         let losBlock = "";
-        let lof = true;
-        let water = "";
-        let cover = 0;
-        if (weapon.abilities.includes("Smart")) {
-            cover = -2;
-        }
-
-        if (target.token.get(SM.camo) === true) {
-            cover += 2; 
-        }
-
+        let cover = false;
 
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
         let distance = shooterHex.cube.distance(targetHex.cube);
-        let spotterID = "";
-        //AOV and AOF angles
-        let aov = AOV(shooter,target);
-        let aof = AOF(shooter,target);
+        let angle = TargetAngle(shooter,target);
+        if (weapon.special.includes("Arc")) {
 
-        if (aov === false) {
-            los = false;
-            losReason = "Out of Arc of Vision";
-        }  
-        if (aof === false) {
-            lof = false;
+
         }
-
         //check los now incl cover
-        let sH = shooter.type === "Walker" ? shooter.class/2:shooter.class/5;
-        let tH = target.type === "Walker" ? shooter.class/2:shooter.class/5;
-        // ? crouching if used
+        let shooterElevation = shooterHex.elevation + shooter.height;
+        let targetElevation = targetHex.elevation + target.height;
+        if (shooter.special.includes("Flyer")) {
+            if (shooter.token.get(SM.noe) === true) {
+                shooterElevation = shooterHex.elevation + 0.5;
+            } else if (shooter.token.get(SM.flying) === true) {
+                shooterElevation = shooterHex.elevation + 5;
+            }
+        }
+        if (target.special.includes("Flyer")) {
+            if (target.token.get(SM.noe) === true) {
+                targetElevation = targetHex.elevation + 0.5;
+            } else if (target.token.get(SM.flying) === true) {
+                targetElevation = targetHex.elevation + 5;
+            }
+        }
 
-        let shooterElevation = shooterHex.elevation;
-        let targetElevation = targetHex.elevation;
-        if (shooter.type === "Aircraft") {
-            shooterElevation = shooter.airheight;
-        }
-        if (target.type === "Aircraft") {
-            targetElevation = target.airheight;
-        }
-        if (target.type === "Aircraft" && weapon.abilities.includes("AA") === false) {
-            //add height to distance unless weapon has AA
-            distance += Math.abs(targetElevation - shooterElevation);
-        }
-
-        let pt1 = new Point(0,shooterElevation + sH);
-        let pt2 = new Point(distance,targetElevation + tH);
+        let pt1 = new Point(0,shooterHex.elevation + shooter.height);
+        let pt2 = new Point(distance,targetHex.elevation + target.height);
 
         let interCubes = shooterHex.cube.linedraw(targetHex.cube);
 
@@ -1502,8 +1516,6 @@ const CC = (() => {
             let pt3 = new Point(i,0);
             let pt4 = new Point(i,interHex.elevation)
             let pt5 = lineLine(pt1,pt2,pt3,pt4);
-
-
             if (pt5) {
                 los = false;
                 losReason = "Blocked by Elevation at " + label;
@@ -1515,24 +1527,16 @@ const CC = (() => {
             pt4 = new Point(i,interHex.elevation + interHex.terrainHeight);
             pt5 = lineLine(pt1,pt2,pt3,pt4);
             if (pt5) {
-                if (interHex.traits.includes("Foliage")) {cover++};
-                if (interHex.traits.includes("Smoke")) {cover += 2};
-                if (interHex.traits.includes("Open Structure")) {cover += 3};
-                if (interHex.traits.includes("Solid")) {
+                if (interHex.traits.includes("Obscuring")) {
+                    cover = true;
+                }
+                if (interHex.traits.includes("Blocking")) {
                     los = false;
                     losReason = "Blocked by Terrain at " + label;
                     losBlock = label;
                     break;
                 }
-                if (cover > 5 && losBlock === "") {
-                    los = false;
-                    losReason = "Blocked by Cover at " + label;
-                    losBlock = label;
-                    break;
-                }
-
             }
-
             //check for terrain on hex side
             let delta = interCubes[i-1].subtract(interCubes[i]);
             let dir;
@@ -1545,75 +1549,43 @@ const CC = (() => {
             }            
             let edge = interHex.edges[dir];
             if (edge !== "Open") {
-                let terrain = EdgeInfo[edge];
-            log(terrain)
-                pt3 = new Point(i,terrain.elevation);
-                pt4 = new Point(i,terrain.elevation + terrain.terrainHeight);
+                pt3 = new Point(i,interHex.elevation);
+                pt4 = new Point(i,interHex.elevation + edge.height);
                 pt5 = lineLine(pt1,pt2,pt3,pt4);
                 if (pt5) {
-            log("Intersects")
-                    if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
-                        cover++;
-                        if (cover > 5 && losBlock === "") {
-                            los = false;
-                            losReason = "Blocked by Cover at " + label;
-                            losBlock = label;
-                        }                        
+                    if (edge.traits.includes("Obscuring")) {
+                        cover = true;
                     }
                 }
             }
         }
 
-        if (target.airheight === 0) {
-            //target hexside
-            let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
-            let dir;
-            for (let i=0;i<6;i++) {
-                let d = HexInfo.directions[DIRECTIONS[i]];
-                if (delta.q === d.q && delta.r === d.r) {
-                    dir = DIRECTIONS[i];
-                    break;
-                }
-            }     
-            let edge = targetHex.edges[dir];
-            if (edge !== "Open") {
-                let terrain = EdgeInfo[edge];
-                if (terrain.traits.includes("Foliage") || terrain.traits.includes("Low Structure")) {
-                    cover++;
-                    if (cover > 5 && losBlock === "") {
-                        los = false;
-                        losReason = "Blocked by Cover at " + targetHex.label + " Edge";
-                        losBlock = label;
-                    }
-                }
+        //target hexside
+        let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
+        let dir;
+        for (let i=0;i<6;i++) {
+            let d = HexInfo.directions[DIRECTIONS[i]];
+            if (delta.q === d.q && delta.r === d.r) {
+                dir = DIRECTIONS[i];
+                break;
             }
-
-            //target hex
-            if (targetHex.traits.includes("Foliage")) {cover++};
-            if (targetHex.traits.includes("Smoke")) {cover += 2};
-            if (targetHex.traits.includes("Open Structure") || targetHex.traits.includes("Solid")) {cover += 3};
-
-            if (targetHex.traits.includes("Water")) {
-                //partially submerged or fully submerged
-                //partially = +1 cover 
-                //fully = +2 cover / depth - only for submersible units
-                //water will also have a depth, most units can't go in unless depth is 0
-                //pass back something also for things like exploding dice, flamethrowers, laser etc which have different effects
-
-
-            }
-            if (target.token.get(SM.digin) === true) {
-                cover += 3;
+        }     
+        let edge = targetHex.edges[dir];
+       if (edge !== "Open") {
+            pt3 = new Point(i,targetHex.elevation);
+            pt4 = new Point(i,targetHex.elevation + edge.height);
+            pt5 = lineLine(pt1,pt2,pt3,pt4);
+            if (pt5) {
+                if (edge.traits.includes("Obscuring")) {
+                    cover = true;
+                }
             }
         }
 
-        if (cover > 5 && losBlock === "") {
-            los = false;
-            losReason = "Blocked by Cover"
-            losBlock = targetHex.label;
+        //target hex
+        if (targetHex.traits.includes("Blocking") || targetHex.traits.includes("Obscuring")) {
+            cover = true;
         }
-
-        cover = Math.max(0,cover);
 
         //indirect or guided weapons check
         let indirect = false;
@@ -1649,14 +1621,16 @@ const CC = (() => {
             }
         }
 
+        if (target.traits.includes("Flyer") && target.token.get(SM.flying) === true) {
+            cover = false;
+        }
+
         let result = {
             los: los,
             losReason: losReason,
             losBlock: losBlock,
-            lof: lof,
             distance: distance,
             cover: cover,
-            water: water,
             indirect: indirect,
             spotterID: spotterID,
         }
