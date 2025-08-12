@@ -145,14 +145,18 @@ const CC = (() => {
     //traits pull out mobility or Los features
 
     const TerrainInfo = {
-        "Woods": {name: "Woods",height: 2, traits: ["Broken","Blocking"]},
+        "Woods": {name: "Woods",height: 2, traits: ["Broken","Woods"]},
         "Scrub": {name: "Scrub",height: 1, traits: ["Fragile","Obscuring"]},
+        "Crops": {name: "Crops",height: 0.5, traits: ["Open","Obscuring"]},
 
         "Building 1": {name: "Building", height: 1, traits: ["Traversable","Blocking"]},
 
         "Rubble": {name: "Rubble",height: 0, traits: ["Broken","Obscuring"]},
 
         "Ruins": {name: "Ruins",height: 1, traits: ["Traversable","Obscuring"]},
+
+        "Water": {name: "Water",height: 0, traits: ["Water"]},
+
 
 
         "Hill 1": {name: "Hill 1",height: 0,elevation:1},
@@ -162,13 +166,10 @@ const CC = (() => {
     }
 
     const EdgeInfo = {
-        "Hedge": {name: "Hedge",height: 0.5, traits: ["Fragile","Obscuring"]},
-        "Wall": {name: "Wall",height: 0.5, traits: ["Broken","Obscuring"]},
-        "Stream": {name: "Stream",height: 0, traits: ["Water","Difficult"]},
-
-
-
-
+        "#00ff00": {name: "Hedge",height: 0.5, traits: ["Fragile","Obscuring"]},
+        "#980000": {name: "Wall",height: 0.5, traits: ["Broken","Obscuring"]},
+        "#0000ff": {name: "Stream",height: 0, traits: ["Water","Difficult"]},
+        "#000000": {name: "Bridge",height: 0, traits: ["Open"]},
     }
 
 
@@ -1002,7 +1003,7 @@ const CC = (() => {
             }
         }
         AddTerrain();    
-        //AddEdges();
+        AddEdges();
         //AddRoads();
         AddTokens();        
         let elapsed = Date.now()-startTime;
@@ -1017,8 +1018,7 @@ const CC = (() => {
 
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
         _.each(paths,path => {
-            let types = {"#0000ff": "Stream","#000000": "Bridge","#00ff00": "Hedge","#980000": "Wall"};
-            let type = types[path.get("stroke").toLowerCase()];
+            let type = EdgeInfo[path.get("stroke").toLowerCase()];
             if (type) {
                 let vertices = translatePoly(path);
                 //work through pairs of vertices
@@ -1042,10 +1042,11 @@ const CC = (() => {
                         let pt4 = hex2.centre;
                         let intersect = lineLine(pt1,pt2,pt3,pt4);
                         if (intersect) {
-                            if (hex1.edges[DIRECTIONS[j]] !== "Bridge") {
+                            //dont overwrite bridges
+                            if (hex1.edges[DIRECTIONS[j]].name !== "Bridge") {
                                 hex1.edges[DIRECTIONS[j]] = type;
                             }
-                            if (hex2.edges[DIRECTIONS[k]] !== "Bridge") {
+                            if (hex2.edges[DIRECTIONS[k]].name !== "Bridge") {
                                 hex2.edges[DIRECTIONS[k]] = type;
                             }
                         }
@@ -1236,7 +1237,7 @@ const CC = (() => {
         for (let i=0;i<6;i++) {
             let edge = hex.edges[DIRECTIONS[i]];
             if (edge !== "Open") {
-                outputCard.body.push(edge + " on " + DIRECTIONS[i] + " Edge");
+                outputCard.body.push(edge.name + " on " + DIRECTIONS[i] + " Edge");
             }
         }
         PrintCard();
