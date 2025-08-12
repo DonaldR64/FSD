@@ -135,8 +135,8 @@ const CC = (() => {
 
 //change - consider up arrow and down arrow for flyers
     const SM = {
-        noe: status_one, //nap of earth for flyer
-        flying: status_flyer, //higher elevation for flyer
+        noe: "status_blue", //nap of earth for flyer
+        flying: "status_green", //higher elevation for flyer
         
     }
 
@@ -622,13 +622,13 @@ const CC = (() => {
 
             this.type = aa.type;
             let height = 0; //units own height
-            if (type === "Walker") {
+            if (this.type === "Walker") {
                 height = 1;
             }
-            if (type === "Vehicle") {
+            if (this.type === "Vehicle") {
                 height = .5;
             }
-            if (type === "Behemoth") {
+            if (this.type === "Behemoth") {
                 height = 2;
             }
 
@@ -639,7 +639,8 @@ const CC = (() => {
             let saveInfo = aa.save || 0; // eg d10(3)
             saveInfo = saveInfo.split("(");
             let dX = parseInt(saveInfo[0].replace("d",""));
-            let numberDice = parseInt(saveInfo[1].replace(")","")) || 1;
+            let numberDice = saveInfo[1] || 1;
+            numberDice = parseInt(numberDice);
             let save = {
                 number: numberDice,
                 dX: dX,
@@ -1480,6 +1481,7 @@ const CC = (() => {
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
         let distance = shooterHex.cube.distance(targetHex.cube);
+        //firing arc on weapon
         let angle = TargetAngle(shooter,target);
         if (weapon.special.includes("Arc")) {
 
@@ -1503,8 +1505,8 @@ const CC = (() => {
             }
         }
 
-        let pt1 = new Point(0,shooterHex.elevation + shooter.height);
-        let pt2 = new Point(distance,targetHex.elevation + target.height);
+        let pt1 = new Point(0,shooterElevation);
+        let pt2 = new Point(distance,targetElevation);
 
         let interCubes = shooterHex.cube.linedraw(targetHex.cube);
 
@@ -1529,6 +1531,7 @@ const CC = (() => {
             if (pt5) {
                 if (interHex.traits.includes("Obscuring")) {
                     cover = true;
+log(label + ": Obscuring")
                 }
                 if (interHex.traits.includes("Blocking")) {
                     los = false;
@@ -1537,27 +1540,33 @@ const CC = (() => {
                     break;
                 }
             }
-            //check for terrain on hex side
-            let delta = interCubes[i-1].subtract(interCubes[i]);
-            let dir;
-            for (let i=0;i<6;i++) {
-                let d = HexInfo.directions[DIRECTIONS[i]];
-                if (delta.q === d.q && delta.r === d.r) {
-                    dir = DIRECTIONS[i];
-                    break;
-                }
-            }            
-            let edge = interHex.edges[dir];
-            if (edge !== "Open") {
-                pt3 = new Point(i,interHex.elevation);
-                pt4 = new Point(i,interHex.elevation + edge.height);
-                pt5 = lineLine(pt1,pt2,pt3,pt4);
-                if (pt5) {
-                    if (edge.traits.includes("Obscuring")) {
-                        cover = true;
+            //check for terrain on hex side, ignoring adjacent edge to shooter
+            if (i > 1) {
+    let delta = interCubes[i-1].subtract(interCubes[i]);
+                let dir;
+                for (let i=0;i<6;i++) {
+                    let d = HexInfo.directions[DIRECTIONS[i]];
+                    if (delta.q === d.q && delta.r === d.r) {
+                        dir = DIRECTIONS[i];
+                        break;
+                    }
+                }            
+                let edge = interHex.edges[dir];
+                if (edge !== "Open") {
+                    pt3 = new Point(i,interHex.elevation);
+                    pt4 = new Point(i,interHex.elevation + edge.height);
+                    pt5 = lineLine(pt1,pt2,pt3,pt4);
+                    if (pt5) {
+                        if (edge.traits.includes("Obscuring")) {
+                            cover = true;
+    log(label + " Edge: Obscuring")
+                        }
                     }
                 }
+
+
             }
+
         }
 
         //target hexside
@@ -1571,59 +1580,36 @@ const CC = (() => {
             }
         }     
         let edge = targetHex.edges[dir];
-       if (edge !== "Open") {
-            pt3 = new Point(i,targetHex.elevation);
-            pt4 = new Point(i,targetHex.elevation + edge.height);
+        if (edge !== "Open") {
+            pt3 = new Point(distance,targetHex.elevation);
+            pt4 = new Point(distance,targetHex.elevation + edge.height);
             pt5 = lineLine(pt1,pt2,pt3,pt4);
             if (pt5) {
                 if (edge.traits.includes("Obscuring")) {
                     cover = true;
+log("Target Hex Edge Obscuring")
                 }
             }
         }
 
         //target hex
-        if (targetHex.traits.includes("Blocking") || targetHex.traits.includes("Obscuring")) {
+        if (targetHex.traits.includes("Blocking") || targetHex.traits.includes("Obscuring") && target.special.includes("Flyer") === false) {
             cover = true;
+log("Target Hex Obscuring")
         }
 
         //indirect or guided weapons check
         let indirect = false;
-        if (los === false && (weapon.abilities.includes("Indirect") || weapon.abilities.includes("Guided"))) {
-            //check for spotter
-            _.each(UnitArray,spotter => {
-                if (spotter.faction === shooter.faction) {
-                    if (spotter.token.get(SM.spotting) === true) {
-                        let spotterLOS = LOS(spotter,target);
-                        if (spotterLOS.los === true) {
-                            los = true;
-                            indirect = "Spotter"
-                            spotterID = spotter.id;
-                            if (weapon.abilities.includes("Guided")) {
-                                distance = spotterLOS.distance;
-                                cover = spotterLOS.cover;
-                            }
-                        }
-                    }
-                }
-            })
-            //check for markers
-            if (los === false && weapon.abilities.includes("Indirect")) {
-                los = true;
-                indirect = "No LOS";
-                _.each(state.FSD.rangedIn[shooter.player],markerID => {
-                    let marker = UnitArray[markerID];
-                    let d = HexMap[marker.hexLabel].cube.distance(targetHex.cube);
-                    if (d < 2) {
-                        indirect = "Marker";
-                    }
-                })
-            }
-        }
+      
 
-        if (target.traits.includes("Flyer") && target.token.get(SM.flying) === true) {
+        if (target.special.includes("Flyer") && target.token.get(SM.flying) === true) {
             cover = false;
         }
+
+        if (distance <= 1) {
+            cover = false;
+        }
+
 
         let result = {
             los: los,
@@ -1632,7 +1618,6 @@ const CC = (() => {
             distance: distance,
             cover: cover,
             indirect: indirect,
-            spotterID: spotterID,
         }
 
 log(result)
