@@ -598,9 +598,7 @@ const CC = (() => {
     class Unit {
         constructor(id) {
             let token = findObjs({_type:"graphic", id: id})[0];
-            let location = new Point(token.get("left"),token.get("top"));
-            let cube = location.toCube();
-            let label = cube.label();
+            let label = TokenLocation(token);
             let charID = token.get("represents");
             let char = getObj("character", charID); 
 
@@ -1647,21 +1645,42 @@ log(result)
         
     }
 
+    const TokenLocation = (token) => {
+        let pt = new Point(token.get("left"),token.get("top"));
+        let label = location.label();
+        return label;
+    }
+
+
+    const LocationChange = (tok,prev) => {
+        let newHex = HexMap[TokenLocation(tok)];
+        let prevHex = HexMap[TokenLocation(prev)];
+        if (newHex && newHex.tokenIDs.includes(tok.id) === false) {
+            newHex.tokenIDs.push(tok.id);
+        }
+        if (prevHex && prevHex.tokenIDs.includes(tok.id)) {
+            prevHex.tokenIDs.splice(prevHex.tokenIDs.indexOf(tok.id),1);
+        }
+    }
+
+
 
 
     const changeGraphic = (tok,prev) => {
         RemoveLines();
+        LocationChange(tok,prev);
 
-   
+
+
         //fix the token size in case accidentally changed while game running - need check that game is running
-        if (state.FSD.turn === 0) {return};
-        if (tok.get("width") !== prev.width || tok.get("height") !== prev.height) {
-            tok.set({
-                width: prev.width,
-                height: prev.height,
-            })
-        }
-
+        if (state.FSD.turn > 0) {
+            if (tok.get("width") !== prev.width || tok.get("height") !== prev.height) {
+                tok.set({
+                    width: prev.width,
+                    height: prev.height,
+                })
+            }
+        };
     }
 
 
