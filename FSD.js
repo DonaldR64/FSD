@@ -133,11 +133,11 @@ const CC = (() => {
     };
 
 
-//change - consider up arrow and down arrow for flyers
+//change - consider up arrow and down arrow for flyers, side arrows for moved, ammo for fired etc
     const SM = {
         noe: "status_blue", //nap of earth for flyer
         flying: "status_green", //higher elevation for flyer
-        
+        moved: "status_brown",
     }
 
 
@@ -731,10 +731,11 @@ const CC = (() => {
 
             this.damageTable = drt;
             this.systemTable = systems;
-            this.group = "";
-            this.groupLeader = "";
+            this.groupIDs = "";
 
 
+
+this.offMap = false;   ///
 
 
             UnitArray[id] = this;
@@ -1127,9 +1128,7 @@ const CC = (() => {
                 let unit = new Unit(token.id);
                 let gmnotes = decodeURIComponent(token.get("gmnotes")).toString();
                 if (gmnotes && gmnotes !== null && gmnotes !== "") {
-                    unit.group = gmnotes;
-                    gmnotes = gmnotes.split(",")[0];
-                    unit.groupLeader = gmnotes;
+                    unit.groupIDs = gmnotes;
                 }
 
             }   
@@ -1268,7 +1267,7 @@ const CC = (() => {
         if (hex.los.includes("Obscuring") || hex.los.includes("Blocking")) {
             outputCard.body.push("Unit is in Cover");
         }
-        if (unit.group) {
+        if (unit.groupIDs) {
             outputCard.body.push("Unit is part of Group");
         }
 
@@ -1323,7 +1322,67 @@ const CC = (() => {
 
     const NextTurn = () => {
         let turn = state.FSD.turn;
+        turn++;
+        state.FSD.turn = turn;
+        //get highest command and any resets on units
+//???? Characters pick out also
 
+        let commandBonus = [0,0]
+        _.each(UnitArray,unit => {
+            if (unit.token.get("tint_color") !== "#ff0000" && unit.offMap === false) {
+                commandBonus[unit.player] = Math.max(commandBonus[unit.player],unit.command);
+            }
+            unit.moved = false;
+
+
+        })
+
+//any end turn things here
+
+
+
+
+
+        SetupCard("Turn " + turn,"","Neutral");
+        outputCard.body.push("Bring in any Reinforcements");
+        outputCard.body.push("[hr]");
+        outputCard.body.push("Roll For Initiative");
+        outputCard.body.push(state.FSD.factions[0] + " adds " + commandBonus[0]);
+        outputCard.body.push(state.FSD.factions[1] + " adds " + commandBonus[1]);
+        outputCard.body.push("[hr]");
+        outputCard.body.push("Starting with the lower result, both players roll their Activation Dice");
+//? roll and place then just prompt for reroll and pre-assign
+        outputCard.body.push("And Pre-Assign any Dice");
+        outputCard.body.push("[hr]");
+        outputCard.body.push("Then the winner of the Initiative can pick who activates First");
+        PrintCard();
+
+    }
+
+    const RollD6 = (msg) => {
+        let Tag = msg.content.split(";");
+        PlaySound("Dice");
+        let roll = randomInteger(6);
+        let playerID = msg.playerid;
+        let faction = "Neutral";
+        if (!state.FSD.players[playerID] || state.FSD.players[playerID] === undefined) {
+            if (msg.selected) {
+                let id = msg.selected[0]._id;
+                if (id) {
+                    let tok = findObjs({_type:"graphic", id: id})[0];
+                    let char = getObj("character", tok.get("represents")); 
+                    faction = Attribute(char,"faction");
+                    state.FSD.players[playerID] = faction;
+                }
+            } else {
+                sendChat("","Click on one of your tokens then select Roll again");
+                return;
+            }
+        } else {
+            faction = state.FSD.players[playerID];
+        }
+        let res = "/direct " + DisplayDice(roll,faction,40);
+        sendChat("player|" + playerID,res);
     }
 
 
@@ -1408,14 +1467,7 @@ const CC = (() => {
             //tokens are part of a group of bases, eg. infantry
             for (let i=0;i<tokenIDs.length;i++) {
                 let unit = UnitArray[tokenIDs[i]];
-                unit.group = tokenIDs;
-                unit.groupLeader = tokenIDs[0];
-                if (i > 0) {
-                    unit.token.set({
-                        aura1_color: "transparent",
-                        aura1_radius: 0,
-                    })
-                }
+                unit.groupIDs = tokenIDs;
                 unit.token.set("gmnotes",groupIDs);
             }
         }
@@ -1455,13 +1507,15 @@ const CC = (() => {
     const TargetAngle = (shooter,target) => {
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
-
         //angle from shooter's hex to target's hex
         let phi = Angle(shooterHex.cube.angle(targetHex.cube));
         let theta = Angle(shooter.token.get("rotation"));
         let gamma = Angle(phi - theta);
         return gamma;
     }
+
+
+
 
     const CheckLOS = (msg) => {
         let Tag = msg.content.split(";");
@@ -1656,6 +1710,78 @@ log(result)
 
 
     const Activate = (msg) => {
+        let Tag = msg.content.split(";");
+        let id = Tag[1];
+        let order = Tag[2];
+        let unit = UnitArray[id];
+        let actions = parseInt(unit.token.get("bar1_value"));
+
+        let errorMsg = [];
+        if (unit.token.get("aura1_color") === "#000000") {
+            errorMsg.push("Unit has already activated this turn");
+        }
+
+        SetupCard(unit.name,order,unit.faction);
+
+        if (errorMsg.length > 0) {
+            _.each(errorMsg,msg => {
+                outputCard.body.push(msg);
+            })
+            PrintCard();
+            return;
+        }
+
+
+        if (unit.token.get("tint_color") === "#ff0000") {
+            order = "Unpin";
+            //Unpin
+            outputCard.body.push("The Unit Unpins as its Action");
+            actions --;
+        }
+
+        if (order === "Move") {
+            let move = unit.move;
+            if (unit.token.get(SM.moved) === true) {
+                move = Math.max((unit.move - 1),1);
+            }
+            outputCard.body.push("The Unit has a Move of " + move + " Hexes" );
+            outputCard.body.push("Move 1 Hex at a time");
+            outputCard.body.push("Taking into account Terrain Costs");
+            outputCard.body.push("Rotation at end costs 1 Hex equivalent");
+            if (unit.token.get(SM.moved) == true && ((unit.move - 1) > 0)) {
+                outputCard.body.push("[Reduced by 1 for prev. Movement]");
+            }
+            unit.token.set(SM.moved,true);
+        }
+
+
+
+
+
+
+        
+
+        outputCard.body.push(actions + " Actions Left");
+        unit.token.set("bar1_value",actions);
+        if (actions === 0) {
+            unit.token.set("aura1_color","#000000");
+            outputCard.body.push("Unit's Turn is Over after This Action");
+        }
+        if (unit.groupIDs !== "") {
+            outputCard.body.push("The Action must be taken by all Bases in the Unit");
+            let groupIDs = unit.groupIDs.split(",");
+            _.each(groupIDs,id => {
+                let base = UnitArray[id];
+                base.token.set("aura1_color",unit.token.get("aura1_color"));
+                base.token.set("bar1_value",actions);
+                base.token.set("statusmarkers",unit.get("statusmarkers"));
+            })
+        }
+
+
+        PrintCard();
+
+
        
     }
 
@@ -1677,27 +1803,26 @@ log(result)
 
 
     const LocationChange = (tok,prev) => {
-        if (tok) {
-            let newHex = HexMap[(new Point(tok.get("left"),tok.get("top"))).label()];
-            if (newHex) {
-                if (newHex.tokenIDs.includes(tok.id) === false) {
-                    newHex.tokenIDs.push(tok.id);
-                }
-                let unit = UnitArray[tok.get("id")];
-                if (unit) {
-                    unit.hexLabel = newHex.label;
-                }
-            }
+        let distance = 0;
+        let newHex = HexMap[(new Point(tok.get("left"),tok.get("top"))).label()];
+        if (newHex.tokenIDs.includes(tok.id) === false) {
+            newHex.tokenIDs.push(tok.id);
         }
-        if (prev) {
-            let prevHex = HexMap[(new Point(prev.left,prev.top)).label()];
-            if (prevHex && prevHex.tokenIDs.includes(tok.id)) {
-                prevHex.tokenIDs.splice(prevHex.tokenIDs.indexOf(tok.id),1);
-            }
+        let unit = UnitArray[tok.get("id")];
+        if (unit) {
+            unit.hexLabel = newHex.label;
         }
-
-
-
+        let prevHex = HexMap[(new Point(prev.left,prev.top)).label()];
+        if (prevHex.tokenIDs.includes(tok.id)) {
+            prevHex.tokenIDs.splice(prevHex.tokenIDs.indexOf(tok.id),1);
+        }
+        distance = newHex.cube.distance(prevHex.cube);
+        let info = {
+            newHex: newHex,
+            prevHex: prevHex,
+            distance: distance,
+        }
+        return info;
     }
 
 
@@ -1705,20 +1830,37 @@ log(result)
 
     const changeGraphic = (tok,prev) => {
         RemoveLines();
-        log(tok)
-        log(prev)
-        LocationChange(tok,prev);
+        let info = LocationChange(tok,prev);
 
 
 
-        //fix the token size in case accidentally changed while game running - need check that game is running
         if (state.FSD.turn > 0) {
+            let unit = UnitArray[tok.get("id")];
+            if (!unit) {return};
+            if (info.distance > 0) {
+//move back
+
+
+
+            }
+            //fix the token size in case accidentally changed while game running - need check that game is running
             if (tok.get("width") !== prev.width || tok.get("height") !== prev.height) {
                 tok.set({
                     width: prev.width,
                     height: prev.height,
                 })
             }
+            if (info.newHex.label !== info.prevHex.label) {
+                //change facing to match direction
+                let angle = Angle(info.prevHex.cube.angle(info.newHex.cube));
+                unit.token.set("rotation",angle);
+
+
+            }
+
+
+
+
         };
     }
 
@@ -1795,6 +1937,9 @@ log(result)
                 break;
             case '!Attack':
                 Attack(msg);
+                break;
+            case '!RollD6':
+                RollD6(msg);
                 break;
 
 
