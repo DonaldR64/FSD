@@ -5,9 +5,6 @@ const CC = (() => {
     const pageInfo = {};
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
-    const UnitMarkers = ["Plus-1d4::2006401","Minus-1d4::2006429","Plus-1d6::2006402","Minus-1d6::2006434","Plus-1d20::2006409","Minus-1d20::2006449","Hot-or-On-Fire-2::2006479","Animal-Form::2006480","Red-Cloak::2006523","A::6001458","B::6001459","C::6001460","D::6001461","E::6001462","F::6001463","G::6001464","H::6001465","I::6001466","J::6001467","L::6001468","M::6001469","O::6001471","P::6001472","Q::6001473","R::6001474","S::6001475"];
-
-
     let HexSize, HexInfo, DIRECTIONS;
 
     //math constants
@@ -735,7 +732,8 @@ const CC = (() => {
 
             this.damageTable = drt;
             this.systemTable = systems;
-
+            this.group = "";
+            this.groupLeader = "";
 
 
 
@@ -1128,8 +1126,16 @@ const CC = (() => {
             let character = getObj("character", token.get("represents"));   
             if (character) {
                 let unit = new Unit(token.id);
+                let gmnotes = decodeURIComponent(token.get("gmnotes")).toString();
+                if (gmnotes && gmnotes !== null && gmnotes !== "") {
+                    unit.group = gmnotes;
+                    gmnotes = gmnotes.split(",")[0];
+                    unit.groupLeader = gmnotes;
+                }
+
             }   
         });
+
 
 
 
@@ -1241,16 +1247,14 @@ const CC = (() => {
     }
 
 
-
-
-    const HexData = (msg) => {
+    const TokenInfo = (msg) => {
         if (!msg.selected) {return};
         let id = msg.selected[0]._id;
-        let token = findObjs({_type:"graphic", id: id})[0];
-        let point = new Point(token.get("left"),token.get("top"));
-        let label = point.label();
-        let hex = HexMap[label];
-        SetupCard("Info","","Neutral");
+        let unit = UnitArray[id];
+        if (!unit) {return};
+        SetupCard(unit.name,"",unit.faction);
+        let hex = HexMap[unit.hexLabel];
+        outputCard.body.push("Hex: " + unit.hexLabel);
         outputCard.body.push("Terrain: " + hex.terrain);
         outputCard.body.push("Elevation: " + hex.elevation);
         outputCard.body.push("Height of Terrain: " + hex.terrainHeight);
@@ -1261,8 +1265,19 @@ const CC = (() => {
                 outputCard.body.push(edge.name + " on " + DIRECTIONS[i] + " Edge");
             }
         }
+        if (hex.traits.includes("Obscuring") || hex.traits.includes("Blocking")) {
+            outputCard.body.push("Unit is in Cover");
+        }
+        if (unit.group) {
+            outputCard.body.push("Unit is part of Group");
+        }
+
+        
         PrintCard();
     }
+
+
+
 
 
 
@@ -1390,7 +1405,6 @@ const CC = (() => {
 
         if (group === true) {
             let groupIDs = tokenIDs.toString();
-            let marker = UnitMarkers[randomInteger(UnitMarkers.length) - 1];
             //tokens are part of a group of bases, eg. infantry
             for (let i=0;i<tokenIDs.length;i++) {
                 let unit = UnitArray[tokenIDs[i]];
@@ -1403,7 +1417,6 @@ const CC = (() => {
                     })
                 }
                 unit.token.set("gmnotes",groupIDs);
-                unit.token.set("status_"+marker,true);
             }
         }
 
@@ -1606,7 +1619,7 @@ log("Target Hex Edge Obscuring")
         }
 
         //target hex
-        if (targetHex.traits.includes("Blocking") || targetHex.traits.includes("Obscuring") && target.special.includes("Flyer") === false) {
+        if (targetHex.traits.includes("Blocking") || targetHex.traits.includes("Obscuring")) {
             cover = true;
 log("Target Hex Obscuring")
         }
@@ -1666,8 +1679,14 @@ log(result)
     const LocationChange = (tok,prev) => {
         if (tok) {
             let newHex = HexMap[(new Point(tok.get("left"),tok.get("top"))).label()];
-            if (newHex && newHex.tokenIDs.includes(tok.id) === false) {
-            newHex.tokenIDs.push(tok.id);
+            if (newHex) {
+                if (newHex.tokenIDs.includes(tok.id) === false) {
+                    newHex.tokenIDs.push(tok.id);
+                }
+                let unit = UnitArray[tok.get("id")];
+                if (unit) {
+                    unit.hexLabel = newHex.label;
+                }
             }
         }
         if (prev) {
@@ -1676,6 +1695,9 @@ log(result)
                 prevHex.tokenIDs.splice(prevHex.tokenIDs.indexOf(tok.id),1);
             }
         }
+
+
+
     }
 
 
@@ -1753,8 +1775,8 @@ log(result)
             case '!AddMarker':
                 AddMarker(msg);
                 break;
-            case '!HexData':
-                HexData(msg);
+            case '!TokenInfo':
+                TokenInfo(msg);
                 break;
             case '!CheckLOS':
                 CheckLOS(msg);
