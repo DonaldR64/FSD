@@ -732,7 +732,10 @@ const CC = (() => {
             this.damageTable = drt;
             this.systemTable = systems;
             this.groupIDs = "";
-
+            let gmnotes = decodeURIComponent(token.get("gmnotes")).toString();
+            if (gmnotes && gmnotes !== null && gmnotes !== "") {
+                this.groupIDs = gmnotes;
+            }
 
 
 this.offMap = false;   ///
@@ -1126,11 +1129,6 @@ this.offMap = false;   ///
             let character = getObj("character", token.get("represents"));   
             if (character) {
                 let unit = new Unit(token.id);
-                let gmnotes = decodeURIComponent(token.get("gmnotes")).toString();
-                if (gmnotes && gmnotes !== null && gmnotes !== "") {
-                    unit.groupIDs = gmnotes;
-                }
-
             }   
         });
 
@@ -1458,7 +1456,7 @@ this.offMap = false;   ///
                 dX: dX,
             }
             unit.save = save;
-            AttributeSet(unit.charID,"move",unit.saveMax);
+            AttributeSet(unit.charID,"save",unit.saveMax);
 
             tokenIDs.push(id);
         })
@@ -1468,7 +1466,7 @@ this.offMap = false;   ///
             //tokens are part of a group of bases, eg. infantry
             for (let i=0;i<tokenIDs.length;i++) {
                 let unit = UnitArray[tokenIDs[i]];
-                unit.groupIDs = tokenIDs;
+                unit.groupIDs = groupIDs;
                 unit.token.set("gmnotes",groupIDs);
             }
         }
@@ -1724,6 +1722,10 @@ log(result)
 
         SetupCard(unit.name,order,unit.faction);
 
+//Activation Dice cost here
+
+
+
         if (errorMsg.length > 0) {
             _.each(errorMsg,msg => {
                 outputCard.body.push(msg);
@@ -1746,9 +1748,8 @@ log(result)
                 move = Math.max((unit.move - 1),1);
             }
             outputCard.body.push("The Unit has a Move of " + move + " Hexes" );
-            outputCard.body.push("Move 1 Hex at a time");
-            outputCard.body.push("Taking into account Terrain Costs");
-            outputCard.body.push("Rotation at end costs 1 Hex equivalent");
+            outputCard.body.push("Move 1 Hex at a time, taking into account Terrain Costs");
+            outputCard.body.push("Rotation at end costs 1 Hex of Movement");
             if (unit.token.get(SM.moved) == true && ((unit.move - 1) > 0)) {
                 outputCard.body.push("[Reduced by 1 for prev. Movement]");
             }
@@ -1775,7 +1776,7 @@ log(result)
                 let base = UnitArray[id];
                 base.token.set("aura1_color",unit.token.get("aura1_color"));
                 base.token.set("bar1_value",actions);
-                base.token.set("statusmarkers",unit.get("statusmarkers"));
+                base.token.set("statusmarkers",unit.token.get("statusmarkers"));
             })
         }
 
