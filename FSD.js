@@ -82,7 +82,9 @@ const FSD = (() => {
     let currentUnitID = "";
     let FireInfo = {};
     let AbilityInfo = {};
-    const MapAreas = {};
+    let MapAreas = {};
+    let actDice = [0,0]; //update on build map and each turn
+    const diceWidth = 80; //pixels 
 
 
 
@@ -1043,14 +1045,14 @@ this.offMap = false;   ///
     const AddAreas = () => {
         //define areas with lines
         if (state.FSD.factions[0] === "" || state.FSD.factions[1] === "") {return};
-        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "foreground",});
+        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
         _.each(paths,path => {
             if (path.get("stroke").toLowerCase() === "#ff0000") {
                 let vertices = translatePoly(path);
-                MapAreas[state.FSD.factions[0]] = {'vertices': vertices};
+                MapAreas[0] = vertices;
             } else if (path.get("stroke").toLowerCase() === "#000000") {
                 let vertices = translatePoly(path);
-                MapAreas[state.FSD.factions[1]] = {'vertices': vertices};
+                MapAreas[1] = vertices;
             }
         });
     }
@@ -1158,6 +1160,8 @@ this.offMap = false;   ///
             }   
         });
 
+
+//add dice also that are in relevant areas, to the actDice array
 
 
 
@@ -1346,6 +1350,8 @@ this.offMap = false;   ///
 
     const NextTurn = () => {
         let turn = state.FSD.turn;
+        ClearDice();
+        RollAD();
         turn++;
         state.FSD.turn = turn;
         //get highest command and any resets on units
@@ -1363,7 +1369,6 @@ this.offMap = false;   ///
 
 //any end turn things here
 
-        //move spent dice to roll pile
 
 
 
@@ -1375,9 +1380,9 @@ this.offMap = false;   ///
         outputCard.body.push(state.FSD.factions[0] + " adds " + commandBonus[0]);
         outputCard.body.push(state.FSD.factions[1] + " adds " + commandBonus[1]);
         outputCard.body.push("[hr]");
-        outputCard.body.push("Starting with the lower result, both players roll their Activation Dice");
-//? roll and place then just prompt for reroll and pre-assign
-        outputCard.body.push("And Pre-Assign any Dice");
+        outputCard.body.push("Starting with the lower result, each player can:");
+        outputCard.body.push(" - delete and reroll any Activation Dice");
+        outputCard.body.push(" - preassign any Activation Dice to Units");
         outputCard.body.push("[hr]");
         outputCard.body.push("Then the winner of the Initiative can pick who activates First");
         PrintCard();
@@ -1419,13 +1424,15 @@ this.offMap = false;   ///
         LoadPage();
         BuildMap();
 
-
         state.FSD = {
             playerIDs: ["",""],
             players: {},
             factions: ["",""],
             lines: [],
             turn: 0,
+            actDicePool: [12,12], //? change based on scenario
+            actDiceCapacity: [8,8],
+            diceIDs:[],
         }
 
 
@@ -1877,6 +1884,109 @@ log(result)
         
     }
 
+    const RollAD = () => {
+        //determine # of Ready AD to roll
+        for (let p=0;p<2;p++) {
+            let number = state.FSD.actDicePool[p];
+            //check if any dice 'out' on units;
+            _.each(UnitArray,unit => {
+                if (unit.player === p) {
+                    let weapons = unit.weapons;
+                    _.each(weapons,weapon => {
+                        if (weapon.ad !== "Free" && weapon.ready === "🟢") {
+                            let cost = 1;
+                            if (weapon.ad.includes("+")) {
+                                cost = weapon.ad.split("+").length;
+                            } 
+                            number -= cost;
+                        }
+                    })
+                }
+            })    
+            actDice[p] = number;
+            number = Math.min(number,state.FSD.actDiceCapacity[p]);
+            PlaceDice(number,p);
+        }
+
+    }
+
+
+
+    const PlaceDice = (numDice,player) => {
+        //using the vertices of the area, divide the area up and place the dice
+        let rolls = [];
+        let faction = state.FSD.factions[player];
+
+        for (let i=0;i<numDice;i++) {
+            let roll = randomInteger(6);
+            rolls.push(roll);
+        }
+
+        rolls.sort();
+
+        let vertices = MapAreas[player];
+        let width = vertices[1].x - vertices[0].x;
+        let height = vertices[1].y - vertices[0].y;
+
+        let halfDW = diceWidth * .5;
+        let outsideW = Math.round((width - (diceWidth * numDice) - (halfDW * (numDice -1)))/2);
+        let outsideH = Math.round((height - diceWidth)/2);
+ 
+        let posX = vertices[0].x + outsideW + halfDW;
+        let posY = vertices[0].y + outsideH + halfDW;
+
+        for (let i=0;i<numDice;i++) {
+            CreateDice(rolls[i],faction,posX,posY);
+            posX += (diceWidth * 1.5);
+        }
+    }
+
+
+
+    const CreateDice = (roll,faction,x,y) => {
+        roll = roll.toString();
+        let table = findObjs({type:'rollabletable', name: faction})[0];
+        if (!table) {
+            table = findObjs({type:'rollabletable', name: "Neutral"})[0];
+        }
+        let obj = findObjs({type:'tableitem', _rollabletableid: table.id, name: roll })[0];        
+        let avatar = obj.get('avatar');
+        let img = getCleanImgSrc(avatar);
+
+        let newToken = createObj("graphic", {
+            left: x,
+            top: y,
+            width: diceWidth,
+            height: diceWidth, 
+            name: "Action Dice " + faction + " " + roll,
+            pageid: Campaign().get("playerpageid"),
+            imgsrc: img,
+            layer: "objects",
+            controlledby: "all",
+        })
+
+        if (newToken) {
+            toFront(newToken);
+        } 
+        state.FSD.diceIDs.push(newToken.id);
+    }
+
+    const ClearDice = () => {
+        let ids = state.FSD.diceIDs;
+        _.each(ids,id => {
+            let token = findObjs({_type:"graphic", id: id})[0];
+            if (token) {
+                token.remove();
+            }
+        })
+        state.FSD.diceIDs = [];
+    }
+
+
+
+
+
+
 
 
 
@@ -1921,15 +2031,15 @@ log(result)
 
 
             }
-            //fix the token size in case accidentally changed while game running - need check that game is running
+            //fix the token size in case accidentally changed while game running 
             if (tok.get("width") !== prev.width || tok.get("height") !== prev.height) {
                 tok.set({
                     width: prev.width,
                     height: prev.height,
                 })
             }
+            //change facing to match direction
             if (info.newHex.label !== info.prevHex.label) {
-                //change facing to match direction
                 let angle = Angle(info.prevHex.cube.angle(info.newHex.cube));
                 unit.token.set("rotation",angle);
 
@@ -2020,6 +2130,9 @@ log(result)
                 break;
             case '!RollD6':
                 RollD6(msg);
+                break;
+            case '!RollAD':
+                RollAD(msg);
                 break;
 
 
