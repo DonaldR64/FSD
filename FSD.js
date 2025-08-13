@@ -1424,6 +1424,7 @@ this.offMap = false;   ///
             let id = element._id;
             let token = findObjs({_type:"graphic", id: id})[0];
             token.set({
+                bar1_value: 2,
                 aura1_color: "#00FF00",
                 aura1_radius: 0.05,
                 tint_color: "transparent",
@@ -1431,7 +1432,7 @@ this.offMap = false;   ///
                 gmnotes: "",
                 rotation: 0,
                 disableSnapping: true,
-                disableTokenMenu: true,
+                disableTokenMenu: false,
             })
 
             let unit = new Unit(id);          
