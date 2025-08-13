@@ -1,4 +1,4 @@
-const CC = (() => {
+const FSD = (() => {
     const version = '2025.8.11';
     if (!state.FSD) {state.FSD = {}};
 
@@ -6,6 +6,10 @@ const CC = (() => {
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
     let HexSize, HexInfo, DIRECTIONS;
+
+
+
+
 
     //math constants
     const M = {
@@ -78,6 +82,9 @@ const CC = (() => {
     let currentUnitID = "";
     let FireInfo = {};
     let AbilityInfo = {};
+    const MapAreas = {};
+
+
 
     let outputCard = {title: "",subtitle: "",side: "",body: [],buttons: [],};
 
@@ -106,15 +113,15 @@ const CC = (() => {
             "backgroundColour": "orange",
             "titlefont": "Anton",
             "fontColour": "#000000",
-            "borderColour": "#000000",
+            "borderColour": "#ffA500",
             "borderStyle": "5px groove",
         },
         "Conglomerate": {
             "image": "",
-            "backgroundColour": "#grey",
+            "backgroundColour": "#0000ff",
             "titlefont": "Bokor",
-            "fontColour": "#000000",
-            "borderColour": "#000000",
+            "fontColour": "#ffffff",
+            "borderColour": "#0000ff",
             "borderStyle": "5px double",
 
         },
@@ -1027,11 +1034,27 @@ this.offMap = false;   ///
         }
         AddTerrain();    
         AddEdges();
-        //AddRoads();
+        AddAreas();
         AddTokens();        
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
+
+    const AddAreas = () => {
+        //define areas with lines
+        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
+        let types = {"#ff0000": "Faction 0","#000000": "Faction 1"};
+        _.each(paths,path => {
+            let type = types[path.get("stroke").toLowerCase()];
+            if (type) {
+                let vertices = translatePoly(path);
+                MapAreas[type] = {'vertices': vertices};
+            }
+        });
+    }
+
+
+
 
 
 
@@ -1733,6 +1756,12 @@ log(result)
 
 //Activation Dice cost here
 
+//if fire or special ability, check if is ready or free
+//if not, can display message to preassign dice first or automatically take dice and proceed ???
+
+
+
+
 
 
         if (errorMsg.length > 0) {
@@ -1836,7 +1865,7 @@ log(result)
         let target = UnitArray[FireInfo.targetID];
         let weapon = shooter.weapons[FireInfo.weaponNum];
 
-        
+
 
 
 
