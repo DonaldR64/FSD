@@ -146,22 +146,20 @@ const CC = (() => {
 
     //height is height of terrain element
     //elevation is 0 by default
-    //traits pull out mobility or Los features
+
 
     const TerrainInfo = {
-        "Woods": {name: "Woods",height: 2, traits: ["Broken","Blocking"]},
-        "Scrub": {name: "Scrub",height: 1, traits: ["Fragile","Obscuring"]},
-        "Crops": {name: "Crops",height: 0.25, traits: ["Open","Obscuring"]},
+        "Woods": {name: "Woods",height: 2,los: "Blocking", move: "Broken"},
+        "Scrub": {name: "Scrub",height: 1, los: "Obscuring", move: "Fragile"},
+        "Crops": {name: "Crops",height: 0.25, los: "Obscuring",move: "Open"},
 
-        "Building 1": {name: "Building", height: 1, traits: ["Traversable","Blocking"]},
+        "Building 1": {name: "Building", height: 1, los: "Blocking",move: "Traversable"},
 
-        "Rubble": {name: "Rubble",height: 0.25, traits: ["Broken","Obscuring"]},
+        "Rubble": {name: "Rubble",height: 0.25, los: "Obscuring",move: "Broken"},
 
-        "Ruins": {name: "Ruins",height: 1, traits: ["Traversable","Obscuring"]},
+        "Ruins": {name: "Ruins",height: 1, los: "Obscuring",move: "Traversable"},
 
-        "Water": {name: "Water",height: 0, traits: ["Water"]},
-
-
+        "Water": {name: "Water",height: 0,los: "Open",move: "Water" },
 
         "Hill 1": {name: "Hill 1",height: 0,elevation:1},
         "Hill 2": {name: "Hill 2",height: 0, elevation:2},
@@ -170,10 +168,10 @@ const CC = (() => {
     }
 
     const EdgeInfo = {
-        "#00ff00": {name: "Hedge",height: 0.25, traits: ["Fragile","Obscuring"]},
-        "#980000": {name: "Wall",height: 0.25, traits: ["Broken","Obscuring"]},
-        "#0000ff": {name: "Stream",height: 0, traits: ["Water","Difficult"]},
-        "#000000": {name: "Bridge",height: 0.25, traits: ["Open","Obscuring"]},
+        "#00ff00": {name: "Hedge",height: 0.25, los: "Obscuring", move: "Fragile"},
+        "#980000": {name: "Wall",height: 0.25, los: "Obscuring",move: "Broken"},
+        "#0000ff": {name: "Stream",height: 0,los: "Open",move: "Broken"},
+        "#000000": {name: "Bridge",height: 0.25,los: "Obscuring",move: "Open"},
     }
 
 
@@ -581,7 +579,8 @@ const CC = (() => {
             this.cube = offset.toCube();
             this.label = offset.label();
 
-            this.traits = ["Open"];
+            this.los = "Open";
+            this.move = "Open";
             this.elevation = 0;
             this.terrainHeight = 0;
             this.edges = {};
@@ -1090,15 +1089,15 @@ const CC = (() => {
                 let hex = HexMap[centreLabel];
                 if (hex.terrain.includes("Open")) {
                     hex.terrain = [];
-                    hex.traits = [];
+                    hex.los = "";
+                    hex.move = "";
                 }
                 if (hex.terrain.includes(terrain.name) === false) {
                     hex.terrain.push(terrain.name);
                     hex.elevation = Math.max(hex.elevation,terrain.elevation);
                     hex.terrainHeight = Math.max(terrain.height, hex.terrainHeight);
-                    if (terrain.traits) {
-                        hex.traits = hex.traits.concat(terrain.traits);
-                    }
+                    hex.los = terrain.los;
+                    hex.move = terrain.move;
                 }
 
             }
@@ -1258,14 +1257,15 @@ const CC = (() => {
         outputCard.body.push("Terrain: " + hex.terrain);
         outputCard.body.push("Elevation: " + hex.elevation);
         outputCard.body.push("Height of Terrain: " + hex.terrainHeight);
-        outputCard.body.push("Traits: " + hex.traits);
+        outputCard.body.push("LOS: " + hex.los);
+        outputCard.body.push("Movement: " + hex.move);
         for (let i=0;i<6;i++) {
             let edge = hex.edges[DIRECTIONS[i]];
             if (edge !== "Open") {
                 outputCard.body.push(edge.name + " on " + DIRECTIONS[i] + " Edge");
             }
         }
-        if (hex.traits.includes("Obscuring") || hex.traits.includes("Blocking")) {
+        if (hex.los.includes("Obscuring") || hex.los.includes("Blocking")) {
             outputCard.body.push("Unit is in Cover");
         }
         if (unit.group) {
@@ -1555,11 +1555,11 @@ const CC = (() => {
             pt4 = new Point(i,interHex.elevation + interHex.terrainHeight);
             pt5 = lineLine(pt1,pt2,pt3,pt4);
             if (pt5) {
-                if (interHex.traits.includes("Obscuring")) {
+                if (interHex.los.includes("Obscuring")) {
                     cover = true;
 log(label + ": Obscuring")
                 }
-                if (interHex.traits.includes("Blocking")) {
+                if (interHex.los.includes("Blocking")) {
                     los = false;
                     losReason = "Blocked by Terrain at " + label;
                     losBlock = label;
@@ -1583,7 +1583,7 @@ log(label + ": Obscuring")
                     pt4 = new Point(i,interHex.elevation + edge.height);
                     pt5 = lineLine(pt1,pt2,pt3,pt4);
                     if (pt5) {
-                        if (edge.traits.includes("Obscuring")) {
+                        if (edge.los.includes("Obscuring")) {
                             cover = true;
     log(label + " Edge: Obscuring")
                         }
@@ -1611,7 +1611,7 @@ log(label + ": Obscuring")
             pt4 = new Point(distance,targetHex.elevation + edge.height);
             pt5 = lineLine(pt1,pt2,pt3,pt4);
             if (pt5) {
-                if (edge.traits.includes("Obscuring")) {
+                if (edge.los.includes("Obscuring")) {
                     cover = true;
 log("Target Hex Edge Obscuring")
                 }
@@ -1619,7 +1619,7 @@ log("Target Hex Edge Obscuring")
         }
 
         //target hex
-        if (targetHex.traits.includes("Blocking") || targetHex.traits.includes("Obscuring")) {
+        if (targetHex.los.includes("Blocking") || targetHex.los.includes("Obscuring")) {
             cover = true;
 log("Target Hex Obscuring")
         }
