@@ -1649,27 +1649,31 @@ log(label + ": Obscuring")
         }
 
         //target hexside
-        let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
-        let dir;
-        for (let i=0;i<6;i++) {
-            let d = HexInfo.directions[DIRECTIONS[i]];
-            if (delta.q === d.q && delta.r === d.r) {
-                dir = DIRECTIONS[i];
-                break;
-            }
-        }     
-        let edge = targetHex.edges[dir];
-        if (edge !== "Open") {
-            pt3 = new Point(distance,targetHex.elevation);
-            pt4 = new Point(distance,targetHex.elevation + edge.height);
-            pt5 = lineLine(pt1,pt2,pt3,pt4);
-            if (pt5) {
-                if (edge.los.includes("Obscuring")) {
-                    cover = true;
-log("Target Hex Edge Obscuring")
+        if (distance > 1) {
+            let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
+            let dir;
+            for (let i=0;i<6;i++) {
+                let d = HexInfo.directions[DIRECTIONS[i]];
+                if (delta.q === d.q && delta.r === d.r) {
+                    dir = DIRECTIONS[i];
+                    break;
+                }
+            }     
+            let edge = targetHex.edges[dir];
+            if (edge !== "Open") {
+                pt3 = new Point(distance,targetHex.elevation);
+                pt4 = new Point(distance,targetHex.elevation + edge.height);
+                pt5 = lineLine(pt1,pt2,pt3,pt4);
+                if (pt5) {
+                    if (edge.los.includes("Obscuring")) {
+                        cover = true;
+    log("Target Hex Edge Obscuring")
+                    }
                 }
             }
         }
+
+
 
         //target hex
         if (targetHex.los.includes("Blocking") || targetHex.los.includes("Obscuring")) {
@@ -1685,7 +1689,7 @@ log("Target Hex Obscuring")
             cover = false;
         }
 
-        if (distance <= 1) {
+        if (distance < 1) {
             cover = false;
         }
 
@@ -1735,11 +1739,13 @@ log(result)
         }
 
 
+
+        actions --;
+
         if (unit.token.get("tint_color") === "#ff0000") {
             order = "Unpin";
             //Unpin
             outputCard.body.push("The Unit Unpins as its Action");
-            actions --;
         }
 
         if (order === "Move") {
@@ -1748,11 +1754,12 @@ log(result)
                 move = Math.max((unit.move - 1),1);
             }
             outputCard.body.push("The Unit has a Move of " + move + " Hexes" );
-            outputCard.body.push("Move 1 Hex at a time, taking into account Terrain Costs");
-            outputCard.body.push("Rotation at end costs 1 Hex of Movement");
             if (unit.token.get(SM.moved) == true && ((unit.move - 1) > 0)) {
                 outputCard.body.push("[Reduced by 1 for prev. Movement]");
             }
+            outputCard.body.push("Move 1 Hex at a time, taking into account Terrain Costs");
+            outputCard.body.push("Rotation at end costs 1 Hex of Movement");
+
             unit.token.set(SM.moved,true);
         }
 
