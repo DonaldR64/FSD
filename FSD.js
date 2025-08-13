@@ -5,6 +5,9 @@ const CC = (() => {
     const pageInfo = {};
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
+    const UnitMarkers = ["Plus-1d4::2006401","Minus-1d4::2006429","Plus-1d6::2006402","Minus-1d6::2006434","Plus-1d20::2006409","Minus-1d20::2006449","Hot-or-On-Fire-2::2006479","Animal-Form::2006480","Red-Cloak::2006523","A::6001458","B::6001459","C::6001460","D::6001461","E::6001462","F::6001463","G::6001464","H::6001465","I::6001466","J::6001467","L::6001468","M::6001469","O::6001471","P::6001472","Q::6001473","R::6001474","S::6001475"];
+
+
     let HexSize, HexInfo, DIRECTIONS;
 
     //math constants
@@ -598,7 +601,7 @@ const CC = (() => {
     class Unit {
         constructor(id) {
             let token = findObjs({_type:"graphic", id: id})[0];
-            let label = TokenLocation(token);
+            let label = (new Point(token.get("left"),token.get("top"))).label();
             let charID = token.get("represents");
             let char = getObj("character", charID); 
 
@@ -1338,6 +1341,11 @@ const CC = (() => {
             sendChat("","No Tokens Selected");
             return
         }
+
+        let group = msg.content.split(";")[1];
+        group = (group === "Yes") ? true:false;
+        let tokenIDs = [];
+
         _.each(msg.selected,element => {
             let id = element._id;
             let token = findObjs({_type:"graphic", id: id})[0];
@@ -1376,7 +1384,30 @@ const CC = (() => {
             }
             unit.save = save;
             AttributeSet(unit.charID,"move",unit.saveMax);
+
+            tokenIDs.push(id);
         })
+
+        if (group === true) {
+            let groupIDs = tokenIDs.toString();
+            let marker = UnitMarkers[randomInteger(UnitMarkers.length) - 1];
+            //tokens are part of a group of bases, eg. infantry
+            for (let i=0;i<tokenIDs.length;i++) {
+                let unit = UnitArray[tokenIDs[i]];
+                unit.group = tokenIDs;
+                unit.groupLeader = tokenIDs[0];
+                if (i > 0) {
+                    unit.token.set({
+                        aura1_color: "transparent",
+                        aura1_radius: 0,
+                    })
+                }
+                unit.token.set("gmnotes",groupIDs);
+                unit.token.set("status_"+marker,true);
+            }
+        }
+
+
 
 
     }
@@ -1629,21 +1660,21 @@ log(result)
         
     }
 
-    const TokenLocation = (token) => {
-        let location = new Point(token.get("left"),token.get("top"));
-        let label = location.label();
-        return label;
-    }
+
 
 
     const LocationChange = (tok,prev) => {
-        let newHex = HexMap[TokenLocation(tok)];
-        let prevHex = HexMap[TokenLocation(prev)];
-        if (newHex && newHex.tokenIDs.includes(tok.id) === false) {
+        if (tok) {
+            let newHex = HexMap[(new Point(tok.get("left"),tok.get("top"))).label()];
+            if (newHex && newHex.tokenIDs.includes(tok.id) === false) {
             newHex.tokenIDs.push(tok.id);
+            }
         }
-        if (prevHex && prevHex.tokenIDs.includes(tok.id)) {
-            prevHex.tokenIDs.splice(prevHex.tokenIDs.indexOf(tok.id),1);
+        if (prev) {
+            let prevHex = HexMap[(new Point(prev.left,prev.top)).label()];
+            if (prevHex && prevHex.tokenIDs.includes(tok.id)) {
+                prevHex.tokenIDs.splice(prevHex.tokenIDs.indexOf(tok.id),1);
+            }
         }
     }
 
@@ -1652,6 +1683,8 @@ log(result)
 
     const changeGraphic = (tok,prev) => {
         RemoveLines();
+        log(tok)
+        log(prev)
         LocationChange(tok,prev);
 
 
