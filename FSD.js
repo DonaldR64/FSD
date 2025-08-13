@@ -76,7 +76,8 @@ const CC = (() => {
     let UnitArray = {};
     let PlayerInfo = {};
     let currentUnitID = "";
-    let combatArray = {};
+    let FireInfo = {};
+    let AbilityInfo = {};
 
     let outputCard = {title: "",subtitle: "",side: "",body: [],buttons: [],};
 
@@ -1337,6 +1338,7 @@ this.offMap = false;   ///
 
 //any end turn things here
 
+        //move spent dice to roll pile
 
 
 
@@ -1714,10 +1716,13 @@ log(result)
 
     const Activate = (msg) => {
         let Tag = msg.content.split(";");
-        let id = Tag[1];
-        let order = Tag[2];
+        let id = Tag[2];
+        let order = Tag[1];
         let unit = UnitArray[id];
         let actions = parseInt(unit.token.get("bar1_value"));
+        let targetID = Tag[3]; //in cases of Fire 
+        let additionalInfo = Tag[4]; //weapon # or ability #
+        let nextRoutine = "";
 
         let errorMsg = [];
         if (unit.token.get("aura1_color") === "#000000") {
@@ -1763,10 +1768,33 @@ log(result)
             unit.token.set(SM.moved,true);
         }
 
+        if (order === "Control Objective") {
 
 
 
 
+        }
+
+        if (order.includes("Fire")) {
+            FireInfo = {
+                shooterID: id,
+                targetID: targetID,
+                weaponNum: additionalInfo,
+            }
+            nextRoutine = "Fire";
+//? change for CC
+        }
+
+        if (order.includes("Ability")) {
+            AbilityInfo = {
+                id: id,
+                targetID: targetID,
+                additionalInfo: additionalInfo,
+            }
+            nextRoutine = "Ability";
+
+
+        }
 
         
 
@@ -1789,9 +1817,8 @@ log(result)
 
 
         PrintCard();
-
-
-       
+        if (nextRoutine === "Fire") {Fire()};
+        if (nextRoutine === "Ability") {Ability()};
     }
 
 
@@ -1804,7 +1831,18 @@ log(result)
 
 
 
-    const Attack = (msg) => {
+    const Fire = () => {
+        let shooter = UnitArray[FireInfo.shooterID];
+        let target = UnitArray[FireInfo.targetID];
+        let weapon = shooter.weapons[FireInfo.weaponNum];
+
+        
+
+
+
+
+
+
         
     }
 
