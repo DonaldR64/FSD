@@ -1042,13 +1042,15 @@ this.offMap = false;   ///
 
     const AddAreas = () => {
         //define areas with lines
-        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
-        let types = {"#ff0000": "Faction 0","#000000": "Faction 1"};
+        if (state.FSD.factions[0] === "" || state.FSD.factions[1] === "") {return};
+        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "foreground",});
         _.each(paths,path => {
-            let type = types[path.get("stroke").toLowerCase()];
-            if (type) {
+            if (path.get("stroke").toLowerCase() === "#ff0000") {
                 let vertices = translatePoly(path);
-                MapAreas[type] = {'vertices': vertices};
+                MapAreas[state.FSD.factions[0]] = {'vertices': vertices};
+            } else if (path.get("stroke").toLowerCase() === "#000000") {
+                let vertices = translatePoly(path);
+                MapAreas[state.FSD.factions[1]] = {'vertices': vertices};
             }
         });
     }
@@ -1983,6 +1985,8 @@ log(result)
                 log(state.FSD);
                 log("Units");
                 log(UnitArray)
+                log("Map Areas");
+                log(MapAreas)
                 break;
             case '!ClearState':
                 ClearState(msg);
