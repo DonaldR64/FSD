@@ -83,7 +83,7 @@ const FSD = (() => {
     let FireInfo = {};
     let AbilityInfo = {};
     let MapAreas = {};
-    let actDice = [0,0]; //update on build map and each turn
+    let actDice = [[],[]]; 
     const diceWidth = 80; //pixels 
 
 
@@ -1390,7 +1390,6 @@ this.offMap = false;   ///
     }
 
     const RollD6 = (msg) => {
-        let Tag = msg.content.split(";");
         PlaySound("Dice");
         let roll = randomInteger(6);
         let playerID = msg.playerid;
@@ -1422,6 +1421,7 @@ this.offMap = false;   ///
 
     const ClearState = (msg) => {
         LoadPage();
+        ClearDice();
         BuildMap();
 
         state.FSD = {
@@ -1903,26 +1903,34 @@ log(result)
                     })
                 }
             })    
-            actDice[p] = number;
             number = Math.min(number,state.FSD.actDiceCapacity[p]);
             PlaceDice(number,p);
         }
 
     }
 
-
+    const RerollAD = (msg) => {
+        let playerID = msg.playerid;
+        if (!playerID) {return};
+        let faction = state.FSD.players[playerID];
+        let player = (state.FSD.factions[0] === faction) ? 0:1;
+        //count dice in square
+        let count = TokensInArea(player);
+        let number = state.FSD.actDiceCapacity[player];
+        number -= count;
+        PlaceDice(number,player);
+    }
 
     const PlaceDice = (numDice,player) => {
         //using the vertices of the area, divide the area up and place the dice
-        let rolls = [];
+        let rolls = actDice[player] || [];
         let faction = state.FSD.factions[player];
-
         for (let i=0;i<numDice;i++) {
             let roll = randomInteger(6);
             rolls.push(roll);
         }
-
         rolls.sort();
+        actDice[player] = rolls;
 
         let vertices = MapAreas[player];
         let width = vertices[1].x - vertices[0].x;
@@ -1942,7 +1950,6 @@ log(result)
     }
 
 
-
     const CreateDice = (roll,faction,x,y) => {
         roll = roll.toString();
         let table = findObjs({type:'rollabletable', name: faction})[0];
@@ -1952,13 +1959,14 @@ log(result)
         let obj = findObjs({type:'tableitem', _rollabletableid: table.id, name: roll })[0];        
         let avatar = obj.get('avatar');
         let img = getCleanImgSrc(avatar);
+        let player = (state.FSD.factions[0] === faction) ? 0:1;
 
         let newToken = createObj("graphic", {
             left: x,
             top: y,
             width: diceWidth,
             height: diceWidth, 
-            name: "Action Dice " + faction + " " + roll,
+            name: player + " Dice " + roll,
             pageid: Campaign().get("playerpageid"),
             imgsrc: img,
             layer: "objects",
@@ -1982,13 +1990,24 @@ log(result)
         state.FSD.diceIDs = [];
     }
 
-
-
-
-
-
-
-
+    const TokensInArea = (player) => {
+        let vertices = MapAreas[player];
+        let tokens = findObjs({_pageid:  Campaign().get("playerpageid") ,_type: "graphic"});
+        let count = 0;
+        _.each(tokens,token => {
+            let name = token.get("name");
+            let dicePlayer = parseInt(name.split(" ")[0]);
+            if (dicePlayer === player) {
+                let x = token.get("left");
+                let y = token.get("top");
+                if (x < vertices[0].x || x > vertices[1].x || y < vertices[0].y || y > vertices[1].y) {
+                    return;
+                };
+                count++
+            }
+        })
+        return count;
+    }
 
     const LocationChange = (tok,prev) => {
         let distance = 0;
@@ -2131,10 +2150,9 @@ log(result)
             case '!RollD6':
                 RollD6(msg);
                 break;
-            case '!RollAD':
-                RollAD(msg);
+            case '!RerollAD':
+                RerollAD(msg);
                 break;
-
 
         }
     };
