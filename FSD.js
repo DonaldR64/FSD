@@ -1052,6 +1052,7 @@ this.offMap = false;   ///
             {stroke: "#434343", area: "Reinforce1"},
             {stroke: "#a64d79", area: "Reserve0"},
             {stroke: "#666666", area: "Reserve1"},
+            {stroke: "#ff00ff", area: "Map"},
         ]
 
 
