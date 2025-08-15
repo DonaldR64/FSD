@@ -1,5 +1,5 @@
 const FSD = (() => {
-    const version = '2025.8.11';
+    const version = '2025.8.15';
     if (!state.FSD) {state.FSD = {}};
 
     const pageInfo = {};
