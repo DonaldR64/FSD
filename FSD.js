@@ -1044,15 +1044,26 @@ this.offMap = false;   ///
 
     const AddAreas = () => {
         //define areas with lines
-        if (state.FSD.factions[0] === "" || state.FSD.factions[1] === "") {return};
-        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
+        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map", shape: "rec"});
+        let areas = [
+            {stroke: "#ff0000", area: "AD0"},
+            {stroke: "#000000", area: "AD1"},
+            {stroke: "#cc0000", area: "Reinforce0"},
+            {stroke: "#434343", area: "Reinforce1"},
+            {stroke: "#a64d79", area: "Reserve0"},
+            {stroke: "#666666", area: "Reserve1"},
+        ]
+
+
+
         _.each(paths,path => {
-            if (path.get("stroke").toLowerCase() === "#ff0000") {
-                let vertices = translatePoly(path);
-                MapAreas[0] = vertices;
-            } else if (path.get("stroke").toLowerCase() === "#000000") {
-                let vertices = translatePoly(path);
-                MapAreas[1] = vertices;
+            for (let i=0;i<areas.length;i++) {
+                let stroke = areas[i].stroke;
+                let area = areas[i].area;
+                if (path.get("stroke").toLowerCase() === stroke) {
+                    let vertices = translatePoly(path);
+                    MapAreas[area] = vertices;
+                }
             }
         });
     }
@@ -1247,37 +1258,6 @@ this.offMap = false;   ///
         }
     }
 
-    const PlaceSmoke = (msg) => {
-        let id = msg.selected[0]._id;
-        let playerID = msg.playerid;
-        let side = state.FSD.players[playerID];
-
-        let token = findObjs({_type:"graphic", id: id})[0];
-        let roll = randomInteger(50);
-        let level;
-        if (roll <= 30) {
-            level = Math.ceil(roll/6);
-        } else if (roll > 30) {
-            roll -= 30;
-            level = Math.ceil(roll/4) + 5;
-        }
-        let charName = "Smoke " + level;
-        let character = findObjs({_type: "character", name: charName})[0];
-        summonToken(character,token.get('left'),token.get("top"),0,160);
-        let smokeAreaName = side + " Smoke";
-        let zone = MapAreas[smokeAreaName];
-        token.set({
-            left: zone.centre.x,
-            top: zone.centre.y,
-        })
-       let tokens = findObjs({_pageid: Campaign().get("playerpageid"),_type: "graphic",_subtype: "token",layer: "objects",});
-        _.each(tokens,token => {
-            if (token.get("name").includes("Smoke")) {
-                token.set("disableSnapping",false);
-                toBack(token);
-            }
-        })
-    }
 
 
     const TokenInfo = (msg) => {
@@ -1944,7 +1924,7 @@ log(rolls)
         rolls.sort();
         actDice[player] = rolls;
 
-        let vertices = MapAreas[player];
+        let vertices = MapAreas["AD" + player];
         let width = vertices[1].x - vertices[0].x;
         let height = vertices[1].y - vertices[0].y;
 
@@ -2003,7 +1983,7 @@ log(rolls)
     }
 
     const TokensInArea = (player) => {
-        let vertices = MapAreas[player];
+        let vertices = MapAreas["AD" + player];
         let tokens = findObjs({_pageid:  Campaign().get("playerpageid") ,_type: "graphic"});
         let count = 0;
         _.each(tokens,token => {
