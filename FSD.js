@@ -1368,23 +1368,34 @@ this.offMap = false;   ///
         PlaySound("Dice");
         let roll = randomInteger(6);
         let playerID = msg.playerid;
+        let id = msg.selected[0]._id;
+        let player,unit;
         let faction = "Neutral";
+
+        if (!id && !playerID) {
+            log("Back")
+            return;
+        }
+        if (id) {
+            unit = UnitArray[id];
+            if (unit) {
+                faction = unit.faction;
+                player = unit.player;
+            }
+        }
+        if ((!id || !unit) && playerID) {
+            faction = state.FSD.players[playerID];
+            player = (state.FSD.factions[0] === faction) ? 0:1;
+        }
+
         if (!state.FSD.players[playerID] || state.FSD.players[playerID] === undefined) {
-            if (msg.selected) {
-                let id = msg.selected[0]._id;
-                if (id) {
-                    let tok = findObjs({_type:"graphic", id: id})[0];
-                    let char = getObj("character", tok.get("represents")); 
-                    faction = Attribute(char,"faction");
-                    state.FSD.players[playerID] = faction;
-                }
+            if (faction !== "Neutral") {    
+                state.FSD.players[playerID] = faction;
             } else {
                 sendChat("","Click on one of your tokens then select Roll again");
                 return;
             }
-        } else {
-            faction = state.FSD.players[playerID];
-        }
+        } 
         let res = "/direct " + DisplayDice(roll,faction,40);
         sendChat("player|" + playerID,res);
     }
@@ -1907,11 +1918,26 @@ log(result)
 
     const RollAD = (msg) => {
         let playerID = msg.playerid;
-        if (!playerID) {return};
-        let faction = state.FSD.players[playerID];
-        let player = (state.FSD.factions[0] === faction) ? 0:1;
+        let id = msg.selected[0]._id;
+        let faction,player,unit;
+        if (!id && !playerID) {
+            log("Back")
+            return;
+        }
+        if (id) {
+            unit = UnitArray[id];
+            if (unit) {
+                faction = unit.faction;
+                player = unit.player;
+            }
+        }
+        if ((!id || !unit) && playerID) {
+            faction = state.FSD.players[playerID];
+            player = (state.FSD.factions[0] === faction) ? 0:1;
+        }
         //count dice in square
         let results = DiceInArea(player);
+log(results)
         let count = results.dice.length;
         let number = state.FSD.readyDice[player] - count;
         //using the vertices of the area, divide the area up and place the dice
