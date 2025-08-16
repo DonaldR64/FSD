@@ -146,8 +146,9 @@ const FSD = (() => {
 //change - consider up arrow and down arrow for flyers, side arrows for moved, ammo for fired etc
     const SM = {
         noe: "status_blue", //nap of earth for flyer
-        flying: "status_green", //higher elevation for flyer
+        flying: "status_pink", //higher elevation for flyer
         moved: "status_brown",
+        command: "status_green", //unit has received a command to activate so no AD cost
     }
 
 
