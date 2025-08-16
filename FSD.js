@@ -160,6 +160,7 @@ const FSD = (() => {
 
     const TerrainInfo = {
         "Woods": {name: "Woods",height: 2,los: "Blocking", move: "Broken"},
+        "Orchard": {name: "Orchard",height: 1,los: "Obscuring", move: "Broken"},
         "Scrub": {name: "Scrub",height: 1, los: "Obscuring", move: "Fragile"},
         "Crops": {name: "Crops",height: 0.25, los: "Obscuring",move: "Open"},
 
@@ -1902,32 +1903,19 @@ log(result)
         let faction = state.FSD.players[playerID];
         let player = (state.FSD.factions[0] === faction) ? 0:1;
         //count dice in square
-        let dice = DiceInArea(player);
-log(dice)
-        let count = dice.length;
-        let rolls = [];
-        for (let i=0;i<count;i++) {
-            rolls.push(dice[i].roll);
-        }
-        actDice[player] = rolls;
-log(actDice)
-
+        let results = DiceInArea(player);
+        let count = results.dice.length;
         let number = state.FSD.readyDice[player] - count;
-        PlaceDice(number,player);
-    }
-
-    const PlaceDice = (numDice,player) => {
         //using the vertices of the area, divide the area up and place the dice
-        let rolls = actDice[player];
+        let rolls = results.rolls;
         ClearDice(player);
-        let faction = state.FSD.factions[player];
-        for (let i=0;i<numDice;i++) {
+        for (let i=0;i<number;i++) {
             let roll = randomInteger(6);
             rolls.push(roll);
         }
         rolls.sort();
         actDice[player] = rolls;
-
+log(actDice)
         let vertices = MapAreas["AD" + player];
         let width = vertices[1].x - vertices[0].x;
         let height = vertices[1].y - vertices[0].y;
@@ -1977,10 +1965,12 @@ log(actDice)
     }
 
     const ClearDice = (player) => {
-        let dice = DiceInArea(player);
+        let dice = DiceInArea(player).dice;
         _.each(dice,die => {
             let token = findObjs({_type:"graphic", id: die.id})[0];
-            token.remove();
+            if (token) {
+                token.remove();
+            }
         })
     }
 
@@ -1988,6 +1978,9 @@ log(actDice)
         let vertices = MapAreas["AD" + player];
         let tokens = findObjs({_pageid:  Campaign().get("playerpageid") ,_type: "graphic"});
         let dice = [];
+        let rolls = [];
+
+        actDice[player] = rolls;
         _.each(tokens,token => {
             let name = token.get("name").split(" ");
             let dicePlayer = parseInt(name[0]);
@@ -1997,14 +1990,20 @@ log(actDice)
                 if (x < vertices[0].x || x > vertices[1].x || y < vertices[0].y || y > vertices[1].y) {
                     return;
                 };
+                let roll = parseInt(name[2]);
                 let die = {
-                    roll: parseInt(name[2]),
+                    roll: roll,
                     id: token.get("id"),
                 }
                 dice.push(die);
+                rolls.push(roll);
             }
         })
-        return dice;
+        let results = {
+            dice: dice,
+            rolls: rolls,
+        }
+        return results;
     }
 
     const LocationChange = (tok,prev) => {
