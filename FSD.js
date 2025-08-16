@@ -837,7 +837,7 @@ this.offMap = false;   ///
             let weapon = unit.weapons[i];
             systemNum++;
             abilityName = systemNum + " - " + weapon.name;
-            action = "!Activate;Attack" + i + ";" + unit.id
+            action = "!Activate;Attack" + i + ";@{selected|token_id}";
             //how many targets?
             let targets = 1;
             if (weapon.name.includes("(x")) {
