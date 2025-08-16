@@ -811,7 +811,12 @@ this.offMap = false;   ///
         let id = msg.selected[0]._id;
         let unit = UnitArray[id];
         if (!unit) {return};
-        let char = getObj("character", charID);   
+        AddAbilities2(unit);
+    }
+
+
+    const AddAbilities2 = (unit) => {
+        let char = getObj("character", unit.charID);   
 
         let abilityName,action;
         let abilArray = findObjs({_type: "ability", _characterid: char.id});
@@ -821,32 +826,36 @@ this.offMap = false;   ///
         } 
         //Move 
         if (unit.moveMax > 0) {
-            abilityName = "Move";
+            abilityName = "0 - Move";
             action = "!Activate;Move;@{selected|token_id}";
             AddAbility(abilityName,action,char.id);
         }
-        //Weapons
-        _.each(unit.weapons,weapon => {
 
+        let systemNum = 0;
+        //Use Weapons 
+        for (let i=0;i<unit.weapons.length;i++) {
+            let weapon = unit.weapons[i];
+            systemNum++;
+            abilityName = systemNum + " - " + weapon.name;
+            action = "!Activate;Attack" + i + ";" + unit.id
+            //how many targets?
+            let targets = 1;
+            if (weapon.name.includes("(x")) {
+                let temp = weapon.name.split("(x");
+                targets = parseInt(temp[1].replace(")",""));
+            }
+            for (let t=0;t<targets;t++) {
+                action += ";@{target|Target " + (t+1) + "|token_id}";
+            }
+            AddAbility(abilityName,action,char.id);
+        }
 
+        //Use Abilities
 
-
-
-
-        })
-
-        //Abilities
-        _.each(unit.abilities,ability => {
-
-
-
-
-            
-        })
         
 
 
-
+        //Load Weapons/Abilities
 
 
 
@@ -1513,6 +1522,36 @@ this.offMap = false;   ///
             }
             unit.save = save;
             AttributeSet(unit.charID,"save",unit.saveMax);
+            //reset weapons and abilities
+            for (let i=0;i<unit.weapons.length;i++) {
+                let weapon = unit.weapons[i];
+        log(weapon)
+                if (weapon.ready === "⬤") {
+        log("Dead")
+                    if (weapon.ad === "Free") {
+                        weapon.ready = "🟢";
+                    } else {
+                        weapon.ready = "🔴";
+                    }
+        log(weapon.ready)
+                    AttributeSet(unit.charID,"weapon" + (i+1) + "ready",weapon.ready);
+                }
+            }
+            for (let i=0;i<unit.abilities.length;i++) {
+                let ability = unit.abilities[i];
+                if (ability.ready === "⬤") {
+                    if (ability.ad === "Free") {
+                        ability.ready = "🟢";
+                    } else {
+                        ability.ready = "🔴";
+                    }
+                    AttributeSet(unit.charID,"ability" + (i+1) + "ready",ability.ready);
+                }
+            }
+            //reset damage chart
+
+
+
 
             tokenIDs.push(id);
         })
