@@ -812,7 +812,38 @@ this.offMap = false;   ///
         let unit = UnitArray[id];
         if (!unit) {return};
         let char = getObj("character", charID);   
+
+        let abilityName,action;
+        let abilArray = findObjs({_type: "ability", _characterid: char.id});
+        //clear old abilities
+        for(let a=0;a<abilArray.length;a++) {
+            abilArray[a].remove();
+        } 
+        //Move 
+        if (unit.moveMax > 0) {
+            abilityName = "Move";
+            action = "!Activate;Move;@{selected|token_id}";
+            AddAbility(abilityName,action,char.id);
+        }
+        //Weapons
+        _.each(unit.weapons,weapon => {
+            
+
+
+
+
+
+        })
+
+
+
+
+        //Abilities
+
         
+
+
+
 
 
 
