@@ -808,18 +808,14 @@ this.offMap = false;   ///
             sendChat("","No Token Selected");
             return;
         };
-        let type = msg.content.split(";")[1];
-        let faction = msg.content.split(";")[2];
-
         let id = msg.selected[0]._id;
-        let token = findObjs({_type:"graphic", id: id})[0];
+        let unit = UnitArray[id];
+        if (!unit) {return};
+        
 
-        let charID = token.get("represents");
-        if (!charID) {
-            sendChat("","No Associated Character for this Token");
-            return;
-        }
-        let char = getObj("character", charID);   
+
+
+
 
 
         sendChat("","Abilities Added")
