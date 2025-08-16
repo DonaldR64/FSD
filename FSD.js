@@ -83,7 +83,6 @@ const FSD = (() => {
     let FireInfo = {};
     let AbilityInfo = {};
     let MapAreas = {};
-    let actDice = [[],[]]; 
     const diceWidth = 80; //pixels 
 
 
@@ -1012,7 +1011,6 @@ this.offMap = false;   ///
     const BuildMap = () => {
         let startTime = Date.now();
         HexMap = {};
-        actDice = [[],[]];
         let startX = HexInfo.pixelStart.x;
         let startY = HexInfo.pixelStart.y;
         let halfToggleX = HexInfo.halfToggleX;
@@ -1040,8 +1038,6 @@ this.offMap = false;   ///
         AddEdges();
         AddAreas();
         AddTokens();
-        BuildADArray(0);
-        BuildADArray(1);
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
@@ -1151,15 +1147,6 @@ this.offMap = false;   ///
             }
         })
 
-    }
-
-    const BuildADArray = (p) => {
-        let array = [];
-        let dice = DiceInArea(p);
-        _.each(dice,die => {
-            array.push(die.roll);
-        })
-        actDice[p] = array;
     }
 
 
@@ -1751,6 +1738,11 @@ log(result)
         }
 
         SetupCard(unit.name,order,unit.faction);
+        let dice = DiceInArea[unit.player].dice;
+        if (dice.length === 0 && unit.token.get(SM.command) === false) {
+            errorMsg.push("No Activation Dice to Use");
+        }
+
 
 //Activation Dice cost here
 
@@ -1769,6 +1761,9 @@ log(result)
             PrintCard();
             return;
         }
+
+
+
 
 
 
@@ -1793,6 +1788,7 @@ log(result)
             outputCard.body.push("Rotation at end costs 1 Hex of Movement");
 
             unit.token.set(SM.moved,true);
+
         }
 
         if (order === "Control Objective") {
@@ -1842,10 +1838,16 @@ log(result)
             })
         }
 
-
-        PrintCard();
         if (nextRoutine === "Fire") {Fire()};
         if (nextRoutine === "Ability") {Ability()};
+
+
+        if (unit.token.get(SM.command) === false) {
+            outputCard.body.push("[hr]");
+            outputCard.body.push("Spend an Activation Dice");
+        }
+        PrintCard();        
+
     }
 
 
@@ -1915,8 +1917,6 @@ log(result)
             rolls.push(roll);
         }
         rolls.sort();
-        actDice[player] = rolls;
-log(actDice)
         let vertices = MapAreas["AD" + player];
         let width = vertices[1].x - vertices[0].x;
         let height = vertices[1].y - vertices[0].y;
@@ -2114,8 +2114,6 @@ log(actDice)
                 log(UnitArray);
                 log("Map Areas");
                 log(MapAreas);
-                log("Act Dice");
-                log(actDice)
                 break;
             case '!ClearState':
                 ClearState(msg);
