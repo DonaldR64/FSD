@@ -1338,6 +1338,11 @@ this.offMap = false;   ///
                 commandBonus[unit.player] = Math.max(commandBonus[unit.player],unit.command);
             }
             unit.moved = false;
+            unit.token.set("aura1_color","#00ff00");
+//weapons reset
+
+
+
 
 
         })
@@ -1493,7 +1498,7 @@ this.offMap = false;   ///
         }
 
 
-
+        sendChat("","Unit(s) added")
 
     }
 
