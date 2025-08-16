@@ -827,7 +827,7 @@ this.offMap = false;   ///
         }
         //Weapons
         _.each(unit.weapons,weapon => {
-            
+
 
 
 
@@ -835,11 +835,14 @@ this.offMap = false;   ///
 
         })
 
-
-
-
         //Abilities
+        _.each(unit.abilities,ability => {
 
+
+
+
+            
+        })
         
 
 
