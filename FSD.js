@@ -811,8 +811,8 @@ this.offMap = false;   ///
         let id = msg.selected[0]._id;
         let unit = UnitArray[id];
         if (!unit) {return};
+        let char = getObj("character", charID);   
         
-
 
 
 
