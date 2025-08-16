@@ -1758,8 +1758,6 @@ log(result)
         }
 
 
-//Activation Dice cost here
-
 //if fire or special ability, check if is ready or free
 //if not, can display message to preassign dice first or automatically take dice and proceed ???
 
@@ -1806,21 +1804,18 @@ log(result)
         }
 
         if (order === "Control Objective") {
-
-
-
-
+            //will only be on Mechs and Vehicles
+            outputCard.body.push("The Unit Acts to Control the nearby Objective");
         }
 
-        if (order.includes("Fire")) {
-            let additionalInfo = order.replace("Fire","");
+        if (order.includes("Attack")) {
+            let additionalInfo = order.replace("Attack","");
             FireInfo = {
                 shooterID: id,
                 targetIDs: targetIDs,
                 weaponNum: additionalInfo,
             }
-            nextRoutine = "Fire";
-//? change for CC
+            nextRoutine = "Attack";
         }
 
         if (order.includes("Ability")) {
@@ -1854,7 +1849,7 @@ log(result)
             })
         }
 
-        if (nextRoutine === "Fire") {Fire()};
+        if (nextRoutine === "Attack") {Attack()};
         if (nextRoutine === "Ability") {Ability()};
 
 
@@ -1876,9 +1871,16 @@ log(result)
 
 
 
-    const Fire = () => {
+    const Attack = () => {
         let shooter = UnitArray[FireInfo.shooterID];
-        let target = UnitArray[FireInfo.targetID];
+        let targetIDs = FireInfo.targetIDs;
+        let targets = [];
+        _.each(targetIDs, id => {
+            let target = UnitArray[id];
+            if (target) {
+                targets.push(target);
+            }
+        })
         let weapon = shooter.weapons[FireInfo.weaponNum];
 
 
