@@ -1724,12 +1724,14 @@ log(result)
 
     const Activate = (msg) => {
         let Tag = msg.content.split(";");
+        let order = Tag[1]; //could be eg Fire1 for fire weapon 1
         let id = Tag[2];
-        let order = Tag[1];
         let unit = UnitArray[id];
         let actions = parseInt(unit.token.get("bar1_value"));
-        let targetID = Tag[3]; //in cases of Fire 
-        let additionalInfo = Tag[4]; //weapon # or ability #
+        let targetIDs = []; //can be 1+
+        for (let t=3;t<(Tag.length +1);t++) {
+            targetIDs.push(Tag[t]);
+        }
         let nextRoutine = "";
 
         let errorMsg = [];
@@ -1799,9 +1801,10 @@ log(result)
         }
 
         if (order.includes("Fire")) {
+            let additionalInfo = order.replace("Fire","");
             FireInfo = {
                 shooterID: id,
-                targetID: targetID,
+                targetIDs: targetIDs,
                 weaponNum: additionalInfo,
             }
             nextRoutine = "Fire";
@@ -1809,9 +1812,10 @@ log(result)
         }
 
         if (order.includes("Ability")) {
+            let additionalInfo = order.replace("Ability","");
             AbilityInfo = {
                 id: id,
-                targetID: targetID,
+                targetIDs: targetIDs,
                 additionalInfo: additionalInfo,
             }
             nextRoutine = "Ability";
