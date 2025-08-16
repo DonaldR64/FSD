@@ -1744,7 +1744,7 @@ log(result)
             targetIDs.push(Tag[t]);
         }
         let nextRoutine = "";
-        let player = (unit.faction === state.FSD.factions[0]) ? 0:1;
+        let player = unit.player;
 
         let errorMsg = [];
         if (unit.token.get("aura1_color") === "#000000") {
@@ -1752,7 +1752,7 @@ log(result)
         }
 
         SetupCard(unit.name,order,unit.faction);
-        let dice = DiceInArea[player].dice || [];
+        let dice = DiceInArea(player).dice || [];
         if (dice.length === 0 && unit.token.get(SM.command) === false) {
             errorMsg.push("No Activation Dice to Use");
         }
