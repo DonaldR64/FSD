@@ -1891,14 +1891,14 @@ log(result)
                 //check for AD as would not be red if free
                 let rolls = DiceInArea(player).rolls;
                 let cost = weapon.ad.cost; //eg. [4,5,6] and Any or [1,2] and All
-                
                 let has = _.intersection(rolls, cost);
-    log("Has")
-    log(has)
-
-
-
-
+                let equal = _.isEqual(cost,has);                
+                if (weapon.ad.needed === "Any" && has.length === 0) {
+                    errorMsg.push("Lack Appropriate Activation Dice");
+                }
+                if (weapon.ad.needed === "All" && equal === false) {
+                    errorMsg.push("Lack Appropriate Activation Dice");
+                }
             }
 /*
             //target check - LOS, distance, arc
