@@ -674,10 +674,27 @@ const FSD = (() => {
                 let sn = aa[prefix + "systemnum"];
                 systemNumbers[sn] = prefix;
                 let wready = aa[prefix + "ready"] || RED;
-                let wad = aa[prefix + "ad"] || "Free";
-//////// 
-                
-                
+                let wad = aa[prefix + "ad"];
+                let cost = "Free";
+                let needed = "Any";
+                if (wad !== "Free") {
+                    if (wad.includes("+")) {
+                        cost = wad.split("+");
+                        needed = "All";
+                        cost = cost.map((e) => parseInt(e));
+                    } else if (wad.includes("-")) {
+                        cost = [];
+                        wad = wad.split("-");
+                        for (let i=parseInt(wad[0]);i<parseInt(wad[1]) + 1;i++) {
+                            cost.push(i);
+                        }
+                    }
+                }
+                let wadInfo = {
+                    cost: cost,
+                    needed: needed,
+                }
+
                 
                 let wspecial = aa[prefix + 'special'] || " ";
 //fix range to be min, normal, max
@@ -703,7 +720,7 @@ const FSD = (() => {
 
                 let weapon = {
                     name: wname,
-                    ad: wad,
+                    ad: wadInfo,
                     ready: wready,
                     sn: sn,
                     range: wrangeInfo,
@@ -1861,22 +1878,9 @@ log(result)
 //In case of Attack, check for AD, ready, destroyed weapon and LOS as well, errorMsg if needed for each
 
         if (order.includes("Attack")) {
+
+            //weapons check
             let weapon = unit.weapons[order.replace("Attack","")];
-            let losResult = LOS(shooter,target,weapon);
-//indirect?
-            if (losResult.los === false) {
-                errorMsg.push("No LOS to Target");
-                errorMsg.push(losResult.losReason);
-            }
-            if (losResult.distance < weapon.range.min) {
-                errorMsg.push("Weapon cannot Fire at Target that Close");
-            }
-            if (losResult.distance > weapon.range.max) {
-                errorMsg.push("Target is beyond Weapons' max range");
-            }
-
-
-
             if (weapon.ready === BLACK) {
                 errorMsg.push("That Weapon is Destroyed");
             }
@@ -1886,25 +1890,71 @@ log(result)
             if (weapon.ready === RED) {
                 //check for AD as would not be red if free
                 let rolls = DiceInArea(player).rolls;
-                let ad = weapon.ad;
-//change this so calc done on class unit
-//ad should be an array of numbers needed with a note in array to indicate is any or all
-
-
-
+                let cost = weapon.ad.cost; //eg. [4,5,6] and Any or [1,2] and All
+                
+                let has = _.intersection(rolls, cost);
+    log("Has")
+    log(has)
 
 
 
 
             }
+/*
+            //target check - LOS, distance, arc
+            if (errorMsg.length === 0) {
+                for (let i=0;i<targetIDs.length;i++) {
+                    let targetID = targetIDs[i];
+                    let target = UnitArray[targetID];   
+                    if (!unit) {
+                        errorMsg.push("Not a Valid Target");
+                    } else {
+                        let losResult = LOS(unit,target,weapon);
+        //indirect?
+                        if (los === false) {
+                            errorMsg.push("No LOS to Target");
+                            errorMsg.push(losResult.losReason);
+                        }
+                        if (losResult.distance < weapon.range.min) {
+                            errorMsg.push("Weapon cannot Fire at Target that Close");
+                        }
+                        if (losResult.distance > weapon.range.max) {
+                            errorMsg.push("Target is beyond Weapons' Max range");
+                        }
+                    }
+                }
+            
+                if (weapon.ready === BLACK) {
+                    errorMsg.push("That Weapon is Destroyed");
+                }
+                if (weapon.ready === ORANGE) {
+                    errorMsg.push("That Weapon has already fired this turn");
+                }
+                if (weapon.ready === RED) {
+                    //check for AD as would not be red if free
+                    let rolls = DiceInArea(player).rolls;
+                    let cost = weapon.ad.cost; //eg. [4,5,6] and Any or [1,2] and All
+                    
+                    let has = _.intersection(rolls, cost);
+        log("Has")
+        log(has)
 
+
+
+
+                }
+
+
+
+
+            }
+*/
 
 
             FireInfo = {
                 shooterID: id,
                 targetIDs: targetIDs,
                 weapon: weapon,
-                losResult: losResult,
             }
             nextRoutine = "Attack";
         }
@@ -2013,6 +2063,7 @@ log(result)
 
 
     const Attack = () => {
+    return
         let shooter = UnitArray[FireInfo.shooterID];
         let targetIDs = FireInfo.targetIDs;
         let targets = [];
@@ -2052,10 +2103,10 @@ log(result)
                 if (unit.player === p) {
                     let weapons = unit.weapons;
                     _.each(weapons,weapon => {
-                        if (weapon.ad !== "Free" && weapon.ready === GREEN) {
+                        if (weapon.ad.cost !== "Free" && weapon.ready === GREEN) {
                             let cost = 1;
-                            if (weapon.ad.includes("+")) {
-                                cost = weapon.ad.split("+").length;
+                            if (weapon.ad.needed.includes("All")) {
+                                cost = weapon.ad.cost.length;
                             } 
                             number -= cost;
                         }
