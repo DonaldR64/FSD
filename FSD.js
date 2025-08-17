@@ -1856,10 +1856,12 @@ log(result)
         let id = Tag[2];
         let unit = UnitArray[id];
         let actions = parseInt(unit.token.get("bar1_value"));
-        let targetIDs = []; //can be 1+
-        for (let t=3;t<(Tag.length +1);t++) {
-            targetIDs.push(Tag[t]);
+        let targetInfo = [];
+        for (let t=3;t<Tag.length;t++) {
+            targetInfo.push({id: Tag[t]});
         }
+
+
         let nextRoutine = "";
         let player = unit.player;
 
@@ -1901,63 +1903,42 @@ log(result)
                     errorMsg.push("Lack Appropriate Activation Dice");
                 }
             }
-/*
+
             //target check - LOS, distance, arc
             if (errorMsg.length === 0) {
-                for (let i=0;i<targetIDs.length;i++) {
-                    let targetID = targetIDs[i];
+                for (let i=0;i<targetInfo.length;i++) {
+                    let targetID = targetInfo[i].id;
                     let target = UnitArray[targetID];   
-                    if (!unit) {
-                        errorMsg.push("Not a Valid Target");
+                    if (!target) {
+                        continue;
                     } else {
                         let losResult = LOS(unit,target,weapon);
         //indirect?
-                        if (los === false) {
-                            errorMsg.push("No LOS to Target");
+                        if (losResult.los === false) {
+                            errorMsg.push(target.name + " is not in LOS");
                             errorMsg.push(losResult.losReason);
                         }
                         if (losResult.distance < weapon.range.min) {
-                            errorMsg.push("Weapon cannot Fire at Target that Close");
+                            errorMsg.push(target.name  + " is Too Close");
                         }
                         if (losResult.distance > weapon.range.max) {
-                            errorMsg.push("Target is beyond Weapons' Max range");
+                            errorMsg.push(target.name + " is Too Far");
                         }
+                        targetInfo[i].losResult = losResult;
                     }
                 }
-            
-                if (weapon.ready === BLACK) {
-                    errorMsg.push("That Weapon is Destroyed");
-                }
-                if (weapon.ready === ORANGE) {
-                    errorMsg.push("That Weapon has already fired this turn");
-                }
-                if (weapon.ready === RED) {
-                    //check for AD as would not be red if free
-                    let rolls = DiceInArea(player).rolls;
-                    let cost = weapon.ad.cost; //eg. [4,5,6] and Any or [1,2] and All
-                    
-                    let has = _.intersection(rolls, cost);
-        log("Has")
-        log(has)
-
-
-
-
-                }
-
-
-
-
             }
-*/
 
 
             FireInfo = {
                 shooterID: id,
-                targetIDs: targetIDs,
+                targetInfo: targetInfo,
                 weapon: weapon,
             }
             nextRoutine = "Attack";
+
+log(FireInfo)
+
         }
 
 
