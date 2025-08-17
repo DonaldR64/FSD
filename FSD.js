@@ -1891,8 +1891,8 @@ log(result)
                 //check for AD as would not be red if free
                 let rolls = DiceInArea(player).rolls;
                 let cost = weapon.ad.cost; //eg. [4,5,6] and Any or [1,2] and All
-                let has = _.intersection(rolls, cost);
-                let equal = _.isEqual(cost,has);                
+                let has = _.intersection(rolls, cost); //returns array of values that both rolls and cost arrays have
+                let equal = _.isEqual(cost,has);  //boolean, returns true if 2 arrays are equal              
                 if (weapon.ad.needed === "Any" && has.length === 0) {
                     errorMsg.push("Lack Appropriate Activation Dice");
                 }
