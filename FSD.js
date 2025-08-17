@@ -1873,10 +1873,11 @@ log(result)
         if (dice.length === 0 && unit.token.get(SM.command) === false) {
             errorMsg.push("No Activation Dice to Use");
         }
+        if (actions === 0) {
+            errorMsg.push("Unit has no more Actions this turn");
+        }
 
-
-//In case of Attack, check for AD, ready, destroyed weapon and LOS as well, errorMsg if needed for each
-
+        //In case of Attack, check for AD, ready, destroyed weapon and LOS as well, errorMsg if needed for each
         if (order.includes("Attack")) {
 
             //weapons check
