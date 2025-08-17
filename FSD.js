@@ -1,5 +1,5 @@
 const FSD = (() => {
-    const version = '2025.8.15';
+    const version = '2025.8.17';
     if (!state.FSD) {state.FSD = {}};
 
     const pageInfo = {};
@@ -1860,7 +1860,6 @@ log(result)
         for (let t=3;t<Tag.length;t++) {
             targetInfo.push({id: Tag[t]});
         }
-
 
         let nextRoutine = "";
         let player = unit.player;
