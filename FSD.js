@@ -7,8 +7,10 @@ const FSD = (() => {
 
     let HexSize, HexInfo, DIRECTIONS;
 
-
-
+    let BLACK = "⚫";
+    let RED = "🔴";
+    let GREEN = "🟢";
+    let ORANGE = "🟠";
 
 
     //math constants
@@ -671,16 +673,40 @@ const FSD = (() => {
                 if (!wname || wname === undefined || wname === null) {continue};
                 let sn = aa[prefix + "systemnum"];
                 systemNumbers[sn] = prefix;
-                let wready = aa[prefix + "ready"] || "🔴";
+                let wready = aa[prefix + "ready"] || RED;
                 let wad = aa[prefix + "ad"] || "Free";
+//////// 
+                
+                
+                
                 let wspecial = aa[prefix + 'special'] || " ";
+//fix range to be min, normal, max
+                let wrange = aa[prefix + "range"];
+                let min, normal, max;
+                wrange = wrange.split("-");
+                if (wrange.length === 2) {
+                    min = parseInt(wrange[0]);
+                    normal = parseInt(wrange[1]);
+                    max = 2 * normal;
+                } else {
+                    min = 0;
+                    normal = parseInt(wrange[0]);
+                    max = 2 * normal;
+                }
+                let wrangeInfo = {
+                    min: min,
+                    normal: normal,
+                    max: max,
+                }
+
+
 
                 let weapon = {
                     name: wname,
                     ad: wad,
                     ready: wready,
                     sn: sn,
-                    range: aa[prefix + "range"],
+                    range: wrangeInfo,
                     damage: aa[prefix + "damage"],
                     special: wspecial,
                     fx: aa[prefix + "fx"],
@@ -700,7 +726,7 @@ const FSD = (() => {
                 if (!aname || aname === undefined || aname === null) {continue};
                 let sn = aa[prefix + "systemnum"];
                 systemNumbers[sn] = prefix;
-                let aready = aa[prefix + "ready"] || "🔴";
+                let aready = aa[prefix + "ready"] || RED;
                 let aad = aa[prefix + "ad"] || "Free";
                 let aspecial = aa[prefix + 'special'] || " ";
 
@@ -1526,12 +1552,12 @@ this.offMap = false;   ///
             for (let i=0;i<unit.weapons.length;i++) {
                 let weapon = unit.weapons[i];
         log(weapon)
-                if (weapon.ready === "⬤") {
+                if (weapon.ready === BLACK) {
         log("Dead")
                     if (weapon.ad === "Free") {
-                        weapon.ready = "🟢";
+                        weapon.ready = GREEN;
                     } else {
-                        weapon.ready = "🔴";
+                        weapon.ready = RED;
                     }
         log(weapon.ready)
                     AttributeSet(unit.charID,"weapon" + (i+1) + "ready",weapon.ready);
@@ -1539,11 +1565,11 @@ this.offMap = false;   ///
             }
             for (let i=0;i<unit.abilities.length;i++) {
                 let ability = unit.abilities[i];
-                if (ability.ready === "⬤") {
+                if (ability.ready === BLACK) {
                     if (ability.ad === "Free") {
-                        ability.ready = "🟢";
+                        ability.ready = GREEN;
                     } else {
-                        ability.ready = "🔴";
+                        ability.ready = RED;
                     }
                     AttributeSet(unit.charID,"ability" + (i+1) + "ready",ability.ready);
                 }
@@ -1832,8 +1858,78 @@ log(result)
         }
 
 
-//if fire or special ability, check if is ready or free
-//if not, can display message to preassign dice first or automatically take dice and proceed ???
+//In case of Attack, check for AD, ready, destroyed weapon and LOS as well, errorMsg if needed for each
+
+        if (order.includes("Attack")) {
+            let weapon = unit.weapons[order.replace("Attack","")];
+            let losResult = LOS(shooter,target,weapon);
+//indirect?
+            if (losResult.los === false) {
+                errorMsg.push("No LOS to Target");
+                errorMsg.push(losResult.losReason);
+            }
+            if (losResult.distance < weapon.range.min) {
+                errorMsg.push("Weapon cannot Fire at Target that Close");
+            }
+            if (losResult.distance > weapon.range.max) {
+                errorMsg.push("Target is beyond Weapons' max range");
+            }
+
+
+
+            if (weapon.ready === BLACK) {
+                errorMsg.push("That Weapon is Destroyed");
+            }
+            if (weapon.ready === ORANGE) {
+                errorMsg.push("That Weapon has already fired this turn");
+            }
+            if (weapon.ready === RED) {
+                //check for AD
+                let rolls = DiceInArea(player).rolls;
+                let ad = weapon.ad;
+//change this so calc done on class unit
+//ad should be an array of numbers needed with a note in array to indicate is any or all
+                if (ad.includes("+")) {
+                    ad = ad.split("+");
+                    ad = ad.map((e) => parseInt(e.trim()));
+                    for (let i=0;i<ad.length;i++) {
+                        let index = rolls.indexOf(ad);
+                        if (index > -1) {
+                            rolls.splice(index,1);
+                        } else {
+                            errorMsg.push("Unable to Load/Prepare Weapon");
+                            break;
+                        }
+                    }
+                } else {
+                    ad = ad.split("-");
+                    ad = ad.map((e) => parseInt(e.trim()));
+                    let one = false;
+                    for (let i=0;i<ad.length;i++) {
+                        let index = rolls.indexOf(ad);
+                        if (index > -1) {
+                            rolls.splice(index,1);
+                            one = true;
+                            break;
+                        }
+                    }
+                    if (one === false) {
+                        errorMsg.push("Unable to Load/Prepare Weapon");
+                    }
+                }
+            }
+
+
+
+            FireInfo = {
+                shooterID: id,
+                targetIDs: targetIDs,
+                weapon: weapon,
+                losResult: losResult,
+            }
+            nextRoutine = "Attack";
+        }
+
 
 
 
@@ -1882,15 +1978,7 @@ log(result)
             outputCard.body.push("The Unit Acts to Control the nearby Objective");
         }
 
-        if (order.includes("Attack")) {
-            let additionalInfo = order.replace("Attack","");
-            FireInfo = {
-                shooterID: id,
-                targetIDs: targetIDs,
-                weaponNum: additionalInfo,
-            }
-            nextRoutine = "Attack";
-        }
+
 
         if (order.includes("Ability")) {
             let additionalInfo = order.replace("Ability","");
@@ -1957,6 +2045,15 @@ log(result)
         })
         let weapon = shooter.weapons[FireInfo.weaponNum];
 
+        //already have checked for AD, ready etc and error in Activation if lacking
+
+        if (weapon.ready === RED) {
+            //'load' using AD
+
+
+        }
+
+
 
 
 
@@ -1976,7 +2073,7 @@ log(result)
                 if (unit.player === p) {
                     let weapons = unit.weapons;
                     _.each(weapons,weapon => {
-                        if (weapon.ad !== "Free" && weapon.ready === "🟢") {
+                        if (weapon.ad !== "Free" && weapon.ready === GREEN) {
                             let cost = 1;
                             if (weapon.ad.includes("+")) {
                                 cost = weapon.ad.split("+").length;
