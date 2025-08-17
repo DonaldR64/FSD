@@ -1884,39 +1884,18 @@ log(result)
                 errorMsg.push("That Weapon has already fired this turn");
             }
             if (weapon.ready === RED) {
-                //check for AD
+                //check for AD as would not be red if free
                 let rolls = DiceInArea(player).rolls;
                 let ad = weapon.ad;
 //change this so calc done on class unit
 //ad should be an array of numbers needed with a note in array to indicate is any or all
-                if (ad.includes("+")) {
-                    ad = ad.split("+");
-                    ad = ad.map((e) => parseInt(e.trim()));
-                    for (let i=0;i<ad.length;i++) {
-                        let index = rolls.indexOf(ad);
-                        if (index > -1) {
-                            rolls.splice(index,1);
-                        } else {
-                            errorMsg.push("Unable to Load/Prepare Weapon");
-                            break;
-                        }
-                    }
-                } else {
-                    ad = ad.split("-");
-                    ad = ad.map((e) => parseInt(e.trim()));
-                    let one = false;
-                    for (let i=0;i<ad.length;i++) {
-                        let index = rolls.indexOf(ad);
-                        if (index > -1) {
-                            rolls.splice(index,1);
-                            one = true;
-                            break;
-                        }
-                    }
-                    if (one === false) {
-                        errorMsg.push("Unable to Load/Prepare Weapon");
-                    }
-                }
+
+
+
+
+
+
+
             }
 
 
