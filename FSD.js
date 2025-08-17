@@ -1978,7 +1978,7 @@ log(result)
 
 
 
-        actions --;
+        actions = Math.max(0,actions - 1);
 
         if (unit.token.get("tint_color") === "#ff0000") {
             order = "Unpin";
