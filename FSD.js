@@ -2044,16 +2044,8 @@ log(FireInfo)
 
 
     const Attack = () => {
-    return
         let shooter = UnitArray[FireInfo.shooterID];
-        let targetIDs = FireInfo.targetIDs;
-        let targets = [];
-        _.each(targetIDs, id => {
-            let target = UnitArray[id];
-            if (target) {
-                targets.push(target);
-            }
-        })
+        let targetInfo = FireInfo.targetInfo; //id and LOS from activate
         let weapon = shooter.weapons[FireInfo.weaponNum];
 
         //already have checked for AD, ready etc and error in Activation if lacking
