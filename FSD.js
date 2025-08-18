@@ -1882,6 +1882,7 @@ log(result)
         if (order.includes("Attack")) {
 
             //weapons check
+            let diceUsed = [];
             let weapon = unit.weapons[order.replace("Attack","")];
             if (weapon.ready === BLACK) {
                 errorMsg.push("That Weapon is Destroyed");
@@ -1895,11 +1896,19 @@ log(result)
                 let cost = weapon.ad.cost; //eg. [4,5,6] and Any or [1,2] and All
                 let has = _.intersection(rolls, cost); //returns array of values that both rolls and cost arrays have
                 let equal = _.isEqual(cost,has);  //boolean, returns true if 2 arrays are equal              
-                if (weapon.ad.needed === "Any" && has.length === 0) {
-                    errorMsg.push("Lack Appropriate Activation Dice");
+                if (weapon.ad.needed === "Any") {
+                    if (has.length > 0) {
+                        diceUsed = [has[0]];
+                    } else {
+                        errorMsg.push("Lack Appropriate Activation Dice");
+                    }
                 }
-                if (weapon.ad.needed === "All" && equal === false) {
-                    errorMsg.push("Lack Appropriate Activation Dice");
+                if (weapon.ad.needed === "All") {
+                    if (equal === true) {
+                        diceUsed = cost;
+                    } else {
+                        errorMsg.push("Lack Appropriate Activation Dice");
+                    }
                 }
             }
 
@@ -1933,9 +1942,10 @@ log(result)
                 shooterID: id,
                 targetInfo: targetInfo,
                 weapon: weapon,
+                diceUsed: diceUsed,
             }
             nextRoutine = "Attack";
-
+log("Fire Info")
 log(FireInfo)
 
         }
@@ -2047,18 +2057,25 @@ log(FireInfo)
         let shooter = UnitArray[FireInfo.shooterID];
         let targetInfo = FireInfo.targetInfo; //id and LOS from activate
         let weapon = shooter.weapons[FireInfo.weaponNum];
-
+        let shooterTip = "";
         //already have checked for AD, ready etc and error in Activation if lacking
 
-        if (weapon.ready === RED) {
+        if (FireInfo.diceUsed.length > 0) {
             //'load' using AD
-
-
+            let dice = DiceInArea(shooter.player).dice;
+            _.each(FireInfo.diceUsed,roll => {
+                let index = dice.map((e) => e.roll).indexOf(roll);
+                let die = dice[index];
+                if (die) {
+                    let id = die.id;
+                    let token = findObjs({_type:"graphic", id: id})[0];
+                    if (token) {token.remove()};
+                }
+            })
+            shooterTip += "AD Used: " + FireInfo.diceUsed.toString();
         }
 
-
-
-
+        
 
 
 
