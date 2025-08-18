@@ -785,10 +785,22 @@ const FSD = (() => {
 
             this.damageTable = drt;
             this.systemTable = systems;
+
+            //characters and groups of bases
             this.groupIDs = "";
+            this.assocID = "";
+            this.group = false;
+            this.hasChar = false;
             let gmnotes = decodeURIComponent(token.get("gmnotes")).toString();
             if (gmnotes && gmnotes !== null && gmnotes !== "") {
-                this.groupIDs = gmnotes;
+                gmnotes = gmnotes.split(";");
+                if (gmnotes[0] === "C") {
+                    this.hasChar = true;
+                    this.assocID = gmnotes[1];
+                } else if (gmnotes[1] === "G") {
+                    this.group = true;
+                    this.groupIDs = gmnotes[1];
+                }
             }
 
 
@@ -1605,7 +1617,8 @@ this.offMap = false;   ///
             for (let i=0;i<tokenIDs.length;i++) {
                 let unit = UnitArray[tokenIDs[i]];
                 unit.groupIDs = groupIDs;
-                unit.token.set("gmnotes",groupIDs);
+                unit.group = true;
+                unit.token.set("gmnotes","G;" + groupIDs);
             }
         }
 
