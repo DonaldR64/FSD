@@ -1537,9 +1537,12 @@ this.offMap = false;   ///
         let association = msg.content.split(";")[1]; //Nil,Group,Character
         let tokenIDs = [];
 
+
         _.each(msg.selected,element => {
             let id = element._id;
             let token = findObjs({_type:"graphic", id: id})[0];
+            
+
             token.set({
                 bar1_value: 2,
                 aura1_color: "#00FF00",
@@ -1619,11 +1622,6 @@ this.offMap = false;   ///
                 unit.group = true;
                 unit.token.set("gmnotes","G;" + groupIDs);
             }
-        }
-        if (association === "Character") {
-            
-
-
         }
 
 
