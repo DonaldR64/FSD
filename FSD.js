@@ -2056,9 +2056,9 @@ log(FireInfo)
     const Attack = () => {
         let shooter = UnitArray[FireInfo.shooterID];
         let targetInfo = FireInfo.targetInfo; //id and LOS from activate
-        let weapon = shooter.weapons[FireInfo.weaponNum];
+        let weapon = FireInfo.weaponNum;
         let shooterTip = "";
-        //already have checked for AD, ready etc and error in Activation if lacking
+        //already have checked for AD, ready etc and errored in Activation if lacking
 
         if (FireInfo.diceUsed.length > 0) {
             //'load' using AD
@@ -2076,6 +2076,11 @@ log(FireInfo)
         }
 
         
+
+
+
+
+
 
 
 
