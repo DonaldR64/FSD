@@ -1534,8 +1534,7 @@ this.offMap = false;   ///
             return
         }
 
-        let group = msg.content.split(";")[1];
-        group = (group === "Yes") ? true:false;
+        let association = msg.content.split(";")[1]; //Nil,Group,Character
         let tokenIDs = [];
 
         _.each(msg.selected,element => {
@@ -1611,7 +1610,7 @@ this.offMap = false;   ///
             tokenIDs.push(id);
         })
 
-        if (group === true) {
+        if (association === "Group") {
             let groupIDs = tokenIDs.toString();
             //tokens are part of a group of bases, eg. infantry
             for (let i=0;i<tokenIDs.length;i++) {
@@ -1621,6 +1620,14 @@ this.offMap = false;   ///
                 unit.token.set("gmnotes","G;" + groupIDs);
             }
         }
+        if (association === "Character") {
+            
+
+
+        }
+
+
+
 
 
         sendChat("","Unit(s) added")
