@@ -1,17 +1,11 @@
-const FSD = (() => {
-    const version = '2025.8.17';
-    if (!state.FSD) {state.FSD = {}};
+const FF = (() => {
+    const version = '2025.11.1';
+    if (!state.FF) {state.FF = {}};
 
     const pageInfo = {};
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
     let HexSize, HexInfo, DIRECTIONS;
-
-    let BLACK = "⚫";
-    let RED = "🔴";
-    let GREEN = "🟢";
-    let ORANGE = "🟠";
-
 
     //math constants
     const M = {
@@ -82,12 +76,6 @@ const FSD = (() => {
     let UnitArray = {};
     let PlayerInfo = {};
     let currentUnitID = "";
-    let FireInfo = {};
-    let AbilityInfo = {};
-    let MapAreas = {};
-    const diceWidth = 80; //pixels 
-
-
 
     let outputCard = {title: "",subtitle: "",side: "",body: [],buttons: [],};
 
@@ -110,8 +98,8 @@ const FSD = (() => {
         }
     }
 
-    const Factions = {
-        "Tech": {
+    const Nations = {
+        "German": {
             "image": "",
             "backgroundColour": "orange",
             "titlefont": "Anton",
@@ -119,73 +107,53 @@ const FSD = (() => {
             "borderColour": "#ffA500",
             "borderStyle": "5px groove",
         },
-        "Conglomerate": {
+        "USA": {
             "image": "",
             "backgroundColour": "#0000ff",
             "titlefont": "Bokor",
             "fontColour": "#ffffff",
             "borderColour": "#0000ff",
             "borderStyle": "5px double",
-
         },
 
         "Neutral": {
             "image": "",
             "backgroundColour": "#FFFFFF",
-            "dice": "UK",
             "titlefont": "Arial",
             "fontColour": "#000000",
             "borderColour": "#00FF00",
             "borderStyle": "5px ridge",
-            "objectiveImages": ["https://s3.amazonaws.com/files.d20.io/images/445305278/d0gD6ulV_LWL6GqXLHl4Lg/thumb.png?1750123999","https://s3.amazonaws.com/files.d20.io/images/445305279/Qlfo7DUpfqQytnDDj1iNFw/thumb.png?1750124000","https://s3.amazonaws.com/files.d20.io/images/445305282/dDimDBtHc8VQCygdSvUsqA/thumb.png?1750123999","https://s3.amazonaws.com/files.d20.io/images/445305281/N-hzu0glUwi30tzyPJrmHA/thumb.png?1750123999","https://s3.amazonaws.com/files.d20.io/images/445305280/Km2iwf_F-BC_5ZBf0EaJ8A/thumb.png?1750123999"],
-
         },
 
     };
 
 
-//change - consider up arrow and down arrow for flyers, side arrows for moved, ammo for fired etc
     const SM = {
-        noe: "status_blue", //nap of earth for flyer
-        flying: "status_pink", //higher elevation for flyer
-        moved: "status_brown",
-        command: "status_green", //unit has received a command to activate so no AD cost
+       
     }
-
-
-
 
 
     //height is height of terrain element
-    //elevation is 0 by default
+    //elevation is 0 by default, adjusted by height lines
+    //cover -> 0 = none, 1 = cover, 2 = hard cover and inf, vehicles
+    //los -> 0 = no block, 1 = blocked after 1 hex, 2 = blocked on other side of area (eg. woods)
+    
 
+    const LinearTerrain = {
+        "Bocage": {name: "Bocage",height: 2,los: 1,conceal: true, iCover: 2, vCover: 1},
+        "Trench": {name: "Trench",height: 0,los: 0,conceal: true, iCover: 2, vCover: 0},
 
-    const TerrainInfo = {
-        "Woods": {name: "Woods",height: 2,los: "Blocking", move: "Broken"},
-        "Orchard": {name: "Orchard",height: 1,los: "Obscuring", move: "Broken"},
-        "Scrub": {name: "Scrub",height: 1, los: "Obscuring", move: "Fragile"},
-        "Crops": {name: "Crops",height: 0.25, los: "Obscuring",move: "Open"},
-
-        "Building 1": {name: "Building", height: 1, los: "Blocking",move: "Traversable"},
-
-        "Rubble": {name: "Rubble",height: 0.25, los: "Obscuring",move: "Broken"},
-
-        "Ruins": {name: "Ruins",height: 1, los: "Obscuring",move: "Traversable"},
-
-        "Water": {name: "Water",height: 0,los: "Open",move: "Water" },
-
-        "Hill 1": {name: "Hill 1",height: 0,elevation:1},
-        "Hill 2": {name: "Hill 2",height: 0, elevation:2},
-        "Hill 3": {name: "Hill 3",height: 0, elevation:3},
 
     }
 
-    const EdgeInfo = {
-        "#00ff00": {name: "Hedge",height: 0.25, los: "Obscuring", move: "Fragile"},
-        "#980000": {name: "Wall",height: 0.25, los: "Obscuring",move: "Broken"},
-        "#0000ff": {name: "Stream",height: 0,los: "Open",move: "Broken"},
-        "#000000": {name: "Bridge",height: 0.25,los: "Obscuring",move: "Open"},
+    const AreaTerrain = {
+        "Emplacement": {name: "Emplacement",height: 1,los: 2,conceal: true, iCover: 2, vCover: 2},
+
+
+
     }
+
+
 
 
 
@@ -433,10 +401,10 @@ const FSD = (() => {
         angle(b) {
             //angle between 2 hexes
             let origin = this.toPoint();
-            let destifaction = b.toPoint();
+            let destination = b.toPoint();
 
-            let x = Math.round(origin.x - destifaction.x);
-            let y = Math.round(origin.y - destifaction.y);
+            let x = Math.round(origin.x - destination.x);
+            let y = Math.round(origin.y - destination.y);
             let phi = Math.atan2(y,x);
             phi = phi * (180/Math.PI);
             phi = Math.round(phi);
@@ -625,8 +593,8 @@ const FSD = (() => {
             this.hexLabel = label;
             this.startHexLabel = label; //used to track movement
 
-            this.faction = aa.faction || "Neutral";
-            this.player = (this.faction === "Neutral") ? 2:(state.FSD.factions[0] === this.faction)? 0:1;
+            this.nation = aa.nation || "Neutral";
+            this.player = (this.nation === "Neutral") ? 2:(state.FF.nations[0] === this.nation)? 0:1;
             this.special = aa.special || " ";
             this.points = parseInt(aa.points) || 0;
 
@@ -962,20 +930,20 @@ this.offMap = false;   ///
             output += "/desc ";
         }
 
-        if (!outputCard.side || !Factions[outputCard.side]) {
+        if (!outputCard.side || !Nations[outputCard.side]) {
             outputCard.side = "Neutral";
         }
 
         //start of card
-        output += `<div style="display: table; border: ` + Factions[outputCard.side].borderStyle + " " + Factions[outputCard.side].borderColour + `; `;
+        output += `<div style="display: table; border: ` + Nations[outputCard.side].borderStyle + " " + Nations[outputCard.side].borderColour + `; `;
         output += `background-color: #EEEEEE; width: 100%; text-align: center; `;
         output += `border-radius: 1px; border-collapse: separate; box-shadow: 5px 3px 3px 0px #aaa;;`;
         output += `"><div style="display: table-header-group; `;
-        output += `background-color: ` + Factions[outputCard.side].backgroundColour + `; `;
-        output += `background-image: url(` + Factions[outputCard.side].image + `), url(` + Factions[outputCard.side].image + `); `;
+        output += `background-color: ` + Nations[outputCard.side].backgroundColour + `; `;
+        output += `background-image: url(` + Nations[outputCard.side].image + `), url(` + Nations[outputCard.side].image + `); `;
         output += `background-position: left,right; background-repeat: no-repeat, no-repeat; background-size: contain, contain; align: center,center; `;
         output += `border-bottom: 2px solid #444444; "><div style="display: table-row;"><div style="display: table-cell; padding: 2px 2px; text-align: center;"><span style="`;
-        output += `font-family: ` + Factions[outputCard.side].titlefont + `; `;
+        output += `font-family: ` + Nations[outputCard.side].titlefont + `; `;
         output += `font-style: normal; `;
 
         let titlefontsize = "1.4em";
@@ -985,11 +953,11 @@ this.offMap = false;   ///
 
         output += `font-size: ` + titlefontsize + `; `;
         output += `line-height: 1.2em; font-weight: strong; `;
-        output += `color: ` + Factions[outputCard.side].fontColour + `; `;
+        output += `color: ` + Nations[outputCard.side].fontColour + `; `;
         output += `text-shadow: none; `;
         output += `">`+ outputCard.title + `</span><br /><span style="`;
         output += `font-family: Arial; font-variant: normal; font-size: 13px; font-style: normal; font-weight: bold; `;
-        output += `color: ` +  Factions[outputCard.side].fontColour + `; `;
+        output += `color: ` +  Nations[outputCard.side].fontColour + `; `;
         output += `">` + outputCard.subtitle + `</span></div></div></div>`;
 
         //body of card
@@ -1015,9 +983,9 @@ this.offMap = false;   ///
 
                 for (let q=0;q<num;q++) {
                     let info = outputCard.inline[inline];
-                    out += `<a style ="background-color: ` + Factions[outputCard.side].backgroundColour + `; padding: 5px;`
-                    out += `color: ` + Factions[outputCard.side].fontColour + `; text-align: center; vertical-align: middle; border-radius: 5px;`;
-                    out += `border-color: ` + Factions[outputCard.side].borderColour + `; font-family: Tahoma; font-size: x-small; `;
+                    out += `<a style ="background-color: ` + Nations[outputCard.side].backgroundColour + `; padding: 5px;`
+                    out += `color: ` + Nations[outputCard.side].fontColour + `; text-align: center; vertical-align: middle; border-radius: 5px;`;
+                    out += `border-color: ` + Nations[outputCard.side].borderColour + `; font-family: Tahoma; font-size: x-small; `;
                     out += `"href = "` + info.action + `">` + info.phrase + `</a>`;
                     inline++;                    
                 }
@@ -1033,9 +1001,9 @@ this.offMap = false;   ///
                     let ind1 = line.indexOf("[F]") + 3;
                     let ind2 = line.indexOf("[/f]");
                     let fac = line.substring(ind1,ind2);
-                    if (Factions[fac]) {
-                        lineBack = Factions[fac].backgroundColour;
-                        fontcolour = Factions[fac].fontColour;
+                    if (Nations[fac]) {
+                        lineBack = Nations[fac].backgroundColour;
+                        fontcolour = Nations[fac].fontColour;
                     }
                     line = line.replace("[F]" + fac + "[/f]","");
 
@@ -1061,7 +1029,7 @@ this.offMap = false;   ///
                     output += '<hr style="width:95%; align:center; margin:0px 0px 5px 5px; border-top:2px solid $1;">';
                 }
                 let out = "";
-                let borderColour = Factions[outputCard.side].borderColour;
+                let borderColour = Nations[outputCard.side].borderColour;
                 
                 if (inline === false || i===0) {
                     out += `<div style="display: table-row; background: #FFFFFF;; ">`;
@@ -1072,8 +1040,8 @@ this.offMap = false;   ///
                 if (inline === true) {
                     out += '<span>     </span>';
                 }
-                out += `<a style ="background-color: ` + Factions[outputCard.side].backgroundColour + `; padding: 5px;`
-                out += `color: ` + Factions[outputCard.side].fontColour + `; text-align: center; vertical-align: middle; border-radius: 5px;`;
+                out += `<a style ="background-color: ` + Nations[outputCard.side].backgroundColour + `; padding: 5px;`
+                out += `color: ` + Nations[outputCard.side].fontColour + `; text-align: center; vertical-align: middle; border-radius: 5px;`;
                 out += `border-color: ` + borderColour + `; font-family: Tahoma; font-size: x-small; `;
                 out += `"href = "` + info.action + `">` + info.phrase + `</a>`
                 
@@ -1128,10 +1096,10 @@ this.offMap = false;   ///
                 halfToggleY = -halfToggleY;
             }
         }
-        AddTerrain();    
-        AddEdges();
-        AddAreas();
-        AddTokens();
+        //AddTerrain();    
+        //AddEdges();
+        //AddAreas();
+        //AddTokens();
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
@@ -1346,7 +1314,7 @@ this.offMap = false;   ///
         let id = msg.selected[0]._id;
         let unit = UnitArray[id];
         if (!unit) {return};
-        SetupCard(unit.name,"",unit.faction);
+        SetupCard(unit.name,"",unit.nation);
         let hex = HexMap[unit.hexLabel];
         outputCard.body.push("Hex: " + unit.hexLabel);
         outputCard.body.push("Terrain: " + hex.terrain);
@@ -1416,52 +1384,6 @@ this.offMap = false;   ///
         })
     }
 
-    const NextTurn = () => {
-        let turn = state.FSD.turn;
-        ClearDice(0);
-        ClearDice(1);
-        CountDice();
-        turn++;
-        state.FSD.turn = turn;
-        //get highest command and any resets on units
-//???? Characters pick out also
-
-        let commandBonus = [0,0]
-        _.each(UnitArray,unit => {
-            if (unit.token.get("tint_color") !== "#ff0000" && unit.offMap === false) {
-                commandBonus[unit.player] = Math.max(commandBonus[unit.player],unit.command);
-            }
-            unit.moved = false;
-            unit.token.set("aura1_color","#00ff00");
-//weapons reset
-
-
-
-
-
-        })
-
-//any end turn things here
-
-
-
-
-
-        SetupCard("Turn " + turn,"","Neutral");
-        outputCard.body.push("Bring in any Reinforcements");
-        outputCard.body.push("[hr]");
-        outputCard.body.push("Roll For Initiative");
-        outputCard.body.push(state.FSD.factions[0] + " adds " + commandBonus[0]);
-        outputCard.body.push(state.FSD.factions[1] + " adds " + commandBonus[1]);
-        outputCard.body.push("[hr]");
-        outputCard.body.push("Starting with the lower result, each player can:");
-        outputCard.body.push(" - roll & reroll any Activation Dice");
-        outputCard.body.push(" - preassign any Activation Dice to Units");
-        outputCard.body.push("[hr]");
-        outputCard.body.push("Then the winner of the Initiative can pick who activates First");
-        PrintCard();
-
-    }
 
     const RollD6 = (msg) => {
         PlaySound("Dice");
@@ -1469,7 +1391,7 @@ this.offMap = false;   ///
         let playerID = msg.playerid;
         let id = msg.selected[0]._id;
         let player,unit;
-        let faction = "Neutral";
+        let nation = "Neutral";
 
         if (!id && !playerID) {
             log("Back")
@@ -1478,24 +1400,24 @@ this.offMap = false;   ///
         if (id) {
             unit = UnitArray[id];
             if (unit) {
-                faction = unit.faction;
+                nation = unit.nation;
                 player = unit.player;
             }
         }
         if ((!id || !unit) && playerID) {
-            faction = state.FSD.players[playerID];
-            player = (state.FSD.factions[0] === faction) ? 0:1;
+            nation = state.FF.players[playerID];
+            player = (state.FF.nations[0] === nation) ? 0:1;
         }
 
-        if (!state.FSD.players[playerID] || state.FSD.players[playerID] === undefined) {
-            if (faction !== "Neutral") {    
-                state.FSD.players[playerID] = faction;
+        if (!state.FF.players[playerID] || state.FF.players[playerID] === undefined) {
+            if (nation !== "Neutral") {    
+                state.FF.players[playerID] = nation;
             } else {
                 sendChat("","Click on one of your tokens then select Roll again");
                 return;
             }
         } 
-        let res = "/direct " + DisplayDice(roll,faction,40);
+        let res = "/direct " + DisplayDice(roll,nation,40);
         sendChat("player|" + playerID,res);
     }
 
@@ -1506,25 +1428,15 @@ this.offMap = false;   ///
 
     const ClearState = (msg) => {
         LoadPage();
-        ClearDice(0);
-        ClearDice(1);
         BuildMap();
 
-        state.FSD = {
+        state.FF = {
             playerIDs: ["",""],
             players: {},
-            factions: ["",""],
+            nations: ["",""],
             lines: [],
             turn: 0,
-            actDicePool: [12,12], //? change based on scenario
-            actDiceCapacity: [8,8], //""
-            readyDice: [0,0], //how many rolled for the turn, reset each turn
         }
-
-
-
-
-
         sendChat("","Cleared State/Arrays");
     }
 
@@ -1556,12 +1468,12 @@ this.offMap = false;   ///
             })
 
             let unit = new Unit(id);          
-            if (state.FSD.factions[0] === "") {
-                state.FSD.factions[0] = unit.faction;
-            } else if (state.FSD.factions[0] !== unit.faction && state.FSD.factions[1] === "") {
-                state.FSD.factions[1] = unit.faction;
+            if (state.FF.nations[0] === "") {
+                state.FF.nations[0] = unit.nation;
+            } else if (state.FF.nations[0] !== unit.nation && state.FF.nations[1] === "") {
+                state.FF.nations[1] = unit.nation;
             } 
-            let player = (state.FSD.factions[0] == unit.faction) ? 0:1;
+            let player = (state.FF.nations[0] == unit.nation) ? 0:1;
             
             unit.player = player;
 
@@ -1688,7 +1600,7 @@ this.offMap = false;   ///
         }
         let distance;
 
-        SetupCard(shooter.name,"LOS",shooter.faction);
+        SetupCard(shooter.name,"LOS",shooter.nation);
         let losResult = LOS(shooter,target);
         outputCard.body.push("Distance: " + losResult.distance);
         if (losResult.los === false) {
@@ -1868,390 +1780,6 @@ log(result)
 
 
 
-    const Activate = (msg) => {
-        let Tag = msg.content.split(";");
-        let order = Tag[1]; //could be eg Fire1 for fire weapon 1
-        let id = Tag[2];
-        let unit = UnitArray[id];
-        let actions = parseInt(unit.token.get("bar1_value"));
-        let targetInfo = [];
-        for (let t=3;t<Tag.length;t++) {
-            targetInfo.push({id: Tag[t]});
-        }
-
-        let nextRoutine = "";
-        let player = unit.player;
-
-        let errorMsg = [];
-        if (unit.token.get("aura1_color") === "#000000") {
-            errorMsg.push("Unit has already activated this turn");
-        }
-
-        SetupCard(unit.name,order,unit.faction);
-        let dice = DiceInArea(player).dice || [];
-        if (dice.length === 0 && unit.token.get(SM.command) === false) {
-            errorMsg.push("No Activation Dice to Use");
-        }
-        if (actions === 0) {
-            errorMsg.push("Unit has no more Actions this turn");
-        }
-
-        //In case of Attack, check for AD, ready, destroyed weapon and LOS as well, errorMsg if needed for each
-        if (order.includes("Attack")) {
-
-            //weapons check
-            let diceUsed = [];
-            let weapon = unit.weapons[order.replace("Attack","")];
-            if (weapon.ready === BLACK) {
-                errorMsg.push("That Weapon is Destroyed");
-            }
-            if (weapon.ready === ORANGE) {
-                errorMsg.push("That Weapon has already fired this turn");
-            }
-            if (weapon.ready === RED) {
-                //check for AD as would not be red if free
-                let rolls = DiceInArea(player).rolls;
-                let cost = weapon.ad.cost; //eg. [4,5,6] and Any or [1,2] and All
-                let has = _.intersection(rolls, cost); //returns array of values that both rolls and cost arrays have
-                let equal = _.isEqual(cost,has);  //boolean, returns true if 2 arrays are equal              
-                if (weapon.ad.needed === "Any") {
-                    if (has.length > 0) {
-                        diceUsed = [has[0]];
-                    } else {
-                        errorMsg.push("Lack Appropriate Activation Dice");
-                    }
-                }
-                if (weapon.ad.needed === "All") {
-                    if (equal === true) {
-                        diceUsed = cost;
-                    } else {
-                        errorMsg.push("Lack Appropriate Activation Dice");
-                    }
-                }
-            }
-
-            //target check - LOS, distance, arc
-            if (errorMsg.length === 0) {
-                for (let i=0;i<targetInfo.length;i++) {
-                    let targetID = targetInfo[i].id;
-                    let target = UnitArray[targetID];   
-                    if (!target) {
-                        continue;
-                    } else {
-                        let losResult = LOS(unit,target,weapon);
-        //indirect?
-                        if (losResult.los === false) {
-                            errorMsg.push(target.name + " is not in LOS");
-                            errorMsg.push(losResult.losReason);
-                        }
-                        if (losResult.distance < weapon.range.min) {
-                            errorMsg.push(target.name  + " is Too Close");
-                        }
-                        if (losResult.distance > weapon.range.max) {
-                            errorMsg.push(target.name + " is Too Far");
-                        }
-                        targetInfo[i].losResult = losResult;
-                    }
-                }
-            }
-
-
-            FireInfo = {
-                shooterID: id,
-                targetInfo: targetInfo,
-                weapon: weapon,
-                diceUsed: diceUsed,
-            }
-            nextRoutine = "Attack";
-log("Fire Info")
-log(FireInfo)
-
-        }
-
-
-
-
-
-
-
-        if (errorMsg.length > 0) {
-            _.each(errorMsg,msg => {
-                outputCard.body.push(msg);
-            })
-            PrintCard();
-            return;
-        }
-
-
-
-
-
-
-        actions = Math.max(0,actions - 1);
-
-        if (unit.token.get("tint_color") === "#ff0000") {
-            order = "Unpin";
-            //Unpin
-            outputCard.body.push("The Unit Unpins as its Action");
-        }
-
-        if (order === "Move") {
-            let move = unit.move;
-            if (unit.token.get(SM.moved) === true) {
-                move = Math.max((unit.move - 1),1);
-            }
-            outputCard.body.push("The Unit has a Move of " + move + " Hexes" );
-            if (unit.token.get(SM.moved) == true && ((unit.move - 1) > 0)) {
-                outputCard.body.push("[Reduced by 1 for prev. Movement]");
-            }
-            outputCard.body.push("Move 1 Hex at a time, taking into account Terrain Costs");
-            outputCard.body.push("Rotation at end costs 1 Hex of Movement");
-
-            unit.token.set(SM.moved,true);
-
-        }
-
-        if (order === "Control Objective") {
-            //will only be on Mechs and Vehicles
-            outputCard.body.push("The Unit Acts to Control the nearby Objective");
-        }
-
-
-
-        if (order.includes("Ability")) {
-            let additionalInfo = order.replace("Ability","");
-            AbilityInfo = {
-                id: id,
-                targetIDs: targetIDs,
-                additionalInfo: additionalInfo,
-            }
-            nextRoutine = "Ability";
-
-
-        }
-
-        
-
-        outputCard.body.push(actions + " Actions Left");
-        unit.token.set("bar1_value",actions);
-        if (actions === 0) {
-            unit.token.set("aura1_color","#000000");
-            outputCard.body.push("Unit's Turn is Over after This Action");
-        }
-        if (unit.groupIDs !== "") {
-            outputCard.body.push("The Action must be taken by all Bases in the Unit");
-            let groupIDs = unit.groupIDs.split(",");
-            _.each(groupIDs,id => {
-                let base = UnitArray[id];
-                base.token.set("aura1_color",unit.token.get("aura1_color"));
-                base.token.set("bar1_value",actions);
-                base.token.set("statusmarkers",unit.token.get("statusmarkers"));
-            })
-        }
-
-        if (nextRoutine === "Attack") {Attack()};
-        if (nextRoutine === "Ability") {Ability()};
-
-
-        if (unit.token.get(SM.command) === false) {
-            outputCard.body.push("[hr]");
-            outputCard.body.push("Spend an Activation Dice");
-        }
-        PrintCard();        
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-    const Attack = () => {
-        let shooter = UnitArray[FireInfo.shooterID];
-        let targetInfo = FireInfo.targetInfo; //id and LOS from activate
-        let weapon = FireInfo.weaponNum;
-        let shooterTip = "";
-        //already have checked for AD, ready etc and errored in Activation if lacking
-
-        if (FireInfo.diceUsed.length > 0) {
-            //'load' using AD
-            let dice = DiceInArea(shooter.player).dice;
-            _.each(FireInfo.diceUsed,roll => {
-                let index = dice.map((e) => e.roll).indexOf(roll);
-                let die = dice[index];
-                if (die) {
-                    let id = die.id;
-                    let token = findObjs({_type:"graphic", id: id})[0];
-                    if (token) {token.remove()};
-                }
-            })
-            shooterTip += "AD Used: " + FireInfo.diceUsed.toString();
-        }
-
-        
-
-
-
-
-
-
-
-
-
-
-        
-    }
-
-    const CountDice = () => {
-        //determine # of Ready AD to roll
-        for (let p=0;p<2;p++) {
-            let number = state.FSD.actDicePool[p];
-            //check if any dice 'out' on units;
-            _.each(UnitArray,unit => {
-                if (unit.player === p) {
-                    let weapons = unit.weapons;
-                    _.each(weapons,weapon => {
-                        if (weapon.ad.cost !== "Free" && weapon.ready === GREEN) {
-                            let cost = 1;
-                            if (weapon.ad.needed.includes("All")) {
-                                cost = weapon.ad.cost.length;
-                            } 
-                            number -= cost;
-                        }
-                    })
-                }
-            })    
-            number = Math.min(number,state.FSD.actDiceCapacity[p]);
-            //lower of pool - dice out vs capacity
-            state.FSD.readyDice[p] = number;
-        }
-    }
-
-    const RollAD = (msg) => {
-        let playerID = msg.playerid;
-        let id = msg.selected[0]._id;
-        let faction,player,unit;
-        if (!id && !playerID) {
-            log("Back")
-            return;
-        }
-        if (id) {
-            unit = UnitArray[id];
-            if (unit) {
-                faction = unit.faction;
-                player = unit.player;
-            }
-        }
-        if ((!id || !unit) && playerID) {
-            faction = state.FSD.players[playerID];
-            player = (state.FSD.factions[0] === faction) ? 0:1;
-        }
-        //count dice in square
-        let results = DiceInArea(player);
-log(results)
-        let count = results.dice.length;
-        let number = state.FSD.readyDice[player] - count;
-        //using the vertices of the area, divide the area up and place the dice
-        let rolls = results.rolls;
-        ClearDice(player);
-        for (let i=0;i<number;i++) {
-            let roll = randomInteger(6);
-            rolls.push(roll);
-        }
-        rolls.sort();
-        let vertices = MapAreas["AD" + player];
-        let width = vertices[1].x - vertices[0].x;
-        let height = vertices[1].y - vertices[0].y;
-
-        let halfDW = diceWidth * .5;
-        let outsideW = Math.round((width - (diceWidth * state.FSD.readyDice[player]) - (halfDW * (state.FSD.readyDice[player] -1)))/2);
-        let outsideH = Math.round((height - diceWidth)/2);
- 
-        let posX = vertices[0].x + outsideW + halfDW;
-        let posY = vertices[0].y + outsideH + halfDW;
-
-        for (let i=0;i<rolls.length;i++) {
-            CreateDice(rolls[i],faction,posX,posY);
-            posX += (diceWidth * 1.5);
-        }
-    }
-
-
-    const CreateDice = (roll,faction,x,y) => {
-        roll = roll.toString();
-        let table = findObjs({type:'rollabletable', name: faction})[0];
-        if (!table) {
-            table = findObjs({type:'rollabletable', name: "Neutral"})[0];
-        }
-        let obj = findObjs({type:'tableitem', _rollabletableid: table.id, name: roll })[0];        
-        let avatar = obj.get('avatar');
-        let img = getCleanImgSrc(avatar);
-        let player = (state.FSD.factions[0] === faction) ? 0:1;
-
-        let newToken = createObj("graphic", {
-            left: x,
-            top: y,
-            width: diceWidth,
-            height: diceWidth, 
-            name: player + " Dice " + roll,
-            pageid: Campaign().get("playerpageid"),
-            imgsrc: img,
-            layer: "objects",
-            controlledby: "all",
-            disableSnapping: true,
-            disableTokenMenu: false,
-        })
-
-        if (newToken) {
-            toFront(newToken);
-        } 
-    }
-
-    const ClearDice = (player) => {
-        let dice = DiceInArea(player).dice;
-        _.each(dice,die => {
-            let token = findObjs({_type:"graphic", id: die.id})[0];
-            if (token) {
-                token.remove();
-            }
-        })
-    }
-
-    const DiceInArea = (player) => {
-        let vertices = MapAreas["AD" + player];
-        let tokens = findObjs({_pageid:  Campaign().get("playerpageid") ,_type: "graphic"});
-        let dice = [];
-        let rolls = [];
-
-        _.each(tokens,token => {
-            let name = token.get("name").split(" ");
-            let dicePlayer = parseInt(name[0]);
-            if (dicePlayer === player) {
-                let x = token.get("left");
-                let y = token.get("top");
-                if (x < vertices[0].x || x > vertices[1].x || y < vertices[0].y || y > vertices[1].y) {
-                    return;
-                };
-                let roll = parseInt(name[2]);
-                let die = {
-                    roll: roll,
-                    id: token.get("id"),
-                }
-                dice.push(die);
-                rolls.push(roll);
-            }
-        })
-        let results = {
-            dice: dice,
-            rolls: rolls,
-        }
-        return results;
-    }
 
     const LocationChange = (tok,prev) => {
         let distance = 0;
@@ -2285,7 +1813,7 @@ log(results)
 
 
 
-        if (state.FSD.turn > 0) {
+        if (state.FF.turn > 0) {
             let unit = UnitArray[tok.get("id")];
             if (!unit) {return};
             if (info.distance > 0) {
@@ -2355,7 +1883,7 @@ log(results)
         switch(args[0]) {
             case '!Dump':
                 log("State");
-                log(state.FSD);
+                log(state.FF);
                 log("Units");
                 log(UnitArray);
                 log("Map Areas");
@@ -2382,20 +1910,9 @@ log(results)
             case '!AddUnits':
                 AddUnits(msg);
                 break;
-            case '!NextTurn':
-                NextTurn();
-                break;
-            case '!Activate':
-                Activate(msg);
-                break;
-            case '!Attack':
-                Attack(msg);
-                break;
+
             case '!RollD6':
                 RollD6(msg);
-                break;
-            case '!RollAD':
-                RollAD(msg);
                 break;
 
         }
@@ -2411,7 +1928,7 @@ log(results)
         on('destroy:graphic',destroyGraphic);
     };
     on('ready', () => {
-        log("===> FSD <===");
+        log("===> FF <===");
         log("===> Software Version: " + version + " <===")
         LoadPage();
         PlayerIDs();
