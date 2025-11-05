@@ -197,8 +197,13 @@ section {
   grid-area: weap;
   background-color: white;
     align-items: center;
-
 }
+
+.weap h3 {
+  text-align: center;
+  color: black;
+}
+
 
 .weaponinfo{
   grid-area: weaponinfo;
