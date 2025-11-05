@@ -131,6 +131,14 @@ section {
 
 }
 
+.header2 {
+  grid-area: header2;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+
+}
+
 
 .attr {
   grid-area: attr;
