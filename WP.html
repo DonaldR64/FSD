@@ -33,6 +33,8 @@
                 <option value="Super-Heavy">Super-Heavy</option>
             </select>        
             <label>Command:</label><input type="checkbox" name="attr_command" value="1">
+            <label>Height:</label><input type="text" name="attr_height">
+            <label>Unit Strength:</label><input type="text" name="attr_us">
             <label>Speed:</label><input type="text" name="attr_speed">
             <label>Shoot:</label><input type="text" name="attr_shoot">
             <label>Assault:</label><input type="text" name="attr_assault">
@@ -51,11 +53,9 @@
                 <tr>
                 <th>Equipped</th>
                 <th>Weapon</th>
-                <th>Type</th>
                 <th>Range</th>
                 <th>Attack</th>
-                <th>AP</th>
-                <th>Special</th>
+                <th>Keywords</th>
                 <th>F/X</th>
                 <th>Sound</th>
                 </tr>
@@ -67,22 +67,9 @@
                         <option value = "Equipped">Equipped</option>
                     </select></td>
                     <td><input type="text" name="attr_weapon1name"></td>
-                    <td><select name="attr_weapon1type">
-                        <option value="" selected disabled hidden>Choose here</option>
-                        <option value="Rifle">Rifle</option>
-                        <option value="CCW">CCW</option>
-                        <option value="Heavy">Heavy</option>
-                        <option value="Heavy2">Heavy</option>
-                        <option value="Sniper">Sniper</option>
-                        <option value="Pistol">Pistol</option>
-                        <option value="Mod">Mod</option>
-                        <option value="Bomb">Bomb</option>
-
-                    </select></td>      
                     <td><input type="text" name="attr_weapon1range"></td>
                     <td><input type="number" name="attr_weapon1attack"></td>
-                    <td><input type="number" name="attr_weapon1ap"></td>
-                    <td><input type="text" name="attr_weapon1special"></td>
+                    <td><input type="text" name="attr_weapon1keywords"></td>
                     <td><input type="text" name="attr_weapon1fx"></td>
                     <td><input type="text" name="attr_weapon1sound"></td>                
                 </tr>
@@ -92,24 +79,11 @@
                         <option value = "Equipped">Equipped</option>
                     </select></td>
                     <td><input type="text" name="attr_weapon2name"></td>
-                    <td><select name="attr_weapon2type">
-                        <option value="" selected disabled hidden>Choose here</option>
-                        <option value="Rifle">Rifle</option>
-                        <option value="CCW">CCW</option>
-                        <option value="Heavy">Heavy</option>
-                        <option value="Heavy2">Heavy</option>
-                        <option value="Sniper">Sniper</option>
-                        <option value="Pistol">Pistol</option>
-                        <option value="Mod">Mod</option>
-                        <option value="Bomb">Bomb</option>
-
-                    </select></td>  
                     <td><input type="text" name="attr_weapon2range"></td>
                     <td><input type="number" name="attr_weapon2attack"></td>
-                    <td><input type="number" name="attr_weapon2ap"></td>
-                    <td><input type="text" name="attr_weapon2special"></td>
+                    <td><input type="text" name="attr_weapon2keywords"></td>
                     <td><input type="text" name="attr_weapon2fx"></td>
-                    <td><input type="text" name="attr_weapon2sound"></td>    
+                    <td><input type="text" name="attr_weapon2sound"></td>   
                 </tr>
                 <tr>
                     <td><select name="attr_weapon3equipped">
