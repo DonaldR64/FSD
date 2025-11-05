@@ -132,15 +132,10 @@ section {
 
 }
 
-.header2 {
-  grid-area: header2;
-  align-items: center;
-  justify-content: center;
-  background-color: white;
-
+.header h4 {
+  text-align: center;
+  color: black;
 }
-
-
 .attr {
   grid-area: attr;
   background-color: white;
