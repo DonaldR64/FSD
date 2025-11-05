@@ -9,7 +9,7 @@
 /* show the selected tab */
 .sheet-tabstoggle[value="input"] ~ div.sheet-input,
 .sheet-tabstoggle[value="display"] ~ div.sheet-display,
-.sheet-tabstoggle[value="abilities"] ~ div.sheet-keywords {
+.sheet-tabstoggle[value="keywords"] ~ div.sheet-keywords {
     display: block;
 }
 
@@ -28,7 +28,7 @@ input[type="hidden"][name="attr_faction"] ~ .mysheet {
 input[type="hidden"][name="attr_faction"][value="Enforcers"] ~ .mysheet {
     background-color: #0437F2;
 }
-input[type="hidden"][name="attr_faction"][value="Orks"] ~ .mysheet {
+input[type="hidden"][name="attr_faction"][value="Marauders"] ~ .mysheet {
   background-color: #3a8000;
 }
 
