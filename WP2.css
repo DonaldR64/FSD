@@ -233,6 +233,90 @@ input[type="hidden"][value="Off"].weapon1-status ~ .weapon1{
 }
 
 
+/* Weapon 2 */
+input[type="hidden"][value="Off"].weapon2-status ~ .weapon2{
+    display: none;
+}
+ 
+.weapon2 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 3fr 1fr 1fr 3fr;
+    grid-template-rows: 1;
+    background-color: white;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+/* Weapon 3 */
+input[type="hidden"][value="Off"].weapon3-status ~ .weapon3{
+    display: none;
+}
+input[type="hidden"][value="Equipped"].weapon3-status ~ .weapon3{
+    display: grid;
+}
+  
+.weapon3 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 3fr 1fr 1fr 3fr;
+    grid-template-rows: 1;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+/* Weapon 4 */
+input[type="hidden"][value="Off"].weapon4-status ~ .weapon4{
+    display: none;
+}
+input[type="hidden"][value="Equipped"].weapon4-status ~ .weapon4{
+    display: grid;
+}
+  
+.weapon4 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 3fr 1fr 1fr 3fr;
+    grid-template-rows: 1;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+/* Weapon 5 */
+input[type="hidden"][value="Off"].weapon5-status ~ .weapon5{
+    display: none;
+}
+input[type="hidden"][value="Equipped"].weapon5-status ~ .weapon5{
+    display: grid;
+}
+  
+.weapon5 {
+    display: grid;
+    grid-gap: 1px;
+  grid-template-columns: 3fr 1fr 1fr 3fr;
+    grid-template-rows: 1;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .specials {
   grid-area: specials;
