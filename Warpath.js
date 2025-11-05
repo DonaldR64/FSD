@@ -134,18 +134,36 @@ const Warpath = (() => {
 
 
     //height is height of terrain element
+    //Hills will be elevations lines - height 3 per elevation
+    //move: 0 = Open, 1 = Difficult, 2 = Impassable
+    //move arrays are: Infantry + Heavy Infantry / Bike / Walker / Vehicle / Super(Heavy)
+    //cover - ignore wall adjacent for firing unit 
+    //woods LOS Is 2 hexes in, ignore edge hex for cover firing out
 
-    const LinearTerrain = {
-        "Bocage": {name: "Bocage",height: 2,los: 1},
-        "Trench": {name: "Trench",height: 0,los: 0},
+
+    const EdgeInfo = {
+        "Hedge": {name: "Hedge",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
+       "Wall": {name: "Wall",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
+        "High Wall": {name: "High Wall",height: 2,move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
+
 
 
     }
 
+
+
+
+
     const AreaTerrain = {
-        "Emplacement": {name: "Emplacement",height: 1,los: 2},
-
-
+        "Woods": {name: "Woods",height: 4,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 1},cover:  {infantry: true, bike: true, walker: true, vehicle: true, super: true}},
+        "Craters": {name: "Craters",height: 0,move: {infantry: 0, bike: 1, walker: 0, vehicle: 0, super: 0}, cover: {infantry: true, bike: true, walker: true, vehicle: false, super: false}},
+        "Rubble": {name: "Rubble",height: 0,move: {infantry: 0, bike: 1, walker: 0, vehicle: 0, super: 0}, cover: {infantry: true, bike: true, walker: true, vehicle: false, super: false}},
+        "Broken Ground": {name: "Broken Ground",height: 0,move: {infantry: 0, bike: 1, walker: 0, vehicle: 0, super: 0}, cover: {infantry: true, bike: true, walker: true, vehicle: false, super: false}},
+        "Low Building": {name: "Low Building",height: 4,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2}, cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
+        "Med Building": {name: "Med Building",height: 6,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
+        "Tall Building": {name: "Tall Building",height: 8,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
+        "River": {name: "River",height: 0, move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 1},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
+        "Ruins": {name: "Ruins", height: 4,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}}
 
     }
 
