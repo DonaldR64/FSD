@@ -49,6 +49,8 @@ main {
   grid-template-areas:"header   common"
                       "header2   common"
                       "attr     attr"
+                      "key      key"
+                      "weap     weap"
                       "weap     weap";
 }
 
@@ -205,6 +207,12 @@ section {
 }
 
 
+.key {
+  grid-area: weap;
+  background-color: white;
+    align-items: center;
+
+}
 
 
 
