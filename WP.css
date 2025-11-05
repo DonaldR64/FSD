@@ -1,15 +1,15 @@
+@import url('https://fonts.googleapis.com/css?family=Bokor|Arsenal&display=swap');
+
 /*Configure the tab buttons*/
 .sheet-input,
-.sheet-display,
-.sheet-keywords {
+.sheet-display {
     display: none;
 }
 
 
 /* show the selected tab */
 .sheet-tabstoggle[value="input"] ~ div.sheet-input,
-.sheet-tabstoggle[value="display"] ~ div.sheet-display,
-.sheet-tabstoggle[value="keywords"] ~ div.sheet-keywords {
+.sheet-tabstoggle[value="display"] ~ div.sheet-display {
     display: block;
 }
 
@@ -157,13 +157,18 @@ section {
 .common {
   grid-area: common;
   background-color: white;
+  align-items: center;
+
 }
 
 .common > img {
-  object-fit: contain;
-  width: 100%;
-  max-height: 100%;
+    object-fit: contain;
+    width: 100%;
+    max-height: 100%;
+    align-self: center;
+    justify-self: center;
 }
+
 
 
 .att {
@@ -281,51 +286,5 @@ input[type="hidden"][value="Equipped"].weapon5-status ~ .weapon5{
     text-align: center;
     align-items: center;
     padding: 3px;
-}
-
-
-.spheader {
-  text-align: center;
-}
-
-.spheader h2 {
-  text-align: center;
-  color: white;
-}
-
-input[type="hidden"][name="attr_faction"]:is([value="Deathguard"],[value="Space Wolves"],[value="Grey Knights"],[value="Ratlings"],[value="Goblins"],[value="Slaanesh"],[value="Infected Colony"],[value="Eldar"]) ~ .spheader h2 {
-  color: black;
-}
-input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .spheader h2 {
-  color:  #39FF14;
-}
-
-
-.spbody h4 {
-  color: white;
-}
-input[type="hidden"][name="attr_faction"]:is([value="Deathguard"],[value="Space Wolves"],[value="Grey Knights"],[value="Ratlings"],[value="Goblins"],[value="Slaanesh"],[value="Infected Colony"],[value="Eldar"]) ~ .spbody {
-  color: black;
-}
-input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .spbody {
-  color:  #39FF14;
-}
-.item span {
-  font-size: 14px;
-}
-
-.spbody {
-  color: white;
-  align-items: center;
-  text-align: center;
-  padding: 0px 0px 0px 20px;
-}
-
-.item {
-  align-items: left;
-  width: fit-content;
-  padding: 5px;
-  text-align: left;
-  margin-bottom: 1em;
 }
 

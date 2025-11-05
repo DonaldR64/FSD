@@ -2,7 +2,6 @@
 <div>
     <button type="action" name="act_input" >Input</button>
     <button type="action" name="act_display" >Display</button>
-    <button type="action" name="act_keywords" >Keywords</button>
 </div>
 
 <div class="sheet-input">
@@ -131,22 +130,19 @@
 </div>
 
 
-
 <div class="sheet-display">
     <input type="hidden" name="attr_faction"/>
-
     <div class="mysheet">
       <div class="attributes">
 
         <main>
-        <input type="hidden" name="attr_faction"/>
-          <section class="header f-center">
+          <section class="header">
             <h1><span name="attr_character_name"></span></h1>
             <h3><span name="attr_faction"></span> <span name="attr_type"></span></h3>
           </section>
 
-          <section class="common f-center">
-              <img alt="Character Avatar" name="attr_character_avatar"/>
+          <section class="common">
+              <img alt="Character Avatar" name="attr_character_avatar" style="width:600px;height:auto; bottom: 0;"/>
           </section>
 
           <section class="att">
@@ -225,11 +221,8 @@
                 <h4><span name="attr_weapon5attack"></span></h4>
                 <h4><span name="attr_weapon5keywords"></span></h4>
             </div>
-
-
-
-
           </section>
+
         </main>
       </div>
     </div>    
@@ -237,7 +230,7 @@
 
 
 <script type="text/worker">
-    const buttonlist = ["input","display","keywords"];
+    const buttonlist = ["input","display"];
     buttonlist.forEach(button => {
         on(`clicked:${button}`, function() {
             setAttrs({
