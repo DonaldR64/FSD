@@ -15,20 +15,18 @@
             <select name="attr_type">
                 <option value="" selected disabled hidden>Choose here</option>
                 <option value="Infantry">Infantry</option>
-                <option value="Heavy Infantry">Heavy Infantry</option>
-                <option value="Bikes">Bikes</option>
                 <option value="Vehicle">Vehicle</option>
                 <option value="Walker">Walker</option>
-                <option value="Super-Heavy">Super-Heavy</option>
+                <option value="Air">Air</option>
             </select>
             <br>
-            <label>Command:</label><input type="checkbox" name="attr_command" value="1">
+            <label>Class:</label><input type="number" name="attr_class">
             <br>
             <label for="attr_faction">Faction:</label>
             <select name="attr_faction">
                 <option value="" selected disabled hidden>Choose here</option>
-                <option value="Enforcers">Enforcers</option>
-                <option value="Marauders">Marauders</option>
+                <option value="Syndicate">Syndicate</option>
+                <option value="Consortium">Consortium</option>
                
             </select>
 
@@ -36,16 +34,15 @@
 
         </div>
         <div class="col">
-            <h3>Attributes</h3>            
-            <label># of Bases:</label><input type="number" name="attr_bases">
-            <label>Height:</label><input type="text" name="attr_height">
-            <label>Unit Strength:</label><input type="text" name="attr_us">
-            <label>Speed:</label><input type="text" name="attr_speed">
-            <label>Shoot:</label><input type="text" name="attr_shoot">
-            <label>Assault:</label><input type="text" name="attr_assault">
-            <label>Armour:</label><input type="text" name="attr_armour">
-            <label>Save:</label><input type="text" name="attr_save">
-            <label>Keywords:</label><input type="text" name="attr_keywords"
+            <h3>Max Attributes</h3>
+            <label>Mobility:</label><input type="number" name="attr_mobility_max">
+            <br>
+            <label>Firepower:</label><input type="number" name="attr_fp_max">
+            <br>
+            <label>Armour:</label><input type="number" name="attr_armour_max>
+            <br>
+            <label>Defence:</label><input type="number" name="attr_defence_max">
+
         </div>
     </div>    
 
