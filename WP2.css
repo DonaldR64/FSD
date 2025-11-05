@@ -204,22 +204,28 @@ section {
   grid-area: weaponinfo;
   display: grid;
   grid-gap: 2px;
-  grid-template-columns: 5fr 1fr 1fr 3fr;
+  grid-template-columns: 3fr 1fr 1fr 3fr;
   grid-template-rows: 1fr;
   background-color: white;
   text-align: center;
   align-items: center;
 }
 
-
-
-.key {
-  grid-area: key;
-  background-color: white;
-    align-items: center;
-
+/* Weapon 1 */
+input[type="hidden"][value="Off"].weapon1-status ~ .weapon1{
+    display: none;
 }
 
+.weapon1 {
+    display: grid;
+    grid-gap: 1px;
+    grid-template-columns: 3fr 1fr 1fr 3fr;
+    grid-template-rows: 1;
+    background-color: white;
+    text-align: center;
+    align-items: center;
+    padding: 3px;
+}
 
 
 
