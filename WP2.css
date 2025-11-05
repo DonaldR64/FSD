@@ -44,13 +44,13 @@ main {
   width: 800px;
   height: 450px;
   grid-gap: 4px;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"header header common common common"
-                      "header header common common common"
-                      "attr   attr   attr2  attr2  attr2"
-                      "weap   weap   weap   weap   weap"
-                      "weap   weap   weap   weap   weap";
+  grid-template-areas:"header common"
+                      "header common"
+                      "attr   attr2"
+                      "weap   weap"
+                      "weap   weap";
 }
 
 
@@ -143,24 +143,6 @@ section {
   align-items: center;
 
 }
-.attr h4 {
-  text-align: center;
-  color: black;
-}
-
-
-
-
-.attrinfo{
-  grid-area: attrinfo;
-  display: grid;
-  grid-gap: 2px;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  background-color: white;
-  text-align: center;
-  align-items: center;
-}
 
 .attr2 {
   grid-area: attr2;
@@ -168,23 +150,23 @@ section {
   align-items: center;
 
 }
-.attr2 h4 {
-  text-align: center;
-  color: black;
-}
 
 
 
-
-.attr2info{
+.attrinfo{
   grid-area: attrinfo;
   display: grid;
   grid-gap: 2px;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr;
   background-color: white;
   text-align: center;
   align-items: center;
+}
+
+.attrinfo h4 {
+  text-align: center;
+  color: black;
 }
 
 
