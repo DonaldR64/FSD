@@ -47,7 +47,7 @@ main {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr;
   grid-template-areas:"header   common"
-                      "header   common"
+                      "header2   common"
                       "attr     attr"
                       "weap     weap";
 }
