@@ -623,7 +623,7 @@ const Warpath = (() => {
             this.faction = aa.faction || "Neutral";
             this.player = (this.faction === "Neutral") ? 2:(state.Warpath.factions[0] === this.faction)? 0:1;
             this.unitkey = aa.unitkey || " ";
-
+            this.bases = parseInt(aa.bases);
             this.type = aa.type;
             this.height = parseInt(aa.height);
             this.speed = aa.speed.split("/").map(e => {return parseInt(e)}) || [0,0];
@@ -632,7 +632,8 @@ const Warpath = (() => {
             this.assault = parseInt(aa.assault) || 0;
             this.armour = parseInt(aa.armour) || 0;
             this.save = parseInt(aa.save) || 0;
-
+            
+            this.unitID = "";
 
 
 
@@ -699,6 +700,31 @@ const Warpath = (() => {
 
 
     }
+
+    class Unit {
+        constructor(mID,uID) {
+            let refModel = ModelArray[mID];
+            this.faction = refModel.faction;
+            this.player = refModel.player;
+            this.bases = refModel.bases;
+            this.type = refModel.type;
+            if (!uID) {
+                uID = stringGen();
+            }
+            this.id = uID;
+            this.tokenIDs = [];
+            UnitArray[uID] = this;
+        }
+
+        AddModel(mID) {
+            this.tokenIDs.push(mID);
+            ModelArray[mID].unitID = this.id;
+        }
+
+
+    }
+
+
 
 
 
@@ -1100,8 +1126,19 @@ log(vertices)
         tokens.forEach((token) => {
             let character = getObj("character", token.get("represents"));   
             if (character) {
+                let unitID = decodeURIComponent(token.get("gmnotes")).toString();       
                 let model = new Model(token.id);
+                if (unitID) {
+                    let unit = UnitArray[unitID];         
+                    if (!unit) {
+                        unit = new Unit(token.id,unitID);
+                    }
+                    unit.AddModel(token.id);
+                }
             }  
+
+
+
         });
         let elapsed = Date.now()-start;
         log(`${c} token${s} checked in ${elapsed/1000} seconds - ` + Object.keys(ModelArray).length + " placed in Model Array");
@@ -1123,6 +1160,16 @@ log(vertices)
             }
         })
     }
+
+    const stringGen = () => {
+        let text = "";
+        let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (let i = 0; i < 6; i++) {
+            text += possible.charAt(Math.floor(randomInteger(possible.length)));
+        }
+        return text;
+    };
+
 
 
     const PlaceTarget = (msg) => {
