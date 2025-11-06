@@ -1126,38 +1126,12 @@ this.offMap = false;   ///
         AddElevations();
         AddTerrain();    
         //AddEdges(); - ? change to linear terrain ?
-        //AddAreas(); //for placing dice ?
         //AddTokens();
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
 
-    const AddAreas = () => {
-        //define areas with lines
-        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map", shape: "rec"});
-        let areas = [
-            {stroke: "#ff0000", area: "AD0"},
-            {stroke: "#000000", area: "AD1"},
-            {stroke: "#cc0000", area: "Reinforce0"},
-            {stroke: "#434343", area: "Reinforce1"},
-            {stroke: "#a64d79", area: "Reserve0"},
-            {stroke: "#666666", area: "Reserve1"},
-            {stroke: "#ff00ff", area: "Map"},
-        ]
 
-
-
-        _.each(paths,path => {
-            for (let i=0;i<areas.length;i++) {
-                let stroke = areas[i].stroke;
-                let area = areas[i].area;
-                if (path.get("stroke").toLowerCase() === stroke) {
-                    let vertices = translatePoly(path);
-                    MapAreas[area] = vertices;
-                }
-            }
-        });
-    }
 
 
 
