@@ -141,7 +141,7 @@ const Warpath = (() => {
     //woods LOS Is 2 hexes in, ignore edge hex for cover firing out
 
 
-    const EdgeInfo = {
+    const LinearTerrain = {
         "#00ff00": {name: "Hedge",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
        "#980000": {name: "Wall",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
         "#ff0000 Wall": {name: "High Wall",height: 2,move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
@@ -164,13 +164,16 @@ const Warpath = (() => {
         "Tall Building": {name: "Tall Building",height: 8,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
         "River": {name: "River",height: 0, move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 1},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
         "Ruins": {name: "Ruins", height: 4,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
-
+        "Open": {name: "Open Ground", height: 0,move: {infantry: 0, bike: 0, walker: 0, vehicle: 0, super: 0},cover: {infantry: false, bike: false, walker: false, vehicle: false, super: false}},
 
 
 
     }
 
-
+    const HillLevels = {
+        "000000": 1,
+        "666666": 2,
+    }
 
 
 
@@ -569,6 +572,7 @@ const Warpath = (() => {
     };
 
     class Hex {
+        //hex will have its elevation and the hexes terrain which can reference TerrainInfo for other details
         constructor(point) {
             this.centre = point;
             let offset = point.toOffset();
@@ -576,18 +580,8 @@ const Warpath = (() => {
             this.tokenIDs = [];
             this.cube = offset.toCube();
             this.label = offset.label();
-
-            this.los = "Open";
-            this.move = "Open";
             this.elevation = 0;
-            this.terrainHeight = 0;
-            this.edges = {};
-            _.each(DIRECTIONS,a => {
-                this.edges[a] = "Open";
-            })
-            this.terrain = ["Open"]
-
-
+            this.terrain = "Open";
             HexMap[this.label] = this;
         }
     }
@@ -1113,8 +1107,9 @@ this.offMap = false;   ///
                 halfToggleY = -halfToggleY;
             }
         }
-        //AddTerrain();    
-        //AddEdges();
+        //AddElevations();
+        AddTerrain();    
+        //AddEdges(); - ? change to linear terrain ?
         //AddAreas();
         //AddTokens();
         let elapsed = Date.now()-startTime;
@@ -1196,34 +1191,47 @@ this.offMap = false;   ///
 
 
     const AddTerrain = () => {
-        //add terrain using tokens
+        //add terrain using tokens on map page, either on top or under map
         let tokens = findObjs({_pageid: Campaign().get("playerpageid"),_type: "graphic",_subtype: "token",layer: "map",});
         _.each(tokens,token => {
             let name = token.get("name");
     log(name)
             let terrain = TerrainInfo[name];
             if (terrain) {
-                if (!terrain.elevation) {terrain.elevation = 0};
                 let centre = new Point(token.get("left"),token.get('top'));
                 let centreLabel = centre.toCube().label();
                 let hex = HexMap[centreLabel];
-                if (hex.terrain.includes("Open")) {
-                    hex.terrain = [];
-                    hex.los = "";
-                    hex.move = "";
-                }
-                if (hex.terrain.includes(terrain.name) === false) {
-                    hex.terrain.push(terrain.name);
-                    hex.elevation = Math.max(hex.elevation,terrain.elevation);
-                    hex.terrainHeight = Math.max(terrain.height, hex.terrainHeight);
-                    hex.los = terrain.los;
-                    hex.move = terrain.move;
-                }
-
+                hex.terrain = name;
             }
         })
 
     }
+
+    const AddElevations = () => {
+        //use terrain lines to build elevations
+        let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
+        _.each(paths,path => {
+            let type = EdgeInfo[path.get("stroke").toLowerCase()];
+            let level = HillLevels[type];
+            if (level) {
+                let vertices = translatePoly(path);
+
+
+
+
+            }
+
+
+
+        }
+
+
+
+
+    }
+
+
+
 
 
      
