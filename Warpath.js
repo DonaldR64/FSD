@@ -142,9 +142,9 @@ const Warpath = (() => {
 
 
     const LinearTerrain = {
-        "#00ff00": {name: "Hedge",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
-       "#980000": {name: "Wall",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
-        "#ff0000 Wall": {name: "High Wall",height: 2,move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
+        "#00ff00": {name: "Hedge",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
+       "#980000": {name: "Wall",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
+        "#ff0000 Wall": {name: "High Wall",height: 2,move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
 
 
 
@@ -170,9 +170,10 @@ const Warpath = (() => {
 
     }
 
-    const HillLevels = {
-        "000000": 1,
-        "666666": 2,
+    const HillHeights = {
+        //each level has a height of 3
+        "#000000": 3,
+        "#666666": 6,
     }
 
 
@@ -237,6 +238,21 @@ const Warpath = (() => {
         }
     }
 
+    const pointInPolygon = (point,vertices) => {
+        //evaluate if point is in the polygon
+        px = point.x
+        py = point.y
+        collision = false
+        len = vertices.length - 1
+        for (let c=0;c<len;c++) {
+            vc = vertices[c];
+            vn = vertices[c+1]
+            if (((vc.y >= py && vn.y < py) || (vc.y < py && vn.y >= py)) && (px < (vn.x-vc.x)*(py-vc.y)/(vn.y-vc.y)+vc.x)) {
+                collision = !collision
+            }
+        }
+        return collision
+    }
 
     const translatePoly = (poly) => {
         //translate points in a pathv2 polygon to map points
@@ -1107,10 +1123,10 @@ this.offMap = false;   ///
                 halfToggleY = -halfToggleY;
             }
         }
-        //AddElevations();
+        AddElevations();
         AddTerrain();    
         //AddEdges(); - ? change to linear terrain ?
-        //AddAreas();
+        //AddAreas(); //for placing dice ?
         //AddTokens();
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
@@ -1195,7 +1211,6 @@ this.offMap = false;   ///
         let tokens = findObjs({_pageid: Campaign().get("playerpageid"),_type: "graphic",_subtype: "token",layer: "map",});
         _.each(tokens,token => {
             let name = token.get("name");
-    log(name)
             let terrain = TerrainInfo[name];
             if (terrain) {
                 let centre = new Point(token.get("left"),token.get('top'));
@@ -1210,24 +1225,22 @@ this.offMap = false;   ///
     const AddElevations = () => {
         //use terrain lines to build elevations
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
+log(paths)
         _.each(paths,path => {
-            let type = EdgeInfo[path.get("stroke").toLowerCase()];
-            let level = HillLevels[type];
-            if (level) {
+            let elevation = HillHeights[path.get("stroke").toLowerCase()];
+log(elevation)
+            if (elevation) {
+                elevation = parseInt(elevation);
                 let vertices = translatePoly(path);
-
-
-
-
+log(vertices)
+                _.each(HexMap,hex => {
+                    let result = pointInPolygon(hex.centre,vertices);
+                    if (result === true) {
+                        hex.elevation = Math.max(hex.elevation,elevation);
+                    }
+                });
             }
-
-
-
-        }
-
-
-
-
+        });
     }
 
 
@@ -1879,10 +1892,7 @@ log(result)
             case '!Dump':
                 log("State");
                 log(state.Warpath);
-                log("Units");
-                log(UnitArray);
-                log("Map Areas");
-                log(MapAreas);
+                log(HexMap["M24"])
                 break;
             case '!ClearState':
                 ClearState(msg);
