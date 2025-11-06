@@ -142,9 +142,9 @@ const Warpath = (() => {
 
 
     const EdgeInfo = {
-        "Hedge": {name: "Hedge",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
-       "Wall": {name: "Wall",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
-        "High Wall": {name: "High Wall",height: 2,move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
+        "#00ff00": {name: "Hedge",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
+       "#980000": {name: "Wall",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
+        "#ff0000 Wall": {name: "High Wall",height: 2,move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: TextTrackCue, super: false}},
 
 
 
@@ -154,7 +154,7 @@ const Warpath = (() => {
 
 
 
-    const AreaTerrain = {
+    const TerrainInfo = {
         "Woods": {name: "Woods",height: 4,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 1},cover:  {infantry: true, bike: true, walker: true, vehicle: true, super: true}},
         "Craters": {name: "Craters",height: 0,move: {infantry: 0, bike: 1, walker: 0, vehicle: 0, super: 0}, cover: {infantry: true, bike: true, walker: true, vehicle: false, super: false}},
         "Rubble": {name: "Rubble",height: 0,move: {infantry: 0, bike: 1, walker: 0, vehicle: 0, super: 0}, cover: {infantry: true, bike: true, walker: true, vehicle: false, super: false}},
@@ -163,7 +163,10 @@ const Warpath = (() => {
         "Med Building": {name: "Med Building",height: 6,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
         "Tall Building": {name: "Tall Building",height: 8,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
         "River": {name: "River",height: 0, move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 1},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
-        "Ruins": {name: "Ruins", height: 4,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}}
+        "Ruins": {name: "Ruins", height: 4,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
+
+
+
 
     }
 
@@ -1149,11 +1152,8 @@ this.offMap = false;   ///
 
 
 
-
+    //terrain that is edges - hedges, walls, barricades and such
     const AddEdges = () => {
-
- //add other types from edgeinfo
-
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
         _.each(paths,path => {
             let type = EdgeInfo[path.get("stroke").toLowerCase()];
