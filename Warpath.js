@@ -602,7 +602,7 @@ const Warpath = (() => {
         }
     }
 
-    class Unit {
+    class Model {
         constructor(id) {
             let token = findObjs({_type:"graphic", id: id})[0];
             let label = (new Point(token.get("left"),token.get("top"))).label();
@@ -622,41 +622,19 @@ const Warpath = (() => {
 
             this.faction = aa.faction || "Neutral";
             this.player = (this.faction === "Neutral") ? 2:(state.Warpath.factions[0] === this.faction)? 0:1;
-            this.special = aa.special || " ";
-            this.points = parseInt(aa.points) || 0;
+            this.unitkey = aa.unitkey || " ";
 
             this.type = aa.type;
-            let height = 0; //units own height
-            if (this.type === "Walker") {
-                height = 1;
-            }
-            if (this.type === "Vehicle") {
-                height = .5;
-            }
-            if (this.type === "Behemoth") {
-                height = 2;
-            }
-
-            this.height = height;
-
-            this.command = parseInt(aa.command) || 0;
-            this.defense = parseInt(aa.defense) || 1;
-            let saveInfo = aa.save || 0; // eg d10(3)
-            saveInfo = saveInfo.split("(");
-            let dX = parseInt(saveInfo[0].replace("d",""));
-            let numberDice = saveInfo[1] || 1;
-            numberDice = parseInt(numberDice);
-            let save = {
-                number: numberDice,
-                dX: dX,
-            }
-            this.save = save;
-            this.move = parseInt(aa.move);
-            this.moveMax = parseInt(aa.move_max);
-            this.saveMax = aa.save_max; //save in original format for ease of updating attribute
+            this.height = parseInt(aa.height);
+            this.speed = aa.speed.split("/").map(e => {return parseInt(e)}) || [0,0];
+            this.unitStrength = aa.us.split("/").map(e => {return parseInt(e)}) || [1,1];
+            this.shoot = parseInt(aa.shoot) || 0;
+            this.assault = parseInt(aa.assault) || 0;
+            this.armour = parseInt(aa.armour) || 0;
+            this.save = parseInt(aa.save) || 0;
 
 
-            let systemNumbers = {};
+
 
             let weapons = [];
             for (let i=0;i<5;i++) {
@@ -666,61 +644,20 @@ const Warpath = (() => {
                 let wequip = aa[prefix + "equipped"];
                 if (!wequip || wequip === undefined || wequip === "Off") {continue};
                 if (!wname || wname === undefined || wname === null) {continue};
-                let sn = aa[prefix + "systemnum"];
-                systemNumbers[sn] = prefix;
-                let wready = aa[prefix + "ready"] || RED;
-                let wad = aa[prefix + "ad"];
-                let cost = "Free";
-                let needed = "Any";
-                if (wad !== "Free") {
-                    if (wad.includes("+")) {
-                        cost = wad.split("+");
-                        needed = "All";
-                        cost = cost.map((e) => parseInt(e));
-                    } else if (wad.includes("-")) {
-                        cost = [];
-                        wad = wad.split("-");
-                        for (let i=parseInt(wad[0]);i<parseInt(wad[1]) + 1;i++) {
-                            cost.push(i);
-                        }
-                    }
-                }
-                let wadInfo = {
-                    cost: cost,
-                    needed: needed,
-                }
 
-                
-                let wspecial = aa[prefix + 'special'] || " ";
-//fix range to be min, normal, max
                 let wrange = aa[prefix + "range"];
-                let min, normal, max;
-                wrange = wrange.split("-");
-                if (wrange.length === 2) {
-                    min = parseInt(wrange[0]);
-                    normal = parseInt(wrange[1]);
-                    max = 2 * normal;
-                } else {
-                    min = 0;
-                    normal = parseInt(wrange[0]);
-                    max = 2 * normal;
+                if (wrange !== "A") {
+                    wrange = parseInt(wrange);
                 }
-                let wrangeInfo = {
-                    min: min,
-                    normal: normal,
-                    max: max,
-                }
-
-
+                
+                let watt = aa[prefix + "attack"];
+                watt = parseInt(watt);
 
                 let weapon = {
                     name: wname,
-                    ad: wadInfo,
-                    ready: wready,
-                    sn: sn,
-                    range: wrangeInfo,
-                    damage: aa[prefix + "damage"],
-                    special: wspecial,
+                    range: wrange,
+                    attack: watt,
+                    keywords: aa[prefix + "keywords"],
                     fx: aa[prefix + "fx"],
                     sound: aa[prefix + "sound"],
                 }
@@ -728,81 +665,11 @@ const Warpath = (() => {
             }
             this.weapons = weapons;
 
-            let abilities = [];
-            for (let i=0;i<5;i++) {
-                let w=i+1;
-                let prefix = "ability" + w;
-                let aname = aa[prefix + "name"];
-                let aequip = aa[prefix + "equipped"];
-                if (!aequip || aequip === undefined || aequip === "Off") {continue};
-                if (!aname || aname === undefined || aname === null) {continue};
-                let sn = aa[prefix + "systemnum"];
-                systemNumbers[sn] = prefix;
-                let aready = aa[prefix + "ready"] || RED;
-                let aad = aa[prefix + "ad"] || "Free";
-                let aspecial = aa[prefix + 'special'] || " ";
-
-                let ability = {
-                    name: aname,
-                    ad: aad,
-                    ready: aready,
-                    sn: sn,
-                    special: aspecial,
-                    fx: aa[prefix + "fx"],
-                    sound: aa[prefix + "sound"],
-                }
-                abilities.push(ability);
-            }
-            this.abilities = abilities;
-
-            let drt = {};
-            let systems = {};
-            for (let i=1;i<7;i++) {
-                let rolls = aa["roll" + i];
-                if (!rolls || rolls === null) {continue};
-                rolls = rolls.split(",");
-                _.each(rolls, roll => {
-                    roll = parseInt(roll);
-                    let system = aa["damage" + i];
-                    system = system.replace("System ","");
-                    let status = aa["damage" + i + "status"];
-                    drt[roll] = {
-                        system: system,
-                    }
-                    if (!systems[system]) {
-                        systems[system] = {
-                            system: systemNumbers[system],
-                            status: status,
-                        }
-                    }
-                })
-            }
-
-            this.damageTable = drt;
-            this.systemTable = systems;
-
-            //characters and groups of bases
-            this.groupIDs = "";
-            this.assocID = "";
-            this.group = false;
-            this.hasChar = false;
-            let gmnotes = decodeURIComponent(token.get("gmnotes")).toString();
-            if (gmnotes && gmnotes !== null && gmnotes !== "") {
-                gmnotes = gmnotes.split(";");
-                if (gmnotes[0] === "C") {
-                    this.hasChar = true;
-                    this.assocID = gmnotes[1];
-                } else if (gmnotes[1] === "G") {
-                    this.group = true;
-                    this.groupIDs = gmnotes[1];
-                }
-            }
 
 
-this.offMap = false;   ///
 
 
-            UnitArray[id] = this;
+            ModelArray[id] = this;
             HexMap[label].tokenIDs.push(id);
 
 
@@ -812,13 +679,6 @@ this.offMap = false;   ///
 
         }
 
-
-        Damage () {
-            
-
-
-
-        }
 
 
         Destroyed () {
@@ -1126,7 +986,7 @@ this.offMap = false;   ///
         AddElevations();
         AddTerrain();    
         //AddEdges(); - ? change to linear terrain ?
-        //AddTokens();
+        AddTokens();
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
@@ -1223,6 +1083,7 @@ log(vertices)
 
      
     const AddTokens = () => {
+        ModelArray = {};
         UnitArray = {};
         //create an array of all tokens
         let start = Date.now();
@@ -1239,11 +1100,11 @@ log(vertices)
         tokens.forEach((token) => {
             let character = getObj("character", token.get("represents"));   
             if (character) {
-                let unit = new Unit(token.id);
+                let model = new Model(token.id);
             }  
         });
         let elapsed = Date.now()-start;
-        log(`${c} token${s} checked in ${elapsed/1000} seconds - ` + Object.keys(UnitArray).length + " placed in Unit Array");
+        log(`${c} token${s} checked in ${elapsed/1000} seconds - ` + Object.keys(ModelArray).length + " placed in Model Array");
 
     }
 
@@ -1866,7 +1727,10 @@ log(result)
             case '!Dump':
                 log("State");
                 log(state.Warpath);
-                log(HexMap["M24"])
+                log("Models");
+                log(ModelArray);
+                log("Units");
+                log(UnitArray)
                 break;
             case '!ClearState':
                 ClearState(msg);
