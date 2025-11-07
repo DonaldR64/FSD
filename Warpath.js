@@ -632,6 +632,11 @@ const Warpath = (() => {
             this.startHexLabel = label; //used to track movement
 
             this.faction = aa.faction || "Neutral";
+            if (state.Warpath.factions[0] === "") {
+                state.Warpath.factions[0] = this.faction;
+            } else if (state.Warpath.factions[0] !== this.faction && state.Warpath.factions[1] === "") {
+                state.Warpath.factions[1] = this.faction;
+            }
             this.player = (this.faction === "Neutral") ? 2:(state.Warpath.factions[0] === this.faction)? 0:1;
             this.unitkey = aa.unitkey || " ";
             this.bases = parseInt(aa.bases);
@@ -1393,15 +1398,15 @@ log(vertices)
             playerIDs: ["",""],
             players: {},
             factions: ["",""],
-            markers: [],
+            markers: [[],[]],
             lines: [],
             turn: 0,
             deployLines: [],
         }
 
         for (let i=0;i<UnitMarkers.length;i++) {
-            state.GDF.markers[0].push(i);
-            state.GDF.markers[1].push(i);
+            state.Warpath.markers[0].push(i);
+            state.Warpath.markers[1].push(i);
         }
 
         sendChat("","Cleared State/Arrays");
@@ -1444,22 +1449,14 @@ log(vertices)
             return
         }
         let tokenIDs = [];
-        let unit;
-        let model;
-        let markerNumber = state.Warpath.markers[player].length;
-        if (!markerNumber || markerNumber === 0) {
-            markerNumber = 1;   
-        } else {
-            markerNumber = randomInteger(markerNumber);
-            state.GDF.markers[player].splice(markerNumber-1,1);
-        }
-
+        let model,unit,markerNumber;
         for (let i=0;i<msg.selected.length;i++) {
             mID = msg.selected[i]._id;
             model = new Model(mID);
             if (i===0) {
+                markerNumber = randomInteger(state.Warpath.markers[model.player].length - 1) || 1;
                 unit = new Unit(mID);
-                unit.symbol = UnitMarkers[markerNumber-1];
+                unit.symbol = UnitMarkers[markerNumber];
             }
             tokenIDs.push(mID);
             model.token.set({
