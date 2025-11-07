@@ -326,7 +326,7 @@
         setAttrs({sheetTab:"display"});
     });
 
-    on("change:attrs", function() { 
+    on("change:attrs sheet:opened", function() { 
         getAttrs(["command"], function(values) {
             let command = values.command;
             let commandText = "";
