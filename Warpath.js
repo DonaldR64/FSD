@@ -1357,108 +1357,31 @@ log(vertices)
         sendChat("","Cleared State/Arrays");
     }
 
-    const AddUnits = (msg) => {
+    const UnitCreation = (msg) => {
         if (!msg.selected) {
             sendChat("","No Tokens Selected");
             return
         }
-
-        let association = msg.content.split(";")[1]; //Nil,Group,Character
         let tokenIDs = [];
-
-
-        _.each(msg.selected,element => {
-            let id = element._id;
-            let token = findObjs({_type:"graphic", id: id})[0];
-            
-
-            token.set({
-                bar1_value: 2,
-                aura1_color: "#00FF00",
-                aura1_radius: 0.05,
+        let unit;
+        let model;
+        for (let i=0;i<msg.selected.length;i++) {
+            mID = msg.selected[i]._id;
+            model = new Model(mID);
+            if (i===0) {
+                unit = new Unit(mID);
+            }
+            tokenIDs.push(mID);
+            model.token.set({
                 tint_color: "transparent",
-                statusmarkers: "",
-                gmnotes: "",
-                rotation: 0,
-                disableSnapping: true,
-                disableTokenMenu: false,
+                gmnotes: unit.id,
             })
-
-            let unit = new Unit(id);          
-            if (state.Warpath.factions[0] === "") {
-                state.Warpath.factions[0] = unit.faction;
-            } else if (state.Warpath.factions[0] !== unit.faction && state.Warpath.factions[1] === "") {
-                state.Warpath.factions[1] = unit.faction;
-            } 
-            let player = (state.Warpath.factions[0] == unit.faction) ? 0:1;
+            model.token.set("statusmarkers","");
             
-            unit.player = player;
-
-            //reset stats
-            unit.move = unit.moveMax;
-            AttributeSet(unit.charID,"move",unit.move);
-            let saveInfo = unit.saveMax;
-            saveInfo = saveInfo.split("(");
-            let dX = parseInt(saveInfo[0].replace("d",""));
-            let numberDice = saveInfo[1] || 1;
-            numberDice = parseInt(numberDice);
-            let save = {
-                number: numberDice,
-                dX: dX,
-            }
-            unit.save = save;
-            AttributeSet(unit.charID,"save",unit.saveMax);
-            //reset weapons and abilities
-            for (let i=0;i<unit.weapons.length;i++) {
-                let weapon = unit.weapons[i];
-        log(weapon)
-                if (weapon.ready === BLACK) {
-        log("Dead")
-                    if (weapon.ad === "Free") {
-                        weapon.ready = GREEN;
-                    } else {
-                        weapon.ready = RED;
-                    }
-        log(weapon.ready)
-                    AttributeSet(unit.charID,"weapon" + (i+1) + "ready",weapon.ready);
-                }
-            }
-            for (let i=0;i<unit.abilities.length;i++) {
-                let ability = unit.abilities[i];
-                if (ability.ready === BLACK) {
-                    if (ability.ad === "Free") {
-                        ability.ready = GREEN;
-                    } else {
-                        ability.ready = RED;
-                    }
-                    AttributeSet(unit.charID,"ability" + (i+1) + "ready",ability.ready);
-                }
-            }
-            //reset damage chart
-
-
-
-
-            tokenIDs.push(id);
-        })
-
-        if (association === "Group") {
-            let groupIDs = tokenIDs.toString();
-            //tokens are part of a group of bases, eg. infantry
-            for (let i=0;i<tokenIDs.length;i++) {
-                let unit = UnitArray[tokenIDs[i]];
-                unit.groupIDs = groupIDs;
-                unit.group = true;
-                unit.token.set("gmnotes","G;" + groupIDs);
-            }
+// add marker
         }
-
-
-
-
-
-        sendChat("","Unit(s) added")
-
+        unit.tokenIDs = tokenIDs;
+        sendChat("","Unit of " + model.name + " Added")
     }
 
 
@@ -1797,8 +1720,8 @@ log(result)
             case '!RemoveLines':
                 RemoveLines();
                 break;
-            case '!AddUnits':
-                AddUnits(msg);
+            case '!UnitCreation':
+                UnitCreation(msg);
                 break;
 
             case '!RollD6':
