@@ -326,9 +326,9 @@
         setAttrs({sheetTab:"display"});
     });
 
-    on("change:attrs sheet:opened", function() { 
+    on("change:attrs function() { 
         getAttrs(["command"], function(values) {
-            let command = values.command || false;
+            let command = values.command;
             let commandText = "";
             if (command === "Yes") {
                 command = true;
@@ -338,7 +338,7 @@
             }
             setAttrs({
                 command: command,
-                commandtext = commandText;
+                commandtext: commandText;
             });
         });    
     });  
