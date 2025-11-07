@@ -5,7 +5,7 @@ const Warpath = (() => {
     const pageInfo = {};
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
-    const UnitMarkers = ["Plus-1d4::2006401","Minus-1d4::2006429","Plus-1d6::2006402","Minus-1d6::2006434","Plus-1d20::2006409","Minus-1d20::2006449","Hot-or-On-Fire-2::2006479","Animal-Form::2006480","Red-Cloak::2006523","A::6001458","B::6001459","C::6001460","D::6001461","E::6001462","F::6001463","G::6001464","H::6001465","I::6001466","J::6001467","L::6001468","M::6001469","O::6001471","P::6001472","Q::6001473","R::6001474","S::6001475"];
+    const UnitMarkers = ["A::6001458","B::6001459","C::6001460","D::6001461","E::6001462","F::6001463","G::6001464","H::6001465","I::6001466","J::6001467","L::6001468","M::6001469","O::6001471","P::6001472","Q::6001473","R::6001474","S::6001475"];
 
     const TurnMarkers = ["","https://s3.amazonaws.com/files.d20.io/images/361055772/zDURNn_0bbTWmOVrwJc6YQ/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055766/UZPeb6ZiiUImrZoAS58gvQ/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055764/yXwGQcriDAP8FpzxvjqzTg/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055768/7GFjIsnNuIBLrW_p65bjNQ/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055770/2WlTnUslDk0hpwr8zpZIOg/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055771/P9DmGozXmdPuv4SWq6uDvw/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055765/V5oPsriRTHJQ7w3hHRBA3A/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055767/EOXU3ujXJz-NleWX33rcgA/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055769/925-C7XAEcQCOUVN1m1uvQ/thumb.png?1695998303"];
 
@@ -624,8 +624,13 @@ const Warpath = (() => {
   
 
             this.token = token;
-            this.name = token.get("name");
             this.charName = char.get("name");
+            let name = token.get("name");
+            if (!name || name === "") {
+                name = this.charName;
+            }
+            this.name = name;
+
             this.id = id;
             this.charID = charID;
             this.hexLabel = label;
@@ -1453,6 +1458,10 @@ log(vertices)
         for (let i=0;i<msg.selected.length;i++) {
             mID = msg.selected[i]._id;
             model = new Model(mID);
+            let name = model.name;
+            if (msg.selected.length > 1) {
+                name = model.name + " " + (i+1);
+            }
             if (i===0) {
                 markerNumber = randomInteger(state.Warpath.markers[model.player].length - 1) || 1;
                 unit = new Unit(mID);
@@ -1462,6 +1471,7 @@ log(vertices)
             model.token.set({
                 tint_color: "transparent",
                 gmnotes: unit.id,
+                name: name,
             })
             model.token.set("statusmarkers","");
             model.token.set("status_" + unit.symbol,true);
