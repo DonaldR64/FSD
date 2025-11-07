@@ -248,12 +248,16 @@
             </div>
 
 
-
-
-
-
-
           </section>
+          <section class="spec">
+            <input type="hidden" name="attr_specialon" class="special-status" value="Off">
+            <div class="special">
+                <h3>Special</h3>
+                <h4><span name="attr_special"></span></h4>
+            </div>
+          </section>
+
+
 
 
 
@@ -335,14 +339,24 @@
     });
 
     on("change:attrs sheet:opened", function() { 
-        getAttrs(["command"], function(values) {
+        getAttrs(["command","special"], function(values) {
             let command = values.command;
+            let special = values.special;
+            
             let commandText = " ";
             if (command === "Yes") {
                 commandText = "Command "
             } 
+
+            let specialOn = "Off";
+            if (special && special !== "") {
+                specialOn = "On";
+            }
+
+
             setAttrs({
                 commandtext: commandText,
+                specialon: specialOn,
             });
         });    
     });  
