@@ -1,5 +1,5 @@
 const Warpath = (() => {
-    const version = '2025.11.4';
+    const version = '2025.11.6';
     if (!state.Warpath) {state.Warpath = {}};
 
     const pageInfo = {};
@@ -1377,7 +1377,7 @@ log(vertices)
                 gmnotes: unit.id,
             })
             model.token.set("statusmarkers","");
-            
+
 // add marker
         }
         unit.tokenIDs = tokenIDs;
