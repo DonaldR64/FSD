@@ -312,21 +312,6 @@ input[type="hidden"][value="Equipped"].weapon5-status ~ .weapon5{
     align-items: center;
 }
 
-input[type="hidden"][value="Off"].special-status ~ .special{
-    display: none;
-}
-input[type="hidden"][value="On"].special-status ~ .special{
-    display: grid;
-}
-  
-.special {
-    display: grid;
-    grid-gap: 1px;
-    text-align: center;
-    align-items: center;
-    padding: 3px;
-}
-
 
 
 
