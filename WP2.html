@@ -331,13 +331,9 @@
             let command = values.command;
             let commandText = "";
             if (command === "Yes") {
-                command = true;
                 commandText = "Command"
-            } else {
-                command = false;
-            }
+            } 
             setAttrs({
-                command: command,
                 commandtext: commandText,
             });
         });    
