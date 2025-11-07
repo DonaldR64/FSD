@@ -5,6 +5,13 @@ const Warpath = (() => {
     const pageInfo = {};
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
+    const UnitMarkers = ["Plus-1d4::2006401","Minus-1d4::2006429","Plus-1d6::2006402","Minus-1d6::2006434","Plus-1d20::2006409","Minus-1d20::2006449","Hot-or-On-Fire-2::2006479","Animal-Form::2006480","Red-Cloak::2006523","A::6001458","B::6001459","C::6001460","D::6001461","E::6001462","F::6001463","G::6001464","H::6001465","I::6001466","J::6001467","L::6001468","M::6001469","O::6001471","P::6001472","Q::6001473","R::6001474","S::6001475"];
+
+    const TurnMarkers = ["","https://s3.amazonaws.com/files.d20.io/images/361055772/zDURNn_0bbTWmOVrwJc6YQ/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055766/UZPeb6ZiiUImrZoAS58gvQ/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055764/yXwGQcriDAP8FpzxvjqzTg/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055768/7GFjIsnNuIBLrW_p65bjNQ/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055770/2WlTnUslDk0hpwr8zpZIOg/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055771/P9DmGozXmdPuv4SWq6uDvw/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055765/V5oPsriRTHJQ7w3hHRBA3A/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055767/EOXU3ujXJz-NleWX33rcgA/thumb.png?1695998303","https://s3.amazonaws.com/files.d20.io/images/361055769/925-C7XAEcQCOUVN1m1uvQ/thumb.png?1695998303"];
+
+
+
+
     let HexSize, HexInfo, DIRECTIONS;
 
     //math constants
@@ -598,6 +605,10 @@ const Warpath = (() => {
             this.label = offset.label();
             this.elevation = 0;
             this.terrain = "Open";
+            this.edges = {};
+            _.each(DIRECTIONS,a => {
+                this.edges[a] = "Open";
+            })
             HexMap[this.label] = this;
         }
     }
@@ -1011,7 +1022,7 @@ const Warpath = (() => {
         }
         AddElevations();
         AddTerrain();    
-        //AddEdges(); - ? change to linear terrain ?
+        //AddEdges();
         AddTokens();
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
@@ -1347,14 +1358,83 @@ log(vertices)
         LoadPage();
         BuildMap();
 
+        //clear arrays
+        ModelArray = {};
+        UnitArray = {};
+        //clear token info
+        let tokens = findObjs({
+            _pageid: Campaign().get("playerpageid"),
+            _type: "graphic",
+            _subtype: "token",
+            layer: "objects",
+        })
+        tokens.forEach((token) => {
+            if (token.get("name").includes("Objective") === true) {return};
+            token.set({
+                name: "",
+                tint_color: "transparent",
+                aura1_color: "transparent",
+                aura1_radius: 0,
+                showplayers_bar1: true,
+                showname: true,
+                showplayers_aura1: true,
+                bar1_value: 0,
+                bar1_max: "",
+                gmnotes: "",
+                statusmarkers: "",
+                tooltip: "",
+            });                
+        });
+    
+        RemoveDead("All");
+
         state.Warpath = {
             playerIDs: ["",""],
             players: {},
             factions: ["",""],
+            markers: [],
             lines: [],
             turn: 0,
+            deployLines: [],
         }
+
+        for (let i=0;i<UnitMarkers.length;i++) {
+            state.GDF.markers[0].push(i);
+            state.GDF.markers[1].push(i);
+        }
+
         sendChat("","Cleared State/Arrays");
+    }
+
+
+    const RemoveDepLines = () => {
+        for (let i=0;i<state.Warpath.deployLines.length;i++) {
+            let id = state.Warpath.deployLines[i];
+            let path = findObjs({_type: "path", id: id})[0];
+            if (path) {
+                path.remove();
+            }
+        }
+    }
+
+    const RemoveDead = (info) => {
+        let tokens = findObjs({
+            _pageid: Campaign().get("playerpageid"),
+            _type: "graphic",
+            _subtype: "token",
+            layer: "map",
+        });
+        tokens.forEach((token) => {
+            if (token.get("status_dead") === true) {
+                token.remove();
+            }
+            let removals = ["Objective","Turn"];
+            for (let i=0;i<removals.length;i++) {
+                if (token.get("name").includes(removals[i]) && info === "All") {
+                    token.remove();
+                }
+            }
+        });
     }
 
     const UnitCreation = (msg) => {
@@ -1365,11 +1445,20 @@ log(vertices)
         let tokenIDs = [];
         let unit;
         let model;
+        let markerNumber = state.Warpath.markers[player].length;
+        if (!markerNumber || markerNumber === 0) {
+            markerNumber = 1;   
+        } else {
+            markerNumber = randomInteger(markerNumber);
+            state.GDF.markers[player].splice(markerNumber-1,1);
+        }
+
         for (let i=0;i<msg.selected.length;i++) {
             mID = msg.selected[i]._id;
             model = new Model(mID);
             if (i===0) {
                 unit = new Unit(mID);
+                unit.symbol = UnitMarkers[markerNumber-1];
             }
             tokenIDs.push(mID);
             model.token.set({
@@ -1377,8 +1466,7 @@ log(vertices)
                 gmnotes: unit.id,
             })
             model.token.set("statusmarkers","");
-
-// add marker
+            model.token.set("status_" + unit.symbol,true);
         }
         unit.tokenIDs = tokenIDs;
         sendChat("","Unit of " + model.name + " Added")
@@ -1723,7 +1811,6 @@ log(result)
             case '!UnitCreation':
                 UnitCreation(msg);
                 break;
-
             case '!RollD6':
                 RollD6(msg);
                 break;
