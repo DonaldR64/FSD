@@ -724,6 +724,7 @@ const Warpath = (() => {
             }
             this.id = uID;
             this.tokenIDs = [];
+            this.symbol = "";
             UnitArray[uID] = this;
         }
 
