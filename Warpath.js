@@ -289,7 +289,19 @@ const Warpath = (() => {
     }
 
 
-
+    const KeyNum = (model,keyword) => {
+        let key = model.unitkey.split(",");
+        log(key)
+        let num = 1;
+        _.each(key,word => {
+            if (word.includes(keyword)) {
+                word = word.trim().replace(keyword,"").replace("(","").replace(")","");
+                num = parseInt(word);
+            }
+            log(num)
+        })
+        return num;
+    }
 
 
 
@@ -1386,11 +1398,11 @@ log(vertices)
                 tint_color: "transparent",
                 aura1_color: "transparent",
                 aura1_radius: 0,
-                showplayers_bar1: true,
+                showplayers_bar1: false,
+                showplayers_bar2: false,
+                showplayers_bar3: false,
                 showname: true,
                 showplayers_aura1: true,
-                bar1_value: 0,
-                bar1_max: "",
                 gmnotes: "",
                 statusmarkers: "",
                 tooltip: "",
@@ -1472,9 +1484,30 @@ log(vertices)
                 tint_color: "transparent",
                 gmnotes: unit.id,
                 name: name,
+                tint_color: "transparent",
+                aura1_color: "transparent",
+                aura1_radius: 0,
+                showplayers_bar1: false,
+                showplayers_bar2: false,
+                showplayers_bar3: false,
+                showname: true,
+                showplayers_aura1: true,
+                statusmarkers: "",
+                tooltip: "",
             })
-            model.token.set("statusmarkers","");
             model.token.set("status_" + unit.symbol,true);
+            if (model.unitkey.includes("Resilience")) {
+                let resilience = KeyNum(model,"Resilience") || 1;
+                model.token.set({
+                    showplayers_bar1: false,
+                    bar1_value: resilience,
+                    bar1_max: resilience,
+                })
+            } 
+
+
+
+
         }
         unit.tokenIDs = tokenIDs;
         sendChat("","Unit of " + model.name + " Added")
