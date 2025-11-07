@@ -17,7 +17,7 @@
 
 .mysheet {
     width: 830px;
-    height: 830px;
+    height: 630px;
 }
 .bits {
     padding: 15px 0px 0px 15px;
@@ -42,7 +42,7 @@ input[type="hidden"][name="attr_faction"][value="Enforcers"] ~ .mysheet {
 main {
   display: grid;
   width: 800px;
-  height: 800px;
+  height: 600px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
