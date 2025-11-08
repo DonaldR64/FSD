@@ -142,16 +142,16 @@ const Warpath = (() => {
 
     //height is height of terrain element
     //Hills will be elevations lines - height 3 per elevation
-    //move: 0 = Open, 1 = Difficult, 2 = Impassable
-    //move arrays are: Infantry + Heavy Infantry / Bike / Walker / Vehicle / Super(Heavy)
+    //move: Open, Difficult, Impassable
+    //move arrays are: Infantry + Heavy Infantry / Bike / Walker / Vehicle / Super-Heavy
     //cover - ignore wall adjacent for firing unit 
     //woods LOS Is 2 hexes in, ignore edge hex for cover firing out
 
 
     const LinearTerrain = {
-        "#00ff00": {name: "Hedge",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
-       "#980000": {name: "Wall",height: 1,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
-        "#ff0000 Wall": {name: "High Wall",height: 2,move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 0},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
+        "#00ff00": {name: "Hedge",height: 1,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Difficult", Walker: "Difficult", Vehicle: "Difficult", "Super-Heavy": "Open"},cover: {Infantry: true,"Heavy Infantry": true,Bike: true, Walker: true, Vehicle: true, "Super-Heavy": false}},
+       "#980000": {name: "Wall",height: 1,move: {Infantry: "Open","Heavy Infantry": "Open",Bike: "Difficult", Walker: "Difficult", Vehicle: "Difficult", "Super-Heavy": "Open"},cover: {Infantry: true,"Heavy Infantry": true, Bike: true, Walker: true, Vehicle: true, "Super-Heavy": false}},
+        "#ff0000 Wall": {name: "High Wall",height: 2,move: {Infantry: "Difficult","Heavy Infantry": "Difficult", Bike: "Impassable", Walker: "Difficult", Vehicle: "Impassable", "Super-Heavy": "Open"},cover: {Infantry: true,"Heavy Infantry": true, Bike: true, Walker: true, Vehicle: true, "Super-Heavy": false}},
 
 
 
@@ -162,16 +162,16 @@ const Warpath = (() => {
 
 
     const TerrainInfo = {
-        "Woods": {name: "Woods",height: 4,move: {infantry: 0, bike: 1, walker: 1, vehicle: 1, super: 1},cover:  {infantry: true, bike: true, walker: true, vehicle: true, super: true}},
-        "Craters": {name: "Craters",height: 0,move: {infantry: 0, bike: 1, walker: 0, vehicle: 0, super: 0}, cover: {infantry: true, bike: true, walker: true, vehicle: false, super: false}},
-        "Rubble": {name: "Rubble",height: 0,move: {infantry: 0, bike: 1, walker: 0, vehicle: 0, super: 0}, cover: {infantry: true, bike: true, walker: true, vehicle: false, super: false}},
-        "Broken Ground": {name: "Broken Ground",height: 0,move: {infantry: 0, bike: 1, walker: 0, vehicle: 0, super: 0}, cover: {infantry: true, bike: true, walker: true, vehicle: false, super: false}},
-        "Low Building": {name: "Low Building",height: 4,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2}, cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
-        "Med Building": {name: "Med Building",height: 6,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
-        "Tall Building": {name: "Tall Building",height: 8,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
-        "River": {name: "River",height: 0, move: {infantry: 1, bike: 2, walker: 1, vehicle: 2, super: 1},cover: {infantry: true, bike: false, walker: false, vehicle: false, super: false}},
-        "Ruins": {name: "Ruins", height: 4,move: {infantry: 0, bike: 2, walker: 0, vehicle: 2, super: 2},cover: {infantry: true, bike: true, walker: true, vehicle: true, super: false}},
-        "Open": {name: "Open Ground", height: 0,move: {infantry: 0, bike: 0, walker: 0, vehicle: 0, super: 0},cover: {infantry: false, bike: false, walker: false, vehicle: false, super: false}},
+        "Woods": {name: "Woods",height: 4,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Difficult", Walker: "Difficult", Vehicle: "Difficult", "Super-Heavy": "Difficult"},cover:  {Infantry: true,"Heavy Infantry": true, Bike: true, Walker: true, Vehicle: true, "Super-Heavy": true}},
+        "Craters": {name: "Craters",height: 0,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Difficult", Walker: "Open", Vehicle: "Open", "Super-Heavy": "Open"}, cover: {Infantry: true,"Heavy Infantry": true, Bike: true, Walker: true, Vehicle: false, "Super-Heavy": false}},
+        "Rubble": {name: "Rubble",height: 0,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Difficult", Walker: "Open", Vehicle: "Open", "Super-Heavy": "Open"}, cover: {Infantry: true,"Heavy Infantry": true, Bike: true, Walker: true, Vehicle: false, "Super-Heavy": false}},
+        "Broken Ground": {name: "Broken Ground",height: 0,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Difficult", Walker: "Open", Vehicle: "Open", "Super-Heavy": "Open"}, cover: {Infantry: true,"Heavy Infantry": true, Bike: true, Walker: true, Vehicle: false, "Super-Heavy": false}},
+        "Low Building": {name: "Low Building",height: 4,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Impassable", Walker: "Open", Vehicle: "Impassable", "Super-Heavy": "Impassable"}, cover: {Infantry: true,"Heavy Infantry": true, Bike: false, Walker: false, Vehicle: false, "Super-Heavy": false}},
+        "Med Building": {name: "Med Building",height: 6,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Impassable", Walker: "Open", Vehicle: "Impassable", "Super-Heavy": "Impassable"},cover: {Infantry: true,"Heavy Infantry": true, Bike: false, Walker: false, Vehicle: false, "Super-Heavy": false}},
+        "Tall Building": {name: "Tall Building",height: 8,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Impassable", Walker: "Open", Vehicle: "Impassable", "Super-Heavy": "Impassable"},cover: {Infantry: true,"Heavy Infantry": true, Bike: false, Walker: false, Vehicle: false, "Super-Heavy": false}},
+        "River": {name: "River",height: 0, move: {Infantry: "Difficult","Heavy Infantry": "Difficult", Bike: "Impassable", Walker: "Difficult", Vehicle: "Impassable", "Super-Heavy": "Difficult"},cover: {Infantry: true,"Heavy Infantry": true, Bike: false, Walker: false, Vehicle: false, "Super-Heavy": false}},
+        "Ruins": {name: "Ruins", height: 4,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Impassable", Walker: "Open", Vehicle: "Impassable", "Super-Heavy": "Impassable"},cover: {Infantry: true,"Heavy Infantry": true, Bike: true, Walker: true, Vehicle: true, "Super-Heavy": false}},
+        "Open": {name: "Open Ground", height: 0,move: {Infantry: "Open","Heavy Infantry": "Open", Bike: "Open", Walker: "Open", Vehicle: "Open", "Super-Heavy": "Open"},cover: {Infantry: false,"Heavy Infantry": false, Bike: false, Walker: false, Vehicle: false, "Super-Heavy": false}},
 
 
 
@@ -1119,14 +1119,11 @@ const Warpath = (() => {
     const AddElevations = () => {
         //use terrain lines to build elevations
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
-log(paths)
         _.each(paths,path => {
             let elevation = HillHeights[path.get("stroke").toLowerCase()];
-log(elevation)
             if (elevation) {
                 elevation = parseInt(elevation);
                 let vertices = translatePoly(path);
-log(vertices)
                 _.each(HexMap,hex => {
                     let result = pointInPolygon(hex.centre,vertices);
                     if (result === true) {
@@ -1263,27 +1260,25 @@ log(vertices)
     const TokenInfo = (msg) => {
         if (!msg.selected) {return};
         let id = msg.selected[0]._id;
-        let unit = UnitArray[id];
-        if (!unit) {return};
-        SetupCard(unit.name,"",unit.faction);
-        let hex = HexMap[unit.hexLabel];
-        outputCard.body.push("Hex: " + unit.hexLabel);
+        let model = ModelArray[id];
+        if (!model) {return};
+        SetupCard(model.name,"",model.faction);
+        let hex = HexMap[model.hexLabel];
+        let terInfo = TerrainInfo[hex.terrain];
+        outputCard.body.push("Hex: " + model.hexLabel);
         outputCard.body.push("Terrain: " + hex.terrain);
         outputCard.body.push("Elevation: " + hex.elevation);
-        outputCard.body.push("Height of Terrain: " + hex.terrainHeight);
-        outputCard.body.push("LOS: " + hex.los);
-        outputCard.body.push("Movement: " + hex.move);
+        outputCard.body.push("Height of Terrain: " + terInfo.height);
+        outputCard.body.push("Height of Base: " + model.height);
+        outputCard.body.push("Movement: " + terInfo.move[model.type]);
+        outputCard.body.push("Cover: " + terInfo.cover[model.type]);
+
+
         for (let i=0;i<6;i++) {
             let edge = hex.edges[DIRECTIONS[i]];
             if (edge !== "Open") {
                 outputCard.body.push(edge.name + " on " + DIRECTIONS[i] + " Edge");
             }
-        }
-        if (hex.los.includes("Obscuring") || hex.los.includes("Blocking")) {
-            outputCard.body.push("Unit is in Cover");
-        }
-        if (unit.groupIDs) {
-            outputCard.body.push("Unit is part of Group");
         }
 
         
