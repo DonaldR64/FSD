@@ -137,7 +137,7 @@ const Warpath = (() => {
 
 
     const SM = {
-       
+       hover: "status_brown",
     }
 
 
@@ -1593,144 +1593,90 @@ const Warpath = (() => {
 
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
-        let distance = shooterHex.cube.distance(targetHex.cube);
+        let distance = shooterHex.cube.distance(targetHex.cube) - 1;
+        
         //firing arc on weapon - used on fliers
         let angle = TargetAngle(shooter,target);
-        if (weapon.special.includes("Arc")) {
-
-
+        let facing = "Front";
+        if (shooter.unitkey.includes("Fly") && shooter.token.get(SM.hover) === false) {
+            if (angle > 90 && angle < 270) {
+                facing = "Rear";
+            }
         }
+        
         //check los now incl cover
         let shooterElevation = shooterHex.elevation + shooter.height;
         let targetElevation = targetHex.elevation + target.height;
-//flyer is 5 above terrain + its height
-//if hovering is 3 above terrain
-
-
-        if (shooter.special.includes("Flyer")) {
-            if (shooter.token.get(SM.noe) === true) {
-                shooterElevation = shooterHex.elevation + 0.5;
-            } else if (shooter.token.get(SM.flying) === true) {
-                shooterElevation = shooterHex.elevation + 5;
+        if (shooter.unitkey.includes("Fly")) {
+            if (shooter.token.get(SM.hover) === true) {
+                shooterElevation += 3;
+            } else {
+                shooterElevation += 5;
             }
         }
-        if (target.special.includes("Flyer")) {
-            if (target.token.get(SM.noe) === true) {
-                targetElevation = targetHex.elevation + 0.5;
-            } else if (target.token.get(SM.flying) === true) {
-                targetElevation = targetHex.elevation + 5;
+        if (target.unitkey.includes("Fly")) {
+            if (target.token.get(SM.hover) === true) {
+                targetElevation += 3;
+            } else {
+                targetElevation += 5;
             }
         }
 
-        let pt1 = new Point(0,shooterElevation);
-        let pt2 = new Point(distance,targetElevation);
-
-        let interCubes = shooterHex.cube.linedraw(targetHex.cube);
+        let interCubes = shooterHex.cube.linedraw(targetHex.cube)
+        interCubes.push(targetHex.cube);
+        let woods = 0;
 
         for (let i=1;i<interCubes.length;i++) {
             let label = interCubes[i].label();
             let interHex = HexMap[label];
-
-            //check for hills
-            let pt3 = new Point(i,0);
-            let pt4 = new Point(i,interHex.elevation)
-            let pt5 = lineLine(pt1,pt2,pt3,pt4);
-            if (pt5) {
-                los = false;
-                losReason = "Blocked by Elevation at " + label;
-                losBlock = label;
-                break;
-            }
-            //check for terrain in hex
-            pt3 = new Point(i,interHex.elevation);
-            pt4 = new Point(i,interHex.elevation + interHex.terrainHeight);
-            pt5 = lineLine(pt1,pt2,pt3,pt4);
-            if (pt5) {
-                if (interHex.los.includes("Obscuring")) {
-                    cover = true;
-log(label + ": Obscuring")
-                }
-                if (interHex.los.includes("Blocking")) {
-                    los = false;
-                    losReason = "Blocked by Terrain at " + label;
-                    losBlock = label;
-                    break;
-                }
-            }
-            //check for terrain on hex side, ignoring adjacent edge to shooter
-            if (i > 1) {
-    let delta = interCubes[i-1].subtract(interCubes[i]);
+            let el = interHex.elevation;
+            let teH = TerrainInfo[interHex.terrain].height; //terrain in hex
+            let edH = 0; //height of any terrain on edge crossed
+            if (i>1) {
+                let delta = interCubes[i-1].subtract(interCubes[i]);
                 let dir;
-                for (let i=0;i<6;i++) {
-                    let d = HexInfo.directions[DIRECTIONS[i]];
+                for (let j=0;j<6;j++) {
+                    let d = HexInfo.directions[DIRECTIONS[j]];
                     if (delta.q === d.q && delta.r === d.r) {
-                        dir = DIRECTIONS[i];
+                        dir = DIRECTIONS[j];
                         break;
                     }
                 }            
                 let edge = interHex.edges[dir];
                 if (edge !== "Open") {
-                    pt3 = new Point(i,interHex.elevation);
-                    pt4 = new Point(i,interHex.elevation + edge.height);
-                    pt5 = lineLine(pt1,pt2,pt3,pt4);
-                    if (pt5) {
-                        if (edge.los.includes("Obscuring")) {
-                            cover = true;
-    log(label + " Edge: Obscuring")
-                        }
-                    }
+                    edH = LinearTerrain[edge].height;
                 }
-
-
             }
-
-        }
-
-        //target hexside
-        if (distance > 1) {
-            let delta = interCubes[interCubes.length -1].subtract(targetHex.cube);
-            let dir;
-            for (let i=0;i<6;i++) {
-                let d = HexInfo.directions[DIRECTIONS[i]];
-                if (delta.q === d.q && delta.r === d.r) {
-                    dir = DIRECTIONS[i];
+            teH = Math.max(teH,edH);
+            terrainHeight = teH + el;
+            let deltaS = shooterHeight - terrainHeight;
+            let deltaT = targetHeight - terrainHeight;
+            if (interHex.label !== targetHex.label) {
+                if (deltaS > 3 || deltaT > 3) {
+                    continue;
+                }
+                if (terrainHeight > shooterHeight && terrainHeight > targetHeight) {
+                    los = false;
+                    losBlock = label;
+                    losReason = "Blocked by Terrain at " + label;
                     break;
                 }
-            }     
-            let edge = targetHex.edges[dir];
-            if (edge !== "Open") {
-                pt3 = new Point(distance,targetHex.elevation);
-                pt4 = new Point(distance,targetHex.elevation + edge.height);
-                pt5 = lineLine(pt1,pt2,pt3,pt4);
-                if (pt5) {
-                    if (edge.los.includes("Obscuring")) {
-                        cover = true;
-    log("Target Hex Edge Obscuring")
-                    }
+            }
+
+            if (teH > 0) {
+                cover = true;
+    log("Cover at " + label);
+                if (interHex.terrain === "Woods") {
+                    woods++;
+                }
+                if (woods > 2) {
+                    los = false;
+                    losBlock = label;
+                    losReason = "Blocked by Woods at " + label;
+                    break;
                 }
             }
         }
-
-
-
-        //target hex
-        if (targetHex.los.includes("Blocking") || targetHex.los.includes("Obscuring")) {
-            cover = true;
-log("Target Hex Obscuring")
-        }
-
-        //indirect or guided weapons check
-        let indirect = false;
-      
-
-        if (target.special.includes("Flyer") && target.token.get(SM.flying) === true) {
-            cover = false;
-        }
-
-        if (distance < 1) {
-            cover = false;
-        }
-
 
         let result = {
             los: los,
@@ -1738,7 +1684,6 @@ log("Target Hex Obscuring")
             losBlock: losBlock,
             distance: distance,
             cover: cover,
-            indirect: indirect,
         }
 
 log(result)
