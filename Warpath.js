@@ -1335,7 +1335,10 @@ const Warpath = (() => {
         PlaySound("Dice");
         let roll = randomInteger(8);
         let playerID = msg.playerid;
-        let id = msg.selected[0]._id;
+        let id,model;
+        if (msg.selected) {
+            id = msg.selected[0]._id;
+        }
         let player,unit;
         let faction = "Neutral";
 
@@ -1344,13 +1347,13 @@ const Warpath = (() => {
             return;
         }
         if (id) {
-            unit = UnitArray[id];
-            if (unit) {
-                faction = unit.faction;
-                player = unit.player;
+            model = ModelArray[id];
+            if (model) {
+                faction = model.faction;
+                player = model.player;
             }
         }
-        if ((!id || !unit) && playerID) {
+        if ((!id || !model) && playerID) {
             faction = state.Warpath.players[playerID];
             player = (state.Warpath.factions[0] === faction) ? 0:1;
         }
