@@ -1237,23 +1237,6 @@ const Warpath = (() => {
     }
 
 
-    const AddMarker = (msg) => {
-        let id = msg.selected[0]._id;
-        let type = msg.content.split(";")[1];
-        let token = findObjs({_type:"graphic", id: id})[0];
-        let charID,img;
-        if (type === "Veteran") {
-            charID = "-OSevl13S7Q6iSaFbutR";
-        } else if (type === "Suppress") {
-            charID = "-OSew5Cn6ReQ0Arco_HQ";
-        }
-        let char = getObj("character", charID);
-        let tokenID = summonToken(char,token.get("left") - 15,token.get('top') - 15,0,40);
-        if (tokenID) {
-            token = findObjs({_type:"graphic", id: tokenID})[0];
-            toFront(token);
-        }
-    }
 
 
 
@@ -1867,9 +1850,7 @@ log("Target Hex offers Cover")
             case '!AddAbilities':
                 AddAbilities(msg);
                 break;
-            case '!AddMarker':
-                AddMarker(msg);
-                break;
+
             case '!TokenInfo':
                 TokenInfo(msg);
                 break;
