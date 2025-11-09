@@ -1,5 +1,5 @@
 const Warpath = (() => {
-    const version = '2025.11.6';
+    const version = '2025.11.8';
     if (!state.Warpath) {state.Warpath = {}};
 
     const pageInfo = {};
