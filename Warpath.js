@@ -646,7 +646,6 @@ const Warpath = (() => {
             this.id = id;
             this.charID = charID;
             this.hexLabel = label;
-            this.startHexLabel = label; //used to track movement
 
             this.faction = aa.faction || "Neutral";
             if (state.Warpath.factions[0] === "") {
@@ -1773,8 +1772,23 @@ log(result)
 
     const changeGraphic = (tok,prev) => {
         //RemoveLines();
-        //let info = LocationChange(tok,prev);
-
+        let model = ModelArray[tok.id];
+        if (model) {
+            let label = (new Point(tok.get("left"),tok.get("top"))).label();
+            if (label !== model.hexLabel) {
+                log(model.name + ' is moving from ' + model.hexLabel + ' to ' + label)
+                let index = HexMap[model.hexLabel].tokenIDs.indexOf(model.id);
+                if (index > -1) {
+                    HexMap[model.hexLabel].tokenIDs.splice(index,1);
+                }
+                HexMap[label].tokenIDs.push(model.id);
+                model.hexLabel = label;
+                model.token.set({
+                    left: HexMap[label].centre.x,
+                    top: HexMap[label].centre.y,
+                })
+            }
+        }
 
 
 
