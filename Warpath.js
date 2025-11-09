@@ -113,6 +113,7 @@ const Warpath = (() => {
             "fontColour": "#000000",
             "borderColour": "#00ff00",
             "borderStyle": "5px groove",
+
         },
         "Enforcers": {
             "image": "",
@@ -1330,9 +1331,9 @@ const Warpath = (() => {
     }
 
 
-    const RollD6 = (msg) => {
+    const RollDice = (msg) => {
         PlaySound("Dice");
-        let roll = randomInteger(6);
+        let roll = randomInteger(8);
         let playerID = msg.playerid;
         let id = msg.selected[0]._id;
         let player,unit;
@@ -1861,8 +1862,8 @@ log(result)
             case '!UnitCreation':
                 UnitCreation(msg);
                 break;
-            case '!RollD6':
-                RollD6(msg);
+            case '!Roll':
+                RollDice(msg);
                 break;
 
         }
