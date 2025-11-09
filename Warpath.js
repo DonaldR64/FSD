@@ -1576,13 +1576,10 @@ const Warpath = (() => {
     }
 
 
-    const LOS = (shooter,target,weapon) => {
+    const LOS = (shooter,target) => {
         let shooterUnit = UnitArray[shooter.unitID];
         let targetUnit = UnitArray[target.unitID];
 
-        if (!weapon) {
-            weapon = {keywords: " "};
-        }
         let los = true;
         let losReason = "";
         let losBlock = "";
