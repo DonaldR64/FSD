@@ -1547,20 +1547,31 @@ const Warpath = (() => {
             sendChat("","Not valid target");
             return;
         }
-        let distance;
+        let shooterUnit = UnitArray[shooter.unitID];
+        let sS = (shooterUnit.tokenIDs.length === 1) ? " ":"s ";
+        let sV = (shooterUnit.tokenIDs.length === 1) ? "has":"have";
+
+        let targetUnit = UnitArray[target.unitID];
+
+        let unitLOSResult = UnitLOS(shooterUnit,targetUnit);
+
+        
 
         SetupCard(shooter.name,"LOS",shooter.faction);
-        let losResult = LOS(shooter,target);
-        outputCard.body.push("Distance: " + losResult.distance);
-        if (losResult.los === false) {
-            outputCard.body.push("No LOS to Target");
-            outputCard.body.push(losResult.losReason);
+        outputCard.body.push("Avg. Distance: " + unitLOSResult.avgdistance);
+        if (unitLOSResult.los === false) {
+            outputCard.body.push("The Shooter" + sS + sV + " no LOS to any Target");
         } else {
-            outputCard.body.push("LOS to Target");
-            if (losResult.cover === true) {
-                outputCard.body.push("Target Has Cover");
-            }
+            //// percentage that have LOS and such
+
+
+
+
+
         }
+
+
+
         PrintCard();
     }
 
