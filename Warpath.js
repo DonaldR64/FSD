@@ -1554,12 +1554,12 @@ const Warpath = (() => {
         let Tag = msg.content.split(";");
         let shooterID = Tag[1];
         let targetID = Tag[2];
-        let shooter = UnitArray[shooterID];
+        let shooter = ModelArray[shooterID];
         if (!shooter) {
             sendChat("","Not valid shooter");
             return;
         }
-        let target = UnitArray[targetID];
+        let target = ModelArray[targetID];
         if (!target) {
             sendChat("","Not valid target");
             return;
@@ -1584,7 +1584,7 @@ const Warpath = (() => {
 
     const LOS = (shooter,target,weapon) => {
         if (!weapon) {
-            weapon = {special: " "};
+            weapon = {keywords: " "};
         }
         let los = true;
         let losReason = "";
