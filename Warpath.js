@@ -291,7 +291,7 @@ const Warpath = (() => {
 
 
     const KeyNum = (model,keyword) => {
-        let key = model.unitkey.split(",");
+        let key = model.keywords.split(",");
         log(key)
         let num = 1;
         _.each(key,word => {
@@ -497,13 +497,13 @@ const Warpath = (() => {
             return new Cube(this.q * (1.0 - t) + b.q * t, this.r * (1.0 - t) + b.r * t, this.s * (1.0 - t) + b.s * t);
         }
         linedraw(b) {
-            //returns array of hexes between this hex and hex 'b'
+            //returns array of hexes between this hex and hex 'b' incl. hex 'b'
             var N = this.distance(b);
             var a_nudge = new Cube(this.q + 1e-06, this.r + 1e-06, this.s - 2e-06);
             var b_nudge = new Cube(b.q + 1e-06, b.r + 1e-06, b.s - 2e-06);
             var results = [];
             var step = 1.0 / Math.max(N, 1);
-            for (var i = 0; i < N; i++) {
+            for (var i = 1; i <= N; i++) {
                 results.push(a_nudge.lerp(b_nudge, step * i).round());
             }
             return results;
@@ -655,7 +655,7 @@ const Warpath = (() => {
                 state.Warpath.factions[1] = this.faction;
             }
             this.player = (this.faction === "Neutral") ? 2:(state.Warpath.factions[0] === this.faction)? 0:1;
-            this.unitkey = aa.unitkey || " ";
+            this.keywords = aa.unitkey || " ";
             this.bases = parseInt(aa.bases);
             this.type = aa.type;
             this.height = parseInt(aa.height);
@@ -1493,7 +1493,7 @@ const Warpath = (() => {
                 tooltip: "",
             })
             model.token.set("status_" + unit.symbol,true);
-            if (model.unitkey.includes("Resilience")) {
+            if (model.keywords.includes("Resilience")) {
                 let resilience = KeyNum(model,"Resilience") || 1;
                 model.token.set({
                     showplayers_bar1: false,
@@ -1583,6 +1583,9 @@ const Warpath = (() => {
 
 
     const LOS = (shooter,target,weapon) => {
+        let shooterUnit = UnitArray[shooter.unitID];
+        let targetUnit = UnitArray[target.unitID];
+
         if (!weapon) {
             weapon = {keywords: " "};
         }
@@ -1598,85 +1601,153 @@ const Warpath = (() => {
         //firing arc on weapon - used on fliers
         let angle = TargetAngle(shooter,target);
         let facing = "Front";
-        if (shooter.unitkey.includes("Fly") && shooter.token.get(SM.hover) === false) {
+        if (shooter.keywords.includes("Fly") && shooter.token.get(SM.hover) === false) {
             if (angle > 90 && angle < 270) {
                 facing = "Rear";
             }
         }
 
-        //check los now incl cover
         let shooterElevation = shooterHex.elevation + shooter.height;
         let targetElevation = targetHex.elevation + target.height;
-        if (shooter.unitkey.includes("Fly")) {
+
+        //Fliers are above terrain 
+        if (shooter.keywords.includes("Fly")) {
             if (shooter.token.get(SM.hover) === true) {
                 shooterElevation += 3;
             } else {
                 shooterElevation += 5;
             }
+            shooterElevation += TerrainInfo[shooterHex.terrain].height;
         }
-        if (target.unitkey.includes("Fly")) {
+        if (target.keywords.includes("Fly")) {
             if (target.token.get(SM.hover) === true) {
                 targetElevation += 3;
             } else {
                 targetElevation += 5;
             }
+            targetElevation += TerrainInfo[shooterHex.terrain].height;
         }
 
         let interCubes = shooterHex.cube.linedraw(targetHex.cube)
-        interCubes.push(targetHex.cube);
         let woods = 0;
+        if (shooterHex.terrain === "Woods" && shooter.height <= 4 && shooter.keywords.includes("Fly") === false) {
+            woods = 1;
+        }
 
-        for (let i=1;i<interCubes.length;i++) {
+        for (let i=0;i<interCubes.length - 1;i++) {
             let label = interCubes[i].label();
+log(label)
             let interHex = HexMap[label];
-            let el = interHex.elevation;
             let teH = TerrainInfo[interHex.terrain].height; //terrain in hex
             let edH = 0; //height of any terrain on edge crossed
-            if (i>1) {
-                let delta = interCubes[i-1].subtract(interCubes[i]);
-                let dir;
-                for (let j=0;j<6;j++) {
-                    let d = HexInfo.directions[DIRECTIONS[j]];
-                    if (delta.q === d.q && delta.r === d.r) {
-                        dir = DIRECTIONS[j];
-                        break;
-                    }
-                }            
-                let edge = interHex.edges[dir];
-                if (edge !== "Open") {
-                    edH = LinearTerrain[edge].height;
+//edge
+/*
+            let delta = interCubes[i].add(interCubes[i+1]);
+            let dir;
+            for (let j=0;j<6;j++) {
+                let d = HexInfo.directions[DIRECTIONS[j]];
+                if (delta.q === d.q && delta.r === d.r) {
+                    dir = DIRECTIONS[j];
+                    break;
                 }
+            }            
+            let edge = interHex.edges[dir];
+            if (edge !== "Open") {
+                edH = LinearTerrain[edge].height;
             }
-            teH = Math.max(teH,edH);
-            terrainHeight = teH + el;
-            let deltaS = shooterElevation - terrainHeight;
-            let deltaT = targetElevation - terrainHeight;
-            if (interHex.label !== targetHex.label) {
-                if (deltaS > 3 || deltaT > 3) {
+*/
+
+            //check for intervening models
+            let mHeight = 0;
+            for (let t=0;t<interHex.tokenIDs.length;t++) {
+                let tid = interHex.tokenIDs[t];
+                let tModel = ModelArray[tid];
+                if (shooterUnit.tokenIDs.includes(tid) || targetUnit.tokenIDs.includes(tid)) {
                     continue;
                 }
-                if ((terrainHeight > shooterElevation && terrainHeight > targetElevation) && interHex.terrain !== "Woods") {
-                    los = false;
-                    losBlock = label;
-                    losReason = "Blocked by Terrain at " + label;
-                    break;
+                if (tModel.keywords.includes("Fly")) {
+                    continue;
                 }
+                mHeight = Math.max(tModel.height,mHeight);
             }
+log("terrain height: " + teH)
+log("edge height: " + edH)
+log("model height: " + mHeight)
 
-            if (teH > 0) {
+
+            let iH = Math.max(teH,edH,mHeight);
+            let modelBlock = false;
+            if (mHeight === iH && mHeight > 0) {
+                modelBlock = true;
+            }
+            interHexHeight = iH + interHex.elevation;
+log("interHexHeight: " + interHexHeight)
+            let deltaS = shooterElevation - interHexHeight;
+            let deltaT = targetElevation - interHexHeight;
+log("deltaS: " + deltaS)
+log("deltaT: " + deltaT)
+
+            if (deltaT > 3 || deltaS > 3) {continue};
+
+            if (deltaS > 0 && deltaT > 0 && iH > 0) {
+                //The line passes over a Base or terrain feature that is lower than both target and shooter (e.g. firing over an intervening wall or shorter Unit).
                 cover = true;
     log("Cover at " + label);
-                if (interHex.terrain === "Woods") {
-                    woods++;
-                }
-                if (woods > 2) {
+            }
+            if (iH > 0 && ((deltaS > 0 && deltaT === 0) || (deltaS === 0 && deltaT > 0))) {
+                //The line passes over a Base or terrain feature that is equal in height to either the target or shooter, and lower than the other.
+                cover = true;
+    log("Cover at " + label);
+            }
+
+            if (deltaS <= 0 && deltaT <= 0) {
+                if (modelBlock === true) {
                     los = false;
                     losBlock = label;
-                    losReason = "Blocked by > 2 Hexes of Woods at " + label;
+                    losReason = "Blocked by Model at " + label;
                     break;
+                } else {
+                    if (interHex.terrain === "Woods" && (shooterElevation >= interHex.elevation || targetElevation >= interHex.elevation)) { 
+                        cover = true;
+                        woods++;
+    log("Woods at " + label);
+                        if (woods > 2) {
+                            los = false;
+                            losBlock = label;
+                            losReason = "Blocked by > 2 Hexes of Woods at " + label;
+                            break;
+                        }                    
+                    } else {
+                        los = false;
+                        losBlock = label;
+                        losReason = "Blocked by Terrain at " + label;
+                        break;
+                    }
                 }
             }
         }
+
+        //target hex
+        if (TerrainInfo[targetHex.terrain].cover[target.type] === true) {
+            cover = true;
+log("Target Hex offers Cover")
+        }
+        if (targetHex.terrain === "Woods" && los === true) {
+            woods++;
+            if (woods > 2) {
+                los = false;
+                losBlock = targetHex.label;
+                losReason = "Target is too deep in woods";
+            }     
+        }
+
+
+
+
+
+
+
+
 
         let result = {
             los: los,
