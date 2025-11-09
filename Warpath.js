@@ -1593,18 +1593,20 @@ const Warpath = (() => {
 
         let shooterHex = HexMap[shooter.hexLabel];
         let targetHex = HexMap[target.hexLabel];
-        let distance = shooterHex.cube.distance(targetHex.cube) - 1;
-        if (distance === 0) {
+        let distance = shooterHex.cube.distance(targetHex.cube);
+        //firing arc on weapon - used on fliers
+        let angle = TargetAngle(shooter,target);
+        if (weapon.special.includes("Arc")) {
 
 
-            
         }
-
         //check los now incl cover
         let shooterElevation = shooterHex.elevation + shooter.height;
         let targetElevation = targetHex.elevation + target.height;
+//flyer is 5 above terrain + its height
+//if hovering is 3 above terrain
 
-/*
+
         if (shooter.special.includes("Flyer")) {
             if (shooter.token.get(SM.noe) === true) {
                 shooterElevation = shooterHex.elevation + 0.5;
@@ -1619,8 +1621,9 @@ const Warpath = (() => {
                 targetElevation = targetHex.elevation + 5;
             }
         }
-*/
 
+        let pt1 = new Point(0,shooterElevation);
+        let pt2 = new Point(distance,targetElevation);
 
         let interCubes = shooterHex.cube.linedraw(targetHex.cube);
 
