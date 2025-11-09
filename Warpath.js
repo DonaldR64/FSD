@@ -1603,7 +1603,7 @@ const Warpath = (() => {
                 facing = "Rear";
             }
         }
-        
+
         //check los now incl cover
         let shooterElevation = shooterHex.elevation + shooter.height;
         let targetElevation = targetHex.elevation + target.height;
@@ -1649,13 +1649,13 @@ const Warpath = (() => {
             }
             teH = Math.max(teH,edH);
             terrainHeight = teH + el;
-            let deltaS = shooterHeight - terrainHeight;
-            let deltaT = targetHeight - terrainHeight;
+            let deltaS = shooterElevation - terrainHeight;
+            let deltaT = targetElevation - terrainHeight;
             if (interHex.label !== targetHex.label) {
                 if (deltaS > 3 || deltaT > 3) {
                     continue;
                 }
-                if (terrainHeight > shooterHeight && terrainHeight > targetHeight) {
+                if ((terrainHeight > shooterElevation && terrainHeight > targetElevation) && interHex.terrain !== "Woods") {
                     los = false;
                     losBlock = label;
                     losReason = "Blocked by Terrain at " + label;
@@ -1672,7 +1672,7 @@ const Warpath = (() => {
                 if (woods > 2) {
                     los = false;
                     losBlock = label;
-                    losReason = "Blocked by Woods at " + label;
+                    losReason = "Blocked by > 2 Hexes of Woods at " + label;
                     break;
                 }
             }
@@ -1685,8 +1685,6 @@ const Warpath = (() => {
             distance: distance,
             cover: cover,
         }
-
-log(result)
 
 
         return result;
