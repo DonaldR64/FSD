@@ -1335,11 +1335,10 @@ const Warpath = (() => {
         PlaySound("Dice");
         let roll = randomInteger(8);
         let playerID = msg.playerid;
-        let id,model;
+        let id,model,player;
         if (msg.selected) {
             id = msg.selected[0]._id;
         }
-        let player,unit;
         let faction = "Neutral";
 
         if (!id && !playerID) {
