@@ -1,5 +1,5 @@
 const UnitLOS = (shooterUnit,targetUnit) => {
-    
+
 
 
 
@@ -11,3 +11,10 @@ const UnitLOS = (shooterUnit,targetUnit) => {
 
 
 }
+
+
+
+
+
+//for each shooter, get valid targets - los, cover, range
+//for the unit, how many of targets are in cover/have los
