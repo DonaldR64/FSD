@@ -40,3 +40,12 @@ const Command = () => {
     outputCard.body.push("When that is done, Roll for Initiative");
 }
 
+const Movement = () => {
+    //reveal all orders, set colours/auras
+    
+
+
+
+
+
+}
