@@ -38,6 +38,7 @@ const Command = () => {
     outputCard.body.push("Roll for Command Points");
     outputCard.body.push("Assign Actions");
     outputCard.body.push("When that is done, Roll for Initiative");
+    outputCard.body.push("Then Advance to Movement Phase");
 }
 
 const Movement = () => {
