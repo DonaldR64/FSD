@@ -1858,7 +1858,6 @@ log("Target Hex offers Cover")
             case '!AddAbilities':
                 AddAbilities(msg);
                 break;
-
             case '!TokenInfo':
                 TokenInfo(msg);
                 break;
@@ -1874,6 +1873,11 @@ log("Target Hex offers Cover")
             case '!Roll':
                 RollDice(msg);
                 break;
+            case '!Turn':
+                Turn();
+                break;
+
+
 
         }
     };
