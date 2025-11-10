@@ -1,0 +1,42 @@
+const Phase = () => {
+    let turn = state.Warpath.turn;
+    let phase = state.Warpath.phase;
+    let phases = ["Command","Movement","Overwatch","Combat","End"];
+    let p = phases[phase]++;
+    if (p>phases.length){
+        p=0;
+        turn++;
+    }
+    phase = phases[p];
+    state.Warpath.phase = phase;
+    state.Warpath.turn = turn;
+
+    SetupCard(phase + "Phase","Turn " + turn,"Neutral");
+
+    switch(phase) {
+        case 'Command':
+            Command();
+            break;
+        case 'Movement':
+            Movement();
+            break;
+        case 'Overwatch':
+            Overwatch();
+            break;
+        case 'Combat':
+            Combat();
+            break;
+        case 'End':
+            End();
+            break;     
+    }
+
+    PrintCard();
+}
+
+const Command = () => {
+    outputCard.body.push("Roll for Command Points");
+    outputCard.body.push("Assign Actions");
+    outputCard.body.push("When that is done, Roll for Initiative");
+}
+

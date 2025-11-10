@@ -1398,6 +1398,7 @@ const Warpath = (() => {
             markers: [[],[]],
             lines: [],
             turn: 0,
+            phase: "End",
             deployLines: [],
         }
 
@@ -1873,8 +1874,8 @@ log("Target Hex offers Cover")
             case '!Roll':
                 RollDice(msg);
                 break;
-            case '!Turn':
-                Turn();
+            case '!Phase':
+                Phase();
                 break;
 
 
