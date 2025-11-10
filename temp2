@@ -43,6 +43,8 @@ const Command = () => {
 
 const Movement = () => {
     //reveal all orders, set colours/auras
+    //run through unit array, check what order was given and aura all the models
+    //command units should already have their orders - ? what aura though...
     
 
 

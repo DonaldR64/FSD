@@ -739,7 +739,7 @@ const Warpath = (() => {
             let refModel = ModelArray[mID];
             this.faction = refModel.faction;
             this.player = refModel.player;
-            this.bases = refModel.bases;
+            this.bases = refModel.bases; //original # of bases
             this.type = refModel.type;
             if (!uID) {
                 uID = stringGen();
@@ -747,6 +747,7 @@ const Warpath = (() => {
             this.id = uID;
             this.tokenIDs = [];
             this.symbol = "";
+            this.order = ""; //order given for turn
             UnitArray[uID] = this;
         }
 
