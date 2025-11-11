@@ -1600,8 +1600,20 @@ const Warpath = (() => {
             }
         }
 
-        let shooterElevation = shooterHex.elevation + shooter.height;
-        let targetElevation = targetHex.elevation + target.height;
+        //height of models, or height of building if model in building
+        let shooterHeight = shooter.height;
+        if (shooterHex.terrain.includes("Building")) {
+            shooterHeight = TerrainInfo[shooterHex.terrain].height;
+        }
+
+        let targetHeight = target.height;
+        if (targetHex.terrain.includes("Building")) {
+            targetHeight = TerrainInfo[targetHex.terrain].height;
+        }
+
+
+        let shooterElevation = shooterHex.elevation + shooterHeight;
+        let targetElevation = targetHex.elevation + targetHeight;
 
         //Fliers are above terrain 
         if (shooter.keywords.includes("Fly")) {
