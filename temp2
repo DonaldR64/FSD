@@ -52,3 +52,65 @@ const Movement = () => {
 
 
 }
+
+const CommandPoints = (msg) => {
+    let playerID = msg.playerid;
+    let id,model,player,faction;
+    if (msg.selected) {
+        id = msg.selected[0]._id;
+    }
+    if (!id && !playerID) {
+        log("Back")
+        return;
+    }
+    if (id) {
+        model = ModelArray[id];
+        if (model) {
+            faction = model.faction;
+            player = model.player;
+        }
+    }
+    if ((!id || !model) && playerID) {
+        faction = state.Warpath.players[playerID];
+        player = (state.Warpath.factions[0] === faction) ? 0:1;
+    }
+    if (!state.Warpath.players[playerID] || state.Warpath.players[playerID] === undefined) {
+        if (faction !== "Neutral") {    
+            state.Warpath.players[playerID] = faction;
+        } else {
+            sendChat("","Click on one of your tokens then select Roll again");
+            return;
+        }
+    } 
+
+    let black = 3;
+    let green = 0;
+    let orange = 0;
+    let commandUnits = 0;
+    _.each(ModelArray,model => {
+        if (model.offboard === false && model.faction === faction && model.keyword.includes("Tactician")) {
+            let key = model.keywords.split(",");
+            _.each(key,phrase => {
+                if (phrase.includes("Tactician")) {
+                    if (phrase.includes("Black")) {black++};
+                    if (phrase.includes("Green")) {green++};
+                    if (phrase.includes("Orange")) {orange++};
+                }
+            })
+        }
+        if (model.keywords.includes("Command")) {
+            commandUnits++;
+        }
+    })
+
+    
+
+
+
+
+
+
+
+
+
+}

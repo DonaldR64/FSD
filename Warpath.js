@@ -699,7 +699,7 @@ const Warpath = (() => {
             }
             this.weapons = weapons;
 
-
+            this.offboard = false;
 
 
 
