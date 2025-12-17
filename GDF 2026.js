@@ -138,8 +138,8 @@ const GDF3 = (() => {
     //height is height of terrain element
 
 
-
-    const LinearTerrain = {
+//needs work on edge info
+    const EdgeInfo = {
         "#00ff00": {name: "Hedge", cover: 1, los: false,height: 0},
         "#980000": {name: "Wall", cover: 1, los: false, height: 0},
 
@@ -473,13 +473,13 @@ const GDF3 = (() => {
             return new Cube(this.q * (1.0 - t) + b.q * t, this.r * (1.0 - t) + b.r * t, this.s * (1.0 - t) + b.s * t);
         }
         linedraw(b) {
-            //returns array of hexes between this hex and hex 'b' incl. hex 'b'
+            //returns array of hexes between this hex and hex 'b', excluding b
             var N = this.distance(b);
             var a_nudge = new Cube(this.q + 1e-06, this.r + 1e-06, this.s - 2e-06);
             var b_nudge = new Cube(b.q + 1e-06, b.r + 1e-06, b.s - 2e-06);
             var results = [];
             var step = 1.0 / Math.max(N, 1);
-            for (var i = 1; i <= N; i++) {
+            for (var i = 1; i < N; i++) {
                 results.push(a_nudge.lerp(b_nudge, step * i).round());
             }
             return results;
@@ -593,13 +593,24 @@ const GDF3 = (() => {
             this.cube = offset.toCube();
             this.label = offset.label();
             this.elevation = 0;
+            this.cover = 0;
+            this.terrainHeight = 0;
             this.terrain = "Open";
+            this.los = false;
             this.edges = {};
             _.each(DIRECTIONS,a => {
                 this.edges[a] = "Open";
             })
             HexMap[this.label] = this;
         }
+
+        distance(b) {
+            let dist = this.cube.distance(b.cube);
+            return dist;
+        }
+
+
+
     }
 
     class Unit {
@@ -1039,6 +1050,9 @@ log(name)
                 let centreLabel = centre.toCube().label();
                 let hex = HexMap[centreLabel];
                 hex.terrain = name;
+                hex.cover = terrain.cover;
+                hex.los = terrain.los;
+                hex.terrainHeight = terrain.height;
             }
         })
 
@@ -1132,14 +1146,13 @@ log(name)
 log(unit)
         let label = unit.hexLabel();
         let hex = HexMap[label];
-        let terrainInfo = TerrainInfo[hex.terrain];
         SetupCard(unit.name,"Info",unit.faction);
         outputCard.body.push("Hex Label: " + label);
         outputCard.body.push("Terrain: " + hex.terrain);
         outputCard.body.push("Elevation: " + hex.elevation);
-        outputCard.body.push("Terrain Height: " + terrainInfo.height);
-        outputCard.body.push("Cover Level: " + terrainInfo.cover);
-        outputCard.body.push("LOS Blocking: " + terrainInfo.los);
+        outputCard.body.push("Terrain Height: " + hex.terrainHeight);
+        outputCard.body.push("Cover Level: " + hex.cover);
+        outputCard.body.push("LOS Blocking: " + hex.los);
         PrintCard();
     }
 
@@ -1247,212 +1260,104 @@ log(unit)
         let Tag = msg.content.split(";");
         let shooterID = Tag[1];
         let targetID = Tag[2];
-        let shooter = ModelArray[shooterID];
+        let shooter = UnitArray[shooterID];
         if (!shooter) {
-            sendChat("","Not valid shooter");
+            sendChat("","Not in Array");
             return;
         }
-        let target = ModelArray[targetID];
+        let target = UnitArray[targetID];
         if (!target) {
-            sendChat("","Not valid target");
+            sendChat("","Not in Array");
             return;
         }
-        let shooterUnit = UnitArray[shooter.unitID];
-        let sS = (shooterUnit.tokenIDs.length === 1) ? " ":"s ";
-        let sV = (shooterUnit.tokenIDs.length === 1) ? "has":"have";
 
-        let targetUnit = UnitArray[target.unitID];
-
-        let unitLOSResult = UnitLOS(shooterUnit,targetUnit);
-
-        
+        let losResult = LOS(shooter,target);
 
         SetupCard(shooter.name,"LOS",shooter.faction);
-        outputCard.body.push("Avg. Distance: " + unitLOSResult.avgdistance);
-        if (unitLOSResult.los === false) {
-            outputCard.body.push("The Shooter" + sS + sV + " no LOS to any Target");
+        outputCard.body.push("Distance: " + losResult.distance);
+        if (losResult.los === false) {
+            outputCard.body.push("No LOS To Target");
+            outputCard.body.push(losResult.losReason);
         } else {
-            //// percentage that have LOS and such
-
-
+            outputCard.body.push("LOS to Target");
+            let cover = ["No Cover","Soft Cover","Hard Cover"];
+            outputCard.body.push("Target has " + cover[losResult.cover]);
 
 
 
         }
-
-
-
         PrintCard();
     }
 
 
     const LOS = (shooter,target) => {
-        let shooterUnit = UnitArray[shooter.unitID];
-        let targetUnit = UnitArray[target.unitID];
 
+//need to factor in Indirect
+
+        let shooterHex = HexMap[shooter.hexLabel()];
+        let shooterElevation = shooterHex.elevation;
+        if ((shooter.type.includes("Infantry") || shooter.type.includes("Hero")) && shooterHex.terrain.includes("Building")) {
+            shooterElevation += Math.max(shooterHex.terrainHeight - 1,0);
+        }
+        let targetHex = HexMap[target.hexLabel()];
+        let targetElevation = targetHex.elevation;
+        if ((target.type.includes("Infantry") || target.type.includes("Hero")) && targetHex.terrain.includes("Building")) {
+            targetElevation += Math.max(targetHex.terrainHeight - 1,0);
+        }
+
+log("Shooter: " + shooter.name)
+log("Elevation: " + shooterElevation)
+log("Target: " + target.name)
+log("Elevation: " + targetElevation)
+
+
+        let distance = shooterHex.distance(targetHex);
+        if (target.type === "Aircraft") {distance += 6};
         let los = true;
         let losReason = "";
-        let losBlock = "";
-        let cover = false;
+        let cover = (target.type === "Aircraft") ? 0:targetHex.cover;
 
-        let shooterHex = HexMap[shooter.hexLabel];
-        let targetHex = HexMap[target.hexLabel];
-        let distance = shooterHex.cube.distance(targetHex.cube) - 1;
-        
-        //firing arc on weapon - used on fliers
-        let angle = TargetAngle(shooter,target);
-        let facing = "Front";
-        if (shooter.keywords.includes("Fly") && shooter.token.get(SM.hover) === false) {
-            if (angle > 90 && angle < 270) {
-                facing = "Rear";
-            }
-        }
+        if (shooter.type !== "Aircraft") {   
+            let pt1 = new Point(0,shooterElevation);
+            let pt2 = new Point(distance,targetElevation);
+            let pt3,pt4,pt5;
+            let interCubes = shooterHex.cube.linedraw(targetHex.cube);
 
-        //height of models, or height of building if model in building
-        let shooterHeight = shooter.height;
-        if (shooterHex.terrain.includes("Building")) {
-            shooterHeight = TerrainInfo[shooterHex.terrain].height;
-        }
+            for (let i=1;i<interCubes.length;i++) {
+                let label = interCubes[i].label();
+                let interHex = HexMap[label];
+log(interHex)
+                //check for hills
+                pt3 = new Point(i,0);
+                pt4 = new Point(i,interHex.elevation);
+                pt5 = lineLine(pt1,pt2,pt3,pt4);
 
-        let targetHeight = target.height;
-        if (targetHex.terrain.includes("Building")) {
-            targetHeight = TerrainInfo[targetHex.terrain].height;
-        }
-
-
-        let shooterElevation = shooterHex.elevation + shooterHeight;
-        let targetElevation = targetHex.elevation + targetHeight;
-
-        //Fliers are above terrain 
-        if (shooter.keywords.includes("Fly")) {
-            if (shooter.token.get(SM.hover) === true) {
-                shooterElevation += 3;
-            } else {
-                shooterElevation += 5;
-            }
-            shooterElevation += TerrainInfo[shooterHex.terrain].height;
-        }
-        if (target.keywords.includes("Fly")) {
-            if (target.token.get(SM.hover) === true) {
-                targetElevation += 3;
-            } else {
-                targetElevation += 5;
-            }
-            targetElevation += TerrainInfo[shooterHex.terrain].height;
-        }
-
-        let interCubes = shooterHex.cube.linedraw(targetHex.cube)
-        let woods = 0;
-        if (shooterHex.terrain === "Woods" && shooter.height <= 4 && shooter.keywords.includes("Fly") === false) {
-            woods = 1;
-        }
-
-        for (let i=0;i<interCubes.length - 1;i++) {
-            let label = interCubes[i].label();
-log(label)
-            let interHex = HexMap[label];
-            let teH = TerrainInfo[interHex.terrain].height; //terrain in hex
-            let edH = 0; //height of any terrain on edge crossed
-//edge
-/*
-            let delta = interCubes[i].add(interCubes[i+1]);
-            let dir;
-            for (let j=0;j<6;j++) {
-                let d = HexInfo.directions[DIRECTIONS[j]];
-                if (delta.q === d.q && delta.r === d.r) {
-                    dir = DIRECTIONS[j];
-                    break;
-                }
-            }            
-            let edge = interHex.edges[dir];
-            if (edge !== "Open") {
-                edH = LinearTerrain[edge].height;
-            }
-*/
-
-            //check for intervening models
-            let mHeight = 0;
-            for (let t=0;t<interHex.tokenIDs.length;t++) {
-                let tid = interHex.tokenIDs[t];
-                let tModel = ModelArray[tid];
-                if (shooterUnit.tokenIDs.includes(tid) || targetUnit.tokenIDs.includes(tid)) {
-                    continue;
-                }
-                if (tModel.keywords.includes("Fly")) {
-                    continue;
-                }
-                mHeight = Math.max(tModel.height,mHeight);
-            }
-log("terrain height: " + teH)
-log("edge height: " + edH)
-log("model height: " + mHeight)
-
-
-            let iH = Math.max(teH,edH,mHeight);
-            let modelBlock = false;
-            if (mHeight === iH && mHeight > 0) {
-                modelBlock = true;
-            }
-            interHexHeight = iH + interHex.elevation;
-log("interHexHeight: " + interHexHeight)
-            let deltaS = shooterElevation - interHexHeight;
-            let deltaT = targetElevation - interHexHeight;
-log("deltaS: " + deltaS)
-log("deltaT: " + deltaT)
-
-            if (deltaT > 3 || deltaS > 3) {continue};
-
-            if (deltaS > 0 && deltaT > 0 && iH > 0) {
-                //The line passes over a Base or terrain feature that is lower than both target and shooter (e.g. firing over an intervening wall or shorter Unit).
-                cover = true;
-    log("Cover at " + label);
-            }
-            if (iH > 0 && ((deltaS > 0 && deltaT === 0) || (deltaS === 0 && deltaT > 0))) {
-                //The line passes over a Base or terrain feature that is equal in height to either the target or shooter, and lower than the other.
-                cover = true;
-    log("Cover at " + label);
-            }
-
-            if (deltaS <= 0 && deltaT <= 0) {
-                if (modelBlock === true) {
+                if (pt5) {
                     los = false;
-                    losBlock = label;
-                    losReason = "Blocked by Model at " + label;
+                    losReason = "Blocked by Elevation at " + label;
                     break;
-                } else {
-                    if (interHex.terrain === "Woods" && (shooterElevation >= interHex.elevation || targetElevation >= interHex.elevation)) { 
-                        cover = true;
-                        woods++;
-    log("Woods at " + label);
-                        if (woods > 2) {
-                            los = false;
-                            losBlock = label;
-                            losReason = "Blocked by > 2 Hexes of Woods at " + label;
-                            break;
-                        }                    
-                    } else {
+                }
+
+                //check for terrain in hex
+                pt3 = new Point(i,interHex.elevation);
+                pt4 = new Point(i,interHex.elevation + interHex.terrainHeight);
+                pt5 = lineLine(pt1,pt2,pt3,pt4);
+
+                if (pt5) {
+                    if (interHex.los === true) {
                         los = false;
-                        losBlock = label;
                         losReason = "Blocked by Terrain at " + label;
                         break;
-                    }
+                    } 
+                    cover = Math.max(cover,hex.cover);
                 }
+
+                //check for terrain edges here
+
+
+                
+
             }
-        }
-
-        //target hex
-        if (TerrainInfo[targetHex.terrain].cover[target.type] === true) {
-            cover = true;
-log("Target Hex offers Cover")
-        }
-        if (targetHex.terrain === "Woods" && los === true) {
-            woods++;
-            if (woods > 2) {
-                los = false;
-                losBlock = targetHex.label;
-                losReason = "Target is too deep in woods";
-            }     
-        }
 
 
 
@@ -1461,15 +1366,15 @@ log("Target Hex offers Cover")
 
 
 
+
+        } 
 
         let result = {
             los: los,
-            losReason: losReason,
-            losBlock: losBlock,
-            distance: distance,
             cover: cover,
+            distance: distance,
+            losReason: losReason,
         }
-
 
         return result;
     }
