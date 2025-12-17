@@ -448,7 +448,7 @@
         <input type="hidden" name="attr_faction"/>
           <section class="header f-center">
             <h1><span name="attr_character_name"></span></h1>
-            <h3><span name="attr_faction"></span> <span name="attr_type"></span></h3>
+            <h3><span name="attr_faction"></span> <span name="attr_type"></span> [<span name="attr_models"></span>]</h3>
           </section>
 
           <section class="common f-center">
@@ -458,18 +458,12 @@
           <section class="att">
             <h3>Attributes</h3>
             <div class="attinfo">
-                <div><span>Models</span></div>
                 <div><span>Quality</span></div>
                 <div><span>Defense</span></div>
                 <div><span>Toughness</span></div>
-                <h4><span name="attr_models"></span></h4>
                 <h4><span name="attr_quality"></span></h4>
                 <h4><span name="attr_defense"></span></h4>
                 <h4><span name="attr_toughness"></span></h4>
-                <h4><span name="attr_hero"></span></h4>
-                <h4><span name="attr_heroquality"></span></h4>
-                <h4><span name="attr_herodefense"></span></h4>
-                <h4><span name="attr_herotoughness"></span></h4>
           </section>
 
           <section class="flag">
@@ -732,7 +726,7 @@
     });
 
     on("change:attrs sheet:opened", function() { 
-        getAttrs(["faction","hero"], function(values) {
+        getAttrs(["faction"], function(values) {
             let faction = values.faction;
             let factionImage = "";
 
@@ -814,11 +808,6 @@
 
             setAttrs({
                 "factionImage": factionImage,
-                "special0": special[0],
-                "special1": special[1],
-                "special2": special[2],
-                "special3": special[3],
-                "special4": special[4],
             });
         });    
     }); 

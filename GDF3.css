@@ -280,7 +280,7 @@ input[type="hidden"][value="Off"].keygrade10-status ~ .key10{
     grid-area: attinfo;
     display: grid;
     grid-gap: 2px;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     background-color: white;
     text-align: center;
