@@ -47,7 +47,15 @@
             <label>Quality:</label><input type="number" name="attr_quality">
             <label>Defense:</label><input type="number" name="attr_defense">
             <label>Toughness:</label><input type="number" name="attr_toughness">
-            <label>Hero:</label><input type="checkbox" name="attr_hero">
+
+            <label for="attr_hero">Hero:</label>
+            <select name="attr_hero">
+                <option value="" selected disabled hidden>Choose here</option>
+                <option value="No Hero">0</option>
+                <option value="Hero">1</option>
+            </select>
+
+
             <label>Hero Quality:</label><input type="number" name="attr_heroquality">
             <label>Hero Defense:</label><input type="number" name="attr_herodefense">
             <label>Hero Toughness:</label><input type="number" name="attr_herotoughness">
@@ -66,7 +74,6 @@
             </select>        
           </div>
     </div>    
-    <label>Special Rules:</label><input type="text" name="attr_special">
     <div class="row">
         <h3>Keywords</h3>
         <div class="keywords">
@@ -720,7 +727,7 @@
     on("change:attrs sheet:opened", function() { 
         getAttrs(["faction","hero"], function(values) {
             let faction = values.faction;
-            let heroFlag = values.hero === 1 : "Hero":"";
+            let heroFlag = values.hero === 1 ? "Hero":"";
             let factionImage = "";
 
             if (faction === "Ultramarines") {
