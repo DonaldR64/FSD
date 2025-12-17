@@ -107,8 +107,8 @@ main {
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"flag     header    header   flag2"
-                      "common   common    common   special"
-                      "common   common    common   upgrades"
+                      "common   common    common   keywords"
+                      "common   common    common   keywords"
                       "att      att       att      att"
                       "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon";
@@ -220,14 +220,10 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
   color: #39FF14;
 }
 
-.special {
-  grid-area: special;
-  flex-direction: center;
-  background-color: white;
-}
 
-.upgrades {
-    grid-area: upgrades;
+
+.keywords {
+    grid-area: keywords;
     flex-direction: center;
     background-color: white;
   }
