@@ -108,7 +108,7 @@ main {
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"common   common    header   header"
                       "common   common    att     keywords"
-                      "common   common    att.    keywords"
+                      "common   common    att    keywords"
                       "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon";
 }
