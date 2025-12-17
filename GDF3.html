@@ -463,7 +463,7 @@
                 <h4><span name="attr_quality"></span></h4>
                 <h4><span name="attr_defense"></span></h4>
                 <h4><span name="attr_toughness"></span></h4>
-                <h4><span name="attr_heroNum"></span></h4>
+                <h4><span name="attr_heroFlag"></span></h4>
                 <h4><span name="attr_heroquality"></span></h4>
                 <h4><span name="attr_herodefense"></span></h4>
                 <h4><span name="attr_herotoughness"></span></h4>
@@ -718,8 +718,9 @@
     });
 
     on("change:attrs sheet:opened", function() { 
-        getAttrs(["faction","special"], function(values) {
+        getAttrs(["faction","hero"], function(values) {
             let faction = values.faction;
+            let heroFlag = values.hero === 1 : "Hero":"";
             let factionImage = "";
 
             if (faction === "Ultramarines") {
@@ -798,9 +799,6 @@
                 factionImage = "https://s3.amazonaws.com/files.d20.io/images/436353798/cF5gvCR7OO8DGV7A_HK-Bw/thumb.png?1744215807";
             } 
 
-            let special = values.special;
-            special = special.split(";");
-
             setAttrs({
                 "factionImage": factionImage,
                 "special0": special[0],
@@ -808,6 +806,7 @@
                 "special2": special[2],
                 "special3": special[3],
                 "special4": special[4],
+                "heroFlag": heroFlag,
             });
         });    
     }); 
