@@ -1071,6 +1071,7 @@ log(name)
         SetupCard(unit.name,"Info",unit.faction);
         outputCard.body.push("Hex Label: " + label);
         outputCard.body.push("Terrain: " + hex.terrain);
+        outputCard.body.push("Elevation: " + hex.elevation);
         outputCard.body.push("Terrain Height: " + terrainInfo.height);
         outputCard.body.push("Cover Level: " + terrainInfo.cover);
         outputCard.body.push("LOS Blocking: " + terrainInfo.los);
