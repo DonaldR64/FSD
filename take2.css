@@ -105,11 +105,10 @@ main {
   height: 800px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"flag     header    header   flag2"
-                      "common   common    common   keywords"
-                      "common   common    common   keywords"
-                      "att      att       att      att"
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-areas:"common   common    header   header"
+                      "common   common    att     keywords"
+                      "common   common    att.    keywords"
                       "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon";
 }
@@ -280,8 +279,8 @@ input[type="hidden"][value="Off"].keygrade10-status ~ .key10{
     grid-area: attinfo;
     display: grid;
     grid-gap: 2px;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
     background-color: white;
     text-align: center;
 }
