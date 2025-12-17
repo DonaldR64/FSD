@@ -107,8 +107,8 @@ main {
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"common   common    header   header"
-                      "common   common    att     keywords"
-                      "common   common    att    keywords"
+                      "common   common    att    att"
+                      "common   common    keywords    keywords"
                       "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon";
 }
@@ -227,37 +227,6 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
     background-color: white;
   }
   
-input[type="hidden"][value="Off"].keygrade1-status ~ .key1{
-    display: none;
-}
-input[type="hidden"][value="Off"].keygrade2-status ~ .key2{
-    display: none;
-}
-input[type="hidden"][value="Off"].keygrade3-status ~ .key3{
-    display: none;
-}
-input[type="hidden"][value="Off"].keygrade4-status ~ .key4{
-    display: none;
-}
-input[type="hidden"][value="Off"].keygrade5-status ~ .key5{
-    display: none
-}
-input[type="hidden"][value="Off"].keygrade6-status ~ .key6{
-    display: none;
-}
-input[type="hidden"][value="Off"].keygrade7-status ~ .key7{
-    display: none;
-}
-input[type="hidden"][value="Off"].keygrade8-status ~ .key8{
-    display: none;
-}
-input[type="hidden"][value="Off"].keygrade9-status ~ .key9{
-    display: none;
-}
-input[type="hidden"][value="Off"].keygrade10-status ~ .key10{
-    display: none;
-}
-
 .common {
   grid-area: common;
   background-color: white;
@@ -279,8 +248,8 @@ input[type="hidden"][value="Off"].keygrade10-status ~ .key10{
     grid-area: attinfo;
     display: grid;
     grid-gap: 2px;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
     background-color: white;
     text-align: center;
 }
