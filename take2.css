@@ -248,7 +248,7 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
     text-align: center;
 }
 
-.att {
+.key {
   grid-area: key;
   background-color: white;
 }
