@@ -43,14 +43,23 @@
         </div>
         <div class="col">
             <h3>Attributes</h3>
+            <label>Models:</label><input type="number" name="attr_models">
             <label>Quality:</label><input type="number" name="attr_quality">
             <label>Defense:</label><input type="number" name="attr_defense">
             <label>Toughness:</label><input type="number" name="attr_toughness">
+            <label>Hero:</label><input type="checkbox" name="attr_hero">
+            <label>Hero Quality:</label><input type="number" name="attr_heroquality">
+            <label>Hero Defense:</label><input type="number" name="attr_herodefense">
+            <label>Hero Toughness:</label><input type="number" name="attr_herotoughness">
+
+
+
+
+
             <label for="attr_type">Type:</label>
             <select name="attr_type">
                 <option value="" selected disabled hidden>Choose here</option>
                 <option value="Infantry">Infantry</option>
-                <option value="Hero">Hero</option>
                 <option value="Vehicle">Vehicle</option>
                 <option value="Monster">Monster</option>
                 <option value="Aircraft">Aircraft</option>
@@ -64,7 +73,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Equipped</th>
+                        <th>Active</th>
                         <th>Keywords</th>
                     </tr>
                 </thead>
@@ -143,16 +152,6 @@
             </table>
         </div>
     </div>
-    <label for="attr_rank">Rank/Priority:</label>
-    <select name="attr_rank">
-        <option value="" selected disabled hidden>Choose here</option>
-        <option value=1>Base</option>
-        <option value=2>Weapons</option>
-        <option value=3>Heavy Weapons</option>
-        <option value=4>Standard Bearer/Special Ops</option>
-        <option value=5>Sergeant</option>
-        <option value=6>Hero</option>
-    </select>  
 
     <div class="row">
         <h3>Weapons</h3>
@@ -456,12 +455,23 @@
           <section class="att">
             <h3>Attributes</h3>
             <div class="attinfo">
+                <div><span>Models</span></div>
                 <div><span>Quality</span></div>
                 <div><span>Defense</span></div>
                 <div><span>Toughness</span></div>
+                <h4><span name="attr_models"></span></h4>
                 <h4><span name="attr_quality"></span><span>+</span></h4>
                 <h4><span name="attr_defense"></span><span>+</span></h4>
                 <h4><span name="attr_toughness"></span></h4>
+                <input type="hidden" name="attr_hero" class="hero-status" value="Off">
+                <div class="hero">
+                    <h4><span name="attr_heroquality"></span><span>+</span></h4>
+                    <h4><span name="attr_herodefense"></span><span>+</span></h4>
+                    <h4><span name="attr_herotoughness"></span></h4>
+                </div>
+
+
+
           </section>
 
           <section class="flag">

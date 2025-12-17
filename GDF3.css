@@ -228,34 +228,34 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
     background-color: white;
   }
   
-input[type="hidden"][value="Off"].upgrade1-status ~ .up1{
+input[type="hidden"][value="Off"].keygrade1-status ~ .key1{
     display: none;
 }
-input[type="hidden"][value="Off"].upgrade2-status ~ .up2{
+input[type="hidden"][value="Off"].keygrade2-status ~ .key2{
     display: none;
 }
-input[type="hidden"][value="Off"].upgrade3-status ~ .up3{
+input[type="hidden"][value="Off"].keygrade3-status ~ .key3{
     display: none;
 }
-input[type="hidden"][value="Off"].upgrade4-status ~ .up4{
+input[type="hidden"][value="Off"].keygrade4-status ~ .key4{
     display: none;
 }
-input[type="hidden"][value="Off"].upgrade5-status ~ .up5{
+input[type="hidden"][value="Off"].keygrade5-status ~ .key5{
     display: none
 }
-input[type="hidden"][value="Off"].upgrade6-status ~ .up6{
+input[type="hidden"][value="Off"].keygrade6-status ~ .key6{
     display: none;
 }
-input[type="hidden"][value="Off"].upgrade7-status ~ .up7{
+input[type="hidden"][value="Off"].keygrade7-status ~ .key7{
     display: none;
 }
-input[type="hidden"][value="Off"].upgrade8-status ~ .up8{
+input[type="hidden"][value="Off"].keygrade8-status ~ .key8{
     display: none;
 }
-input[type="hidden"][value="Off"].upgrade9-status ~ .up9{
+input[type="hidden"][value="Off"].keygrade9-status ~ .key9{
     display: none;
 }
-input[type="hidden"][value="Off"].upgrade10-status ~ .up10{
+input[type="hidden"][value="Off"].keygrade10-status ~ .key10{
     display: none;
 }
 
@@ -276,12 +276,18 @@ input[type="hidden"][value="Off"].upgrade10-status ~ .up10{
   background-color: white;
 }
 
+input[type="hidden"][value=0].hero-status ~ .hero{
+    display: none;
+}
+
+
+
 .attinfo {
     grid-area: attinfo;
     display: grid;
     grid-gap: 2px;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
     background-color: white;
     text-align: center;
 }
