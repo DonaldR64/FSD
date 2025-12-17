@@ -51,8 +51,8 @@
             <label for="attr_hero">Hero:</label>
             <select name="attr_hero">
                 <option value="" selected disabled hidden>Choose here</option>
-                <option value="No Hero">0</option>
-                <option value="Hero">1</option>
+                <option value="">No Hero</option>
+                <option value="Hero">Hero</option>
             </select>
 
 
@@ -727,7 +727,6 @@
     on("change:attrs sheet:opened", function() { 
         getAttrs(["faction","hero"], function(values) {
             let faction = values.faction;
-            let heroFlag = values.hero === 1 ? "Hero":"";
             let factionImage = "";
 
             if (faction === "Ultramarines") {
@@ -813,7 +812,6 @@
                 "special2": special[2],
                 "special3": special[3],
                 "special4": special[4],
-                "heroFlag": heroFlag,
             });
         });    
     }); 
