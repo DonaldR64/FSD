@@ -105,6 +105,25 @@ const GDF3 = (() => {
             "borderColour": "#00FF00",
             "borderStyle": "5px ridge",
         },
+        "Plague Disciples": {
+            "image": "https://s3.amazonaws.com/files.d20.io/images/353239057/GIITPAhD-JdRRD2D6BREWw/thumb.png?1691112406",
+            "dice": "Deathguard",
+            "backgroundColour": "#B3CF99",
+            "titlefont": "Anton",
+            "fontColour": "#000000",
+            "borderColour": "#000000",
+            "borderStyle": "5px ridge",
+        },
+        "Alien Hives": {
+            "image": "https://s3.amazonaws.com/files.d20.io/images/362007142/CjTYql17F5VDkqGlW_yorg/thumb.png?1696555948",
+            "dice": "Tyranids",
+            "backgroundColour": "#800080",
+            "titlefont": "Goblin One",
+            "fontColour": "#f9b822",
+            "borderColour": "#f9b822",
+            "borderStyle": "5px ridge",
+        },
+
 
     };
 
