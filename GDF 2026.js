@@ -1297,7 +1297,8 @@ log(unit)
                 outputCard.body.push(name + " has Range");
             })
             let cover = ["No Cover","Soft Cover","Hard Cover"];
-            outputCard.body.push("Target has " + cover[losResult.cover]);
+            cover = cover[Math.max(losResult.targetHexCover,losResult.interveningCover)];
+            outputCard.body.push("Target has " + cover);
         }
         PrintCard();
     }
