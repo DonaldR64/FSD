@@ -119,8 +119,8 @@ const GDF3 = (() => {
 
 
     const LinearTerrain = {
-        "#00ff00": {name: "Hedge", cover: 1, los: true,height: 0},
-        "#980000": {name: "Wall", cover: 1, los: true, height: 0},
+        "#00ff00": {name: "Hedge", cover: 1, los: false,height: 0},
+        "#980000": {name: "Wall", cover: 1, los: false, height: 0},
 
 
 
@@ -132,15 +132,15 @@ const GDF3 = (() => {
     //0 to defense, -1 to hit
     //+1 to defense, -1 to hit
 
-    //when doing LOS - gets best cover level, and LOS stops if false
+    //when doing LOS - gets best cover level, and LOS stops if true
     //have to check triangles for LOS/heights
     //height => most are height 1, used to check re higher levels
 
     const TerrainInfo = {
-        "Woods": {name: "Woods",cover: 1,los: false,height: 1},
-        "Building 1": {name: "Building 1",cover: 2,los: false,height: 1},
-        "Building 2": {name: "Building 2",cover: 2,los: false,height: 2},
-        "Crops": {name: "Crops",cover: 1,los: true,height: 0},
+        "Woods": {name: "Woods",cover: 1,los: true,height: 1},
+        "Building 1": {name: "Building 1",cover: 2,los: true,height: 1},
+        "Building 2": {name: "Building 2",cover: 2,los: true,height: 2},
+        "Crops": {name: "Crops",cover: 1,los: false,height: 0},
 
 
 
@@ -1067,9 +1067,13 @@ log(name)
         let unit = UnitArray[id];
         let label = unit.hexLabel();
         let hex = HexMap[label];
+        let terrainInfo = TerrainInfo[hex.terrain];
         SetupCard(unit.name,"Info",unit.faction);
         outputCard.body.push("Hex Label: " + label);
         outputCard.body.push("Terrain: " + hex.terrain);
+        outputCard.body.push("Terrain Height: " + terrainInfo.height);
+        outputCard.body.push("Cover Level: " + terrainInfo.cover);
+        outputCard.body.push("LOS Blocking: " + terrainInfo.los);
         PrintCard();
     }
 
