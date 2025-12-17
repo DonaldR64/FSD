@@ -606,13 +606,53 @@ const GDF3 = (() => {
         constructor(token) {
             let id = token.get("id");
             let charID = token.get("represents");
-            let char = getObj("character", charID); 
             let aa = AttributeArray(charID);
 
-            this.token = token;
+            this.tokenID = token.get("id");
             this.name = token.get("name");
 
             this.faction = aa.faction;
+
+            this.models = parseInt(aa.models) || 1;
+            this.quality = parseInt(aa.quality);
+            this.defense = parseInt(aa.defense);
+            this.toughness = parseInt(aa.toughness) || 1;
+
+            this.woundsMax = this.models * this.toughness;
+
+            this.type = aa.type;
+            let keywords = [];
+            for (let i=1;i<11;i++) {
+                let eq = "key" + i + "equipped";
+                let k = "key" + i + "name";
+                if (aa[eq] === "Equipped") {
+                    keywords.push(aa[k].trim());
+                }
+            }
+            this.keywords = keywords;
+
+            let weapons = [];
+            for (let i=1;i<11;i++) {
+                if (aa["weapon" + i + "equipped"] === "Equipped") {
+                    let weapon = {
+                        name: aa["weapon" + i + "name"],
+                        number: parseInt(aa["weapon" + i + "number"]) || 1,
+                        type: aa["weapon" + i + "type"],
+                        range: parseInt(aa["weapon" + i + "range"]) || 1,
+                        attacks: parseInt(aa["weapon" + i + "attack"]) || 1,
+                        ap: parseInt(aa["weapon" + i + "ap"]) || 0,
+                        keywords: aa["weapon" + i + "special"],
+                        fx: aa["weapon" + i + "fx"],
+                        sound: aa["weapon" + i + "sound"],
+                    }
+                    weapons.push(weapon);
+                }
+            }
+            this.weapons = weapons;
+
+
+
+
 
 
             UnitArray[id] = this;
@@ -632,7 +672,8 @@ const GDF3 = (() => {
         }
 
         hexLabel() {
-            let label = (new Point(this.token.get("left"),this.token.get("top"))).label();
+            let token = findObjs({_type:"graphic", id: this.tokenID})[0];
+            let label = (new Point(token.get("left"),token.get("top"))).label();
             return label;
         }
 
@@ -1087,6 +1128,8 @@ log(name)
         if (!msg.selected) {return};
         let id = msg.selected[0]._id;
         let unit = UnitArray[id];
+
+log(unit)
         let label = unit.hexLabel();
         let hex = HexMap[label];
         let terrainInfo = TerrainInfo[hex.terrain];
@@ -1150,32 +1193,6 @@ log(name)
 
         //clear arrays
         UnitArray = {};
-        //clear token info
-        let tokens = findObjs({
-            _pageid: Campaign().get("playerpageid"),
-            _type: "graphic",
-            _subtype: "token",
-            layer: "objects",
-        })
-        tokens.forEach((token) => {
-            if (token.get("name").includes("Objective") === true) {return};
-            token.set({
-                name: "",
-                tint_color: "transparent",
-                aura1_color: "transparent",
-                aura1_radius: 0,
-                showplayers_bar1: false,
-                showplayers_bar2: false,
-                showplayers_bar3: false,
-                showname: true,
-                showplayers_aura1: true,
-                gmnotes: "",
-                statusmarkers: "",
-                tooltip: "",
-            });                
-        });
-    
-        RemoveDead("All");
 
         state.GDF3 = {
             playerIDs: ["",""],
