@@ -119,29 +119,37 @@ const GDF3 = (() => {
 
 
     const LinearTerrain = {
-        "#00ff00": {name: "Hedge",height: 1},
-        "#980000": {name: "Wall",height: 1},
+        "#00ff00": {name: "Hedge", cover: 1, los: true,height: 0},
+        "#980000": {name: "Wall", cover: 1, los: true, height: 0},
 
 
 
     }
 
 
+    //Cover: 0, 1, 2
+    //0 to defense, 0 to hit    
+    //0 to defense, -1 to hit
+    //+1 to defense, -1 to hit
 
-
+    //when doing LOS - gets best cover level, and LOS stops if false
+    //have to check triangles for LOS/heights
+    //height => most are height 1, used to check re higher levels
 
     const TerrainInfo = {
-        "Woods": {name: "Woods",height: 4},
-
+        "Woods": {name: "Woods",cover: 1,los: false,height: 1},
+        "Building 1": {name: "Building 1",cover: 2,los: false,height: 1},
+        "Building 2": {name: "Building 2",cover: 2,los: false,height: 2},
+        "Crops": {name: "Crops",cover: 1,los: true,height: 0},
 
 
 
     }
 
     const HillHeights = {
-        //each level has a height of 3
-        "#000000": 3,
-        "#666666": 6,
+        //each successive level has a height of 1
+        "#000000": 1,
+        "#666666": 2,
     }
 
 
@@ -572,15 +580,17 @@ const GDF3 = (() => {
         }
     }
 
-    class Model {
-        constructor(id) {
-            let token = findObjs({_type:"graphic", id: id})[0];
+    class Unit {
+        constructor(token) {
+            let id = token.get("id");
             let charID = token.get("represents");
             let char = getObj("character", charID); 
             let aa = AttributeArray(charID);
 
             this.token = token;
-   
+            this.name = token.get("name");
+
+this.faction = "Neutral";
 
 
             UnitArray[id] = this;
@@ -599,7 +609,10 @@ const GDF3 = (() => {
 
         }
 
-
+        hexLabel() {
+            let label = (new Point(this.token.get("left"),this.token.get("top"))).label();
+            return label;
+        }
 
 
 
@@ -894,10 +907,10 @@ const GDF3 = (() => {
                 halfToggleY = -halfToggleY;
             }
         }
-        //AddElevations();
-        //AddTerrain();    
-        //AddEdges();
-        //AddTokens();
+        AddElevations();
+        AddTerrain();    
+        AddEdges();
+        AddTokens();
         let elapsed = Date.now()-startTime;
         log("Hex Map Built in " + elapsed/1000 + " seconds");
     };
@@ -957,6 +970,7 @@ const GDF3 = (() => {
         _.each(tokens,token => {
             let name = token.get("name");
             let terrain = TerrainInfo[name];
+log(name)
             if (terrain) {
                 let centre = new Point(token.get("left"),token.get('top'));
                 let centreLabel = centre.toCube().label();
@@ -1008,22 +1022,11 @@ const GDF3 = (() => {
         tokens.forEach((token) => {
             let character = getObj("character", token.get("represents"));   
             if (character) {
-                let unitID = decodeURIComponent(token.get("gmnotes")).toString();       
-                let model = new Model(token.id);
-                if (unitID) {
-                    let unit = UnitArray[unitID];         
-                    if (!unit) {
-                        unit = new Unit(token.id,unitID);
-                    }
-                    unit.AddModel(token.id);
-                }
+                let unit = new Unit(token);
             }  
-
-
-
         });
         let elapsed = Date.now()-start;
-        log(`${c} token${s} checked in ${elapsed/1000} seconds - ` + Object.keys(ModelArray).length + " placed in Model Array");
+        log(`${c} token${s} checked in ${elapsed/1000} seconds - ` + Object.keys(UnitArray).length + " placed in Array");
 
     }
 
@@ -1061,8 +1064,12 @@ const GDF3 = (() => {
     const TokenInfo = (msg) => {
         if (!msg.selected) {return};
         let id = msg.selected[0]._id;
-
-        
+        let unit = UnitArray[id];
+        let label = unit.hexLabel();
+        let hex = HexMap[label];
+        SetupCard(unit.name,"Info",unit.faction);
+        outputCard.body.push("Hex Label: " + label);
+        outputCard.body.push("Terrain: " + hex.terrain);
         PrintCard();
     }
 
