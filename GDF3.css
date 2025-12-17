@@ -46,7 +46,7 @@ input[type="hidden"][name="attr_faction"]:is([value="Imperial Guard"],[value="In
 input[type="hidden"][name="attr_faction"][value="Space Wolves"] ~ .mysheet {
     background-color: #dae6ef;
 }
-input[type="hidden"][name="attr_faction"][value="Tyranids"] ~ .mysheet {
+input[type="hidden"][name="attr_faction"][value="Alien Hives"] ~ .mysheet {
   background-color: #800080;
 }
 input[type="hidden"][name="attr_faction"][value="Genestealer Cult"] ~ .mysheet {
