@@ -105,10 +105,11 @@ main {
   height: 800px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"flag   header    header   header"
-                      "common   common    common    att"
-                      "common   common    common    att"
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-areas:"flag   header    header   att"
+                      "common   common    common    common"
+                      "common   common    common    common"
+                      "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon";
 }
