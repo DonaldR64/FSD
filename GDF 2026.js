@@ -137,6 +137,7 @@ const GDF3 = (() => {
     //height => most are height 1, used to check re higher levels
 
     const TerrainInfo = {
+        "Open": {name: "Open",cover: 0,los: false,height: 0},
         "Woods": {name: "Woods",cover: 1,los: true,height: 1},
         "Building 1": {name: "Building 1",cover: 2,los: true,height: 1},
         "Building 2": {name: "Building 2",cover: 2,los: true,height: 2},
