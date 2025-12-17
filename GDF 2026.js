@@ -1275,16 +1275,29 @@ log(unit)
 
         SetupCard(shooter.name,"LOS",shooter.faction);
         outputCard.body.push("Distance: " + losResult.distance);
-        if (losResult.los === false) {
-            outputCard.body.push("No LOS To Target");
-            outputCard.body.push(losResult.losReason);
+        let wlos = [];
+        _.each(shooter.weapons,weapon => {
+            if (losResult.distance < weapon.range) {
+                if (losResult.los === true || weapon.keywords.includes("Indirect")) {
+                    wlos.push(weapon.name);
+                }
+            } 
+        })
+
+        if (wlos.length === 0) {
+            if (losResult.los === false) {
+                outputCard.body.push("No LOS To Target");
+                outputCard.body.push(losResult.losReason);
+            } else {
+                outputCard.body.push("LOS to target, but no Weapons in Range");
+            }
         } else {
             outputCard.body.push("LOS to Target");
+            _.each(wlos,name => {
+                outputCard.body.push(name + " has Range");
+            })
             let cover = ["No Cover","Soft Cover","Hard Cover"];
             outputCard.body.push("Target has " + cover[losResult.cover]);
-
-
-
         }
         PrintCard();
     }
@@ -1315,7 +1328,8 @@ log("Elevation: " + targetElevation)
         if (target.type === "Aircraft") {distance += 6};
         let los = true;
         let losReason = "";
-        let cover = (target.type === "Aircraft") ? 0:targetHex.cover;
+
+        let interveningCover = 0;
 
         if (shooter.type !== "Aircraft") {   
             let pt1 = new Point(0,shooterElevation);
@@ -1349,7 +1363,7 @@ log(interHex)
                         losReason = "Blocked by Terrain at " + label;
                         break;
                     } 
-                    cover = Math.max(cover,hex.cover);
+                    interveningCover = Math.max(interveningCover,hex.cover);
                 }
 
                 //check for terrain edges here
@@ -1371,7 +1385,8 @@ log(interHex)
 
         let result = {
             los: los,
-            cover: cover,
+            targetHexCover:  (target.type === "Aircraft") ? 0:targetHex.cover,
+            interveningCover: interveningCover,
             distance: distance,
             losReason: losReason,
         }
