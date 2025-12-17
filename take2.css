@@ -105,10 +105,10 @@ main {
   height: 800px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr;
-  grid-template-areas:
-                      "common   common    common    header"
-                      "common   common    common    att"
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-areas:"flag   header    header   flag2"
+                      "common   common    att    att"
+                      "common   common    key    key"
                       "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon";
 }
@@ -192,6 +192,16 @@ section {
   margin-right: auto;
   border-style: none;
 }
+
+.flag2 {
+  grid-area: flag2;
+  align-items: center;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  border-style: none;
+}
+
 
 .header {
   grid-area: header;
