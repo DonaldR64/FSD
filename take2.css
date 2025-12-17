@@ -106,9 +106,9 @@ main {
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"common   common    header   header"
-                      "common   common    att    att"
-                      "common   common    keywords    keywords"
+  grid-template-areas:"flag   header    header   header"
+                      "common   common    common    att"
+                      "common   common    common    att"
                       "weapon   weapon    weapon   weapon"
                       "weapon   weapon    weapon   weapon";
 }
@@ -193,15 +193,6 @@ section {
   border-style: none;
 }
 
-.flag2 {
-  grid-area: flag2;
-  align-items: center;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  border-style: none;
-}
-
 .header {
   grid-area: header;
   flex-direction: center;
@@ -220,13 +211,6 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
 }
 
 
-
-.keywords {
-    grid-area: keywords;
-    flex-direction: center;
-    background-color: white;
-  }
-  
 .common {
   grid-area: common;
   background-color: white;
@@ -248,8 +232,8 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
     grid-area: attinfo;
     display: grid;
     grid-gap: 2px;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
     background-color: white;
     text-align: center;
 }
