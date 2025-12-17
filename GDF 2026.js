@@ -610,7 +610,7 @@ const GDF3 = (() => {
             this.token = token;
             this.name = token.get("name");
 
-this.faction = "Neutral";
+            this.faction = aa.faction;
 
 
             UnitArray[id] = this;
