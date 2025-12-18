@@ -1456,7 +1456,7 @@ log(label)
                 no.push(weapon.name + " - lacks Range");
                 continue;
             }
-            weaponArray.push({weapon: weapon, hits: 0});
+            weaponArray.push({info: weapon}); //can add hits, rolls etc 
         }
 
         if (weaponArray.length === 0) {
@@ -1483,11 +1483,62 @@ log(label)
         }
 
         //run through weapons, roll to hit/save any hits
-        
+        let quality = attacker.quality;
 
 
 log(weaponArray)
+        _.each(weaponArray,weapon => {
+            let rolls = [], hits = 0, crits = 0;
+            let needed = quality; 
+            //modifiers here
 
+
+            needed = Math.max(2,needed); //1 is always a miss
+
+
+            let dice = weapon.info.number * weapon.info.attacks;
+            let verb = (weapon.info.number === 1) ? " scores ": " score ";
+
+
+            do {
+                let roll = randomInteger(6);
+                rolls.push(roll);
+
+
+
+                if (roll >= needed) {
+                    if (roll === 6) {
+                        crits++;
+                    } else {
+                        hits++;
+                    }
+
+
+
+                }
+
+
+
+
+                dice--;
+            } while (dice > 0);
+
+            rolls = rolls.sort((a,b)=>b-a);
+            weapon.hits = hits;
+            weapon.crits = crits; //natural 6s
+            weapon.rolls = rolls;
+            let totalHits = hits + crits;
+
+            let hitTip = "Rolls: " + rolls.toString() + " vs. " + needed + "+";
+            let tip = '[' + totalHits + '](#" class="showtip" title="' + hitTip + ')';;
+            outputCard.body.push(weapon.info.name + verb + tip + ' hits');
+
+
+
+
+
+
+        })
 
 
 
