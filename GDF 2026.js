@@ -1324,6 +1324,8 @@ log("Elevation: " + targetElevation)
 
 
         let distance = shooterHex.distance(targetHex);
+        if (shooter.type === "Titan") {distance -= 1};
+        if (target.type === "Titan") {distance -= 1};
         let los = true;
         let losReason = "";
 
