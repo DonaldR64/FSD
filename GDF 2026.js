@@ -138,10 +138,9 @@ const GDF3 = (() => {
     //height is height of terrain element
 
 
-//needs work on edge info
     const EdgeInfo = {
-        "#00ff00": {name: "Hedge", cover: 1, los: false,height: 0.5},
-        "#980000": {name: "Wall", cover: 1, los: false, height: 0.5},
+        "#00ff00": {name: "Hedge", cover: 1, los: false,height: 0.25},
+        "#980000": {name: "Wall", cover: 1, los: false, height: 0.25},
 
 
 
@@ -615,7 +614,6 @@ const GDF3 = (() => {
 
     class Unit {
         constructor(token) {
-            let id = token.get("id");
             let charID = token.get("represents");
             let aa = AttributeArray(charID);
 
@@ -666,7 +664,7 @@ const GDF3 = (() => {
 
 
 
-            UnitArray[id] = this;
+            UnitArray[this.tokenID] = this;
 
 
 
@@ -1369,55 +1367,47 @@ log(label)
                 }
 
                 //check for terrain edges here
-                //all edges are walls or hedges, height .5, soft cover
-    log(interCubes[i])
-
-                if ((i+1) === interCubes.length) {
-                    ic = targetHex.cube;
-                } else {
-                    ic = interCubes[i+1];
-                }
-                let delta = ic.subtract(interCubes[i]);
-                let dir;
-                for (let j=0;j<6;j++) {
-                    let d = HexInfo.directions[DIRECTIONS[j]];
-                    if (delta.q === d.q && delta.r === d.r) {
-                        dir = DIRECTIONS[j];
-                        break;
+                //all edges are walls or hedges, soft cover, and skip if shooter/target not at same height
+                if (shooterElevation === targetElevation) {
+                    if ((i+1) === interCubes.length) {
+                        ic = targetHex.cube;
+                    } else {
+                        ic = interCubes[i+1];
                     }
-                }            
-    log(dir)
-                let edge = interHex.edges[dir];
-                if (edge !== "Open") {
-    log(edge)
-                    pt3 = new Point(i,interHex.elevation);
-                    pt4 = new Point(i,interHex.elevation + edge.height);
-                    pt5 = lineLine(pt1,pt2,pt3,pt4);
-                    if (pt5) {
-                        interveningCover = Math.max(interveningCover,edge.cover);
-                    }
-                }
-
-            }
-
-            //check for intervening models using intercubes
-            _.each(UnitArray,unit => {
-                if (unit.id !== shooter.id && unit.id !== target.id) {
-                    let label = unit.hexLabel();
-                    let index = interLabels.indexOf(label);
-                    if (index > 0) {
-                        let interHex = HexMap[label];
+                    let delta = ic.subtract(interCubes[i]);
+                    let dir;
+                    for (let j=0;j<6;j++) {
+                        let d = HexInfo.directions[DIRECTIONS[j]];
+                        if (delta.q === d.q && delta.r === d.r) {
+                            dir = DIRECTIONS[j];
+                            break;
+                        }
+                    }            
+                    let edge = interHex.edges[dir];
+                    if (edge !== "Open") {
                         pt3 = new Point(i,interHex.elevation);
-                        pt4 = new Point(i,interHex.elevation + .5);
+                        pt4 = new Point(i,interHex.elevation + edge.height);
                         pt5 = lineLine(pt1,pt2,pt3,pt4);
                         if (pt5) {
-                            los = false;
-                            losReason = "Blocked by Unit at " + label;
+                            interveningCover = Math.max(interveningCover,edge.cover);
                         }
                     }
                 }
-            })
+            }
 
+            if (shooterElevation === targetElevation) {
+                //check for intervening models using intercubes
+                _.each(UnitArray,unit => {
+log(unit.name + " : " + unit.tokenID)
+                    let label = unit.hexLabel();
+log(label)
+
+                    if (unit.tokenID !== shooter.tokenID && unit.tokenID !== target.tokenID && unit.type !== "Hero" && interLabels.includes(label)) {
+                        los = false;
+                        losReason = "Blocked by Unit at " + label;
+                    }
+                })
+            }
 
 
 
