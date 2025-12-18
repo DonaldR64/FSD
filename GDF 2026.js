@@ -1277,7 +1277,8 @@ log(hex)
         outputCard.body.push("Distance: " + losResult.distance);
         let wlos = [];
         _.each(shooter.weapons,weapon => {
-            if (losResult.distance < weapon.range) {
+            let range = (target.type === "Aircraft" && weapon.keywords.includes("Unstoppable") === false) ? weapon.range - 6:weapon.range;
+            if (losResult.distance < range) {
                 if (losResult.los === true || weapon.keywords.includes("Indirect")) {
                     wlos.push(weapon.name);
                 }
@@ -1323,7 +1324,6 @@ log("Elevation: " + targetElevation)
 
 
         let distance = shooterHex.distance(targetHex);
-        if (target.type === "Aircraft") {distance += 6};
         let los = true;
         let losReason = "";
 
@@ -1402,7 +1402,7 @@ log(unit.name + " : " + unit.tokenID)
                     let label = unit.hexLabel();
 log(label)
 
-                    if (unit.tokenID !== shooter.tokenID && unit.tokenID !== target.tokenID && unit.type !== "Hero" && interLabels.includes(label)) {
+                    if (unit.tokenID !== shooter.tokenID && unit.tokenID !== target.tokenID && unit.type !== "Hero" && interLabels.includes(label) && unit.type !== "Aircraft") {
                         los = false;
                         losReason = "Blocked by Unit at " + label;
                     }
