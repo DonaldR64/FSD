@@ -644,6 +644,9 @@ const GDF3 = (() => {
             let weapons = [];
             for (let i=1;i<11;i++) {
                 if (aa["weapon" + i + "equipped"] === "Equipped") {
+                    let key = (aa["weapon" + i + "special"] || " ").split(",");
+                    let keywords = key.map((e) => e.trim());
+
                     let weapon = {
                         name: aa["weapon" + i + "name"],
                         number: parseInt(aa["weapon" + i + "number"]) || 1,
@@ -651,7 +654,7 @@ const GDF3 = (() => {
                         range: parseInt(aa["weapon" + i + "range"]) || 0,
                         attacks: parseInt(aa["weapon" + i + "attack"]) || 1,
                         ap: parseInt(aa["weapon" + i + "ap"]) || 0,
-                        keywords: aa["weapon" + i + "special"] || " ",
+                        keywords: keywords,
                         fx: aa["weapon" + i + "fx"],
                         sound: aa["weapon" + i + "sound"],
                     }
@@ -1453,7 +1456,7 @@ log(label)
                 no.push(weapon.name + " - lacks Range");
                 continue;
             }
-            weaponArray.push(weapon);
+            weaponArray.push({weapon: weapon, hits: 0});
         }
 
         if (weaponArray.length === 0) {
@@ -1479,13 +1482,11 @@ log(label)
             return;
         }
 
+        //run through weapons, roll to hit/save any hits
+
+
+
 log(weaponArray)
-
-        
-        
-
-
-
 
 
 
