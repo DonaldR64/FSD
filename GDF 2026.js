@@ -1496,7 +1496,9 @@ log(label)
             case '!Roll':
                 RollDice(msg);
                 break;
-
+            case '!Attack':
+                Attack(msg);
+                break;
 
 
         }
