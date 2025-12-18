@@ -1471,7 +1471,7 @@ log(label)
             errorMsg.push("Not in Contact");
         }
 
-        if (errorMsg !== "") {
+        if (errorMsg.length > 0) {
             _.each(errorMsg,error => {
                 outputCard.body.push(error);
             })
@@ -1482,6 +1482,17 @@ log(label)
 log(weaponArray)
 
         
+        
+
+
+
+
+
+
+
+
+
+
 
 
 
