@@ -127,10 +127,10 @@ const GDF3 = (() => {
 
     };
 
-
+//improve this
     const SM = {
-
-
+        moved: "status_blue",
+        fired: "status_red",
 
     }
 
@@ -1490,7 +1490,37 @@ log(weaponArray)
         _.each(weaponArray,weapon => {
             let rolls = [], hits = 0, crits = 0;
             let needed = quality; 
+            if (weapon.keywords.includes("Reliable")) {
+                quality = 2;
+            }
+            let cover;
+            let neededTip = "Quality: " + quality;
+            let hitTips = "";
             //modifiers here
+            //cover
+            if (weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Blast") === false) {
+                if (weapon.keywords.includes("Indirect")) {
+                    cover = losResult.targetHexCover;
+                } else {
+                    cover = Math.max(losResult.targetHexCover,losResult.interveningCover);
+                }
+            }
+            if (cover > 0) {
+                needed += 1;
+                neededTip += "<br>Cover -1 to Hit";
+            }
+            if (attacker.keywords.includes("Artillery") && losResult.distance > 4) {
+                needed -= 1;
+                neededTip += "<br>Artillery at Range +1 to Hit";
+            }
+            if (weapon.keywords.includes("Indirect") && attacker.token.get(SM.moved) === true) {
+                needed += 1;
+                neededTip += "<br>Indirect and Moved -1 to Hit";
+            }
+            if (defender.keywords.includes("Stealth") && weapon.keywords.includes("Unstoppable") === false) {
+                needed += 1;
+                neededTip += "<br>Stealth -1 to Hit";
+            }
 
 
             needed = Math.max(2,needed); //1 is always a miss
@@ -1507,15 +1537,25 @@ log(weaponArray)
 
 
                 if (roll >= needed) {
+                    hits++;
                     if (roll === 6) {
                         crits++;
-                    } else {
-                        hits++;
+                        if (weapon.keywords.includes("Relentless") && losResult.distance > 4) {
+                            hits++;
+                            hitTips += "<br>Relentless +1 hit";
+                        }
+                        if (weapon.keywords.includes("Surge")) {
+                            hits++;
+                            hitTips += "<br>Surge +1 hit";
+                        }
                     }
+                    
+
 
 
 
                 }
+                
 
 
 
@@ -1524,15 +1564,12 @@ log(weaponArray)
             } while (dice > 0);
 
             rolls = rolls.sort((a,b)=>b-a);
-            weapon.hits = hits;
-            weapon.crits = crits; //natural 6s
-            weapon.rolls = rolls;
-            let totalHits = hits + crits;
-
             let hitTip = "Rolls: " + rolls.toString() + " vs. " + needed + "+";
-            let tip = '[' + totalHits + '](#" class="showtip" title="' + hitTip + ')';;
+            let tip = '[' + hits + '](#" class="showtip" title="' + hitTip + ')';;
             outputCard.body.push(weapon.info.name + verb + tip + ' hits');
 
+            //applies damage to defender, and puts out results
+            //ApplyDamage(defender,weapon,crits,hits);
 
 
 
