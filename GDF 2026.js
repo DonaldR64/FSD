@@ -1483,7 +1483,7 @@ log(label)
         }
 
         //run through weapons, roll to hit/save any hits
-
+        
 
 
 log(weaponArray)
