@@ -652,7 +652,7 @@ const GDF3 = (() => {
                         range: parseInt(aa["weapon" + i + "range"]) || 1,
                         attacks: parseInt(aa["weapon" + i + "attack"]) || 1,
                         ap: parseInt(aa["weapon" + i + "ap"]) || 0,
-                        keywords: aa["weapon" + i + "special"],
+                        keywords: aa["weapon" + i + "special"] || " ",
                         fx: aa["weapon" + i + "fx"],
                         sound: aa["weapon" + i + "sound"],
                     }
