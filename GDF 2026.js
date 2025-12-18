@@ -1305,9 +1305,6 @@ log(unit)
 
 
     const LOS = (shooter,target) => {
-
-//need to factor in Indirect
-
         let shooterHex = HexMap[shooter.hexLabel()];
         let shooterElevation = shooterHex.elevation;
         if ((shooter.type.includes("Infantry") || shooter.type.includes("Hero")) && shooterHex.terrain.includes("Building")) {
