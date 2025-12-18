@@ -140,8 +140,8 @@ const GDF3 = (() => {
 
 //needs work on edge info
     const EdgeInfo = {
-        "#00ff00": {name: "Hedge", cover: 1, los: false,height: 0},
-        "#980000": {name: "Wall", cover: 1, los: false, height: 0},
+        "#00ff00": {name: "Hedge", cover: 1, los: false,height: 0.5},
+        "#980000": {name: "Wall", cover: 1, los: false, height: 0.5},
 
 
 
@@ -473,7 +473,7 @@ const GDF3 = (() => {
             return new Cube(this.q * (1.0 - t) + b.q * t, this.r * (1.0 - t) + b.r * t, this.s * (1.0 - t) + b.s * t);
         }
         linedraw(b) {
-            //returns array of hexes between this hex and hex 'b', excluding b
+            //returns array of hexes between this hex and hex 'b'
             var N = this.distance(b);
             var a_nudge = new Cube(this.q + 1e-06, this.r + 1e-06, this.s - 2e-06);
             var b_nudge = new Cube(b.q + 1e-06, b.r + 1e-06, b.s - 2e-06);
@@ -1146,6 +1146,8 @@ log(name)
 log(unit)
         let label = unit.hexLabel();
         let hex = HexMap[label];
+
+log(hex)
         SetupCard(unit.name,"Info",unit.faction);
         outputCard.body.push("Hex Label: " + label);
         outputCard.body.push("Terrain: " + hex.terrain);
@@ -1334,17 +1336,19 @@ log("Elevation: " + targetElevation)
             let pt2 = new Point(distance,targetElevation);
             let pt3,pt4,pt5;
             let interCubes = shooterHex.cube.linedraw(targetHex.cube);
-
-            for (let i=1;i<interCubes.length;i++) {
+            let interLabels = interCubes.map((e) => e.label());
+log(interCubes)
+log(interLabels)
+            for (let i=0;i<interCubes.length;i++) {
                 let label = interCubes[i].label();
+log(label)
                 let interHex = HexMap[label];
-log(interHex)
                 //check for hills
                 pt3 = new Point(i,0);
                 pt4 = new Point(i,interHex.elevation);
                 pt5 = lineLine(pt1,pt2,pt3,pt4);
 
-                if (pt5) {
+                if (pt5 && label !== targetHex.label) {
                     los = false;
                     losReason = "Blocked by Elevation at " + label;
                     break;
@@ -1365,14 +1369,54 @@ log(interHex)
                 }
 
                 //check for terrain edges here
+                //all edges are walls or hedges, height .5, soft cover
+    log(interCubes[i])
 
-
-                
+                if ((i+1) === interCubes.length) {
+                    ic = targetHex.cube;
+                } else {
+                    ic = interCubes[i+1];
+                }
+                let delta = ic.subtract(interCubes[i]);
+                let dir;
+                for (let j=0;j<6;j++) {
+                    let d = HexInfo.directions[DIRECTIONS[j]];
+                    if (delta.q === d.q && delta.r === d.r) {
+                        dir = DIRECTIONS[j];
+                        break;
+                    }
+                }            
+    log(dir)
+                let edge = interHex.edges[dir];
+                if (edge !== "Open") {
+    log(edge)
+                    pt3 = new Point(i,interHex.elevation);
+                    pt4 = new Point(i,interHex.elevation + edge.height);
+                    pt5 = lineLine(pt1,pt2,pt3,pt4);
+                    if (pt5) {
+                        interveningCover = Math.max(interveningCover,edge.cover);
+                    }
+                }
 
             }
 
-
-
+            //check for intervening models using intercubes
+            _.each(UnitArray,unit => {
+                if (unit.id !== shooter.id && unit.id !== target.id) {
+                    let label = unit.hexLabel();
+                    let index = interLabels.indexOf(label);
+                    if (index > 0) {
+                        let interHex = HexMap[label];
+                        pt3 = new Point(i,interHex.elevation);
+                        pt4 = new Point(i,interHex.elevation + .5);
+                        pt5 = lineLine(pt1,pt2,pt3,pt4);
+                        if (pt5) {
+                            los = false;
+                            losReason = "Blocked by Unit at " + label;
+                        }
+                    }
+                }
+            })
 
 
 
