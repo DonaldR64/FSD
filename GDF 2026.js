@@ -614,8 +614,9 @@ const GDF3 = (() => {
 
     class Unit {
         constructor(token) {
-            let charID = token.get("represents");
-            let aa = AttributeArray(charID);
+            this.charID = token.get("represents");
+
+            let aa = AttributeArray(this.charID);
 
             this.tokenID = token.get("id");
             this.name = token.get("name");
@@ -709,59 +710,58 @@ const GDF3 = (() => {
         })
     }    
 
+
     const AddAbilities = (msg) => {
-        if (!msg.selected) {
-            sendChat("","No Token Selected");
-            return;
-        };
+        if (!msg.selected) {return};
         let id = msg.selected[0]._id;
-        let unit = UnitArray[id];
-        if (!unit) {return};
-        AddAbilities2(unit);
-    }
+        let unit = UnitArray[id];  
 
-
-    const AddAbilities2 = (unit) => {
-        let char = getObj("character", unit.charID);   
 
         let abilityName,action;
-        let abilArray = findObjs({_type: "ability", _characterid: char.id});
+        let abilArray = findObjs({_type: "ability", _characterid: unit.charID});
         //clear old abilities
         for(let a=0;a<abilArray.length;a++) {
             abilArray[a].remove();
         } 
-        //Move 
-        if (unit.moveMax > 0) {
-            abilityName = "0 - Move";
-            action = "!Activate;Move;@{selected|token_id}";
-            AddAbility(abilityName,action,char.id);
+        
+        let types = {
+            "Rifle": [],
+            "Pistol": [],
+            "Heavy": [],
+            "Heavy2": [],
+            "Mod": [],
+            "CCW": [],
+            "Sniper": [],
+            "Bomb": [],
         }
-
-        let systemNum = 0;
-        //Use Weapons 
+  
         for (let i=0;i<unit.weapons.length;i++) {
             let weapon = unit.weapons[i];
-            systemNum++;
-            abilityName = systemNum + " - " + weapon.name;
-            action = "!Activate;Attack" + i + ";@{selected|token_id}";
-            //how many targets?
-            let targets = 1;
-            if (weapon.name.includes("(x")) {
-                let temp = weapon.name.split("(x");
-                targets = parseInt(temp[1].replace(")",""));
+            let name = weapon.name;
+            if (weapon.type === " " || weapon.name === " ") {continue}
+            if (weapon.keywords.includes("Limited")) {
+                name += " (Limited)";
             }
-            for (let t=0;t<targets;t++) {
-                action += ";@{target|Target " + (t+1) + "|token_id}";
-            }
-            AddAbility(abilityName,action,char.id);
+            types[weapon.type].push(name); 
+        }
+        
+        let keys = Object.keys(types);
+        let weaponNum = 1;
+        for (let i=0;i<keys.length;i++) {
+            let names = types[keys[i]];
+            let typ = "Ranged;";
+            if (keys[i] === "CCW") {typ = "Melee;"};
+            if (names.length === 0) {continue};
+            names = names.toString();
+            if (names.charAt(0) === ",") {names = names.replace(",","")};
+            names = names.replaceAll(",","+");
+            abilityName = weaponNum + ": " + names;
+            weaponNum += 1;
+            action = "!Attack;@{selected|token_id};@{target|token_id};" + typ + keys[i];
+            AddAbility(abilityName,action,unit.charID);
         }
 
-        //Use Abilities
 
-        
-
-
-        //Load Weapons/Abilities
 
 
 
