@@ -648,7 +648,7 @@ const GDF3 = (() => {
                         name: aa["weapon" + i + "name"],
                         number: parseInt(aa["weapon" + i + "number"]) || 1,
                         type: aa["weapon" + i + "type"],
-                        range: parseInt(aa["weapon" + i + "range"]) || 1,
+                        range: parseInt(aa["weapon" + i + "range"]) || 0,
                         attacks: parseInt(aa["weapon" + i + "attack"]) || 1,
                         ap: parseInt(aa["weapon" + i + "ap"]) || 0,
                         keywords: aa["weapon" + i + "special"] || " ",
@@ -729,6 +729,7 @@ const GDF3 = (() => {
             "Pistol": [],
             "Heavy": [],
             "Heavy2": [],
+            "Heavy3": [],
             "Mod": [],
             "CCW": [],
             "Sniper": [],
@@ -1278,7 +1279,7 @@ log(hex)
         let wlos = [];
         _.each(shooter.weapons,weapon => {
             let range = (target.type === "Aircraft" && weapon.keywords.includes("Unstoppable") === false) ? weapon.range - 6:weapon.range;
-            if (losResult.distance < range) {
+            if (losResult.distance <= range) {
                 if (losResult.los === true || weapon.keywords.includes("Indirect")) {
                     wlos.push(weapon.name);
                 }
@@ -1427,6 +1428,71 @@ log(label)
 
         return result;
     }
+
+    const Attack = (msg) => {
+        let Tag = msg.content.split(";");
+        let attacker = UnitArray[Tag[1]];
+        let defender = UnitArray[Tag[2]];
+        if (!attacker || !defender) {sendChat("","Someones not in Array");return};
+        let combatType = Tag[3];  //Ranged, Melee
+        let weaponType = Tag[4]; //CCW, Rifle etc
+        let errorMsg = [];
+        let losResult = LOS(attacker,defender);
+
+        let weaponArray = [];
+        let no = [];
+        for (let i=0;i<attacker.weapons.length;i++) {
+            let weapon = attacker.weapons[i];
+            if (weapon.type !== weaponType) {continue};
+            if (losResult.los === false && weapon.keywords.includes("Indirect") === false) {
+                no.push(weapon.name + " - no LOS");
+                continue;
+            }
+            let range = (defender.type === "Aircraft" && weapon.keywords.includes("Unstoppable") === false) ? weapon.range - 6:weapon.range;
+            if (losResult.distance > range) {
+                no.push(weapon.name + " - lacks Range");
+                continue;
+            }
+            weaponArray.push(weapon);
+        }
+
+        if (weaponArray.length === 0) {
+            errorMsg.push("No Weapons with LOS or Range");
+            errorMsg = errorMsg.concat(no);
+        }
+
+        SetupCard(attacker.name,defender.name,attacker.faction);
+
+        if (attacker.faction === defender.faction) {
+            errorMsg.push("Friendly Fire!");
+        }
+
+        if (combatType === "Melee" && losResult.distance > 0) {
+            errorMsg.push("Not in Contact");
+        }
+
+        if (errorMsg !== "") {
+            _.each(errorMsg,error => {
+                outputCard.body.push(error);
+            })
+            PrintCard();
+            return;
+        }
+
+log(weaponArray)
+
+        
+
+
+
+
+        PrintCard();
+
+    }
+
+
+
+
 
 
 
