@@ -1593,8 +1593,6 @@ log(weaponArray)
                 outputCard.body.push(weapon.name + tip);
             }
 
-
-
             //applies damage to defender, and puts out results
             //ApplyDamage(defender,weapon,crits,hits);
 
