@@ -618,6 +618,7 @@ const GDF3 = (() => {
 
             let aa = AttributeArray(this.charID);
 
+            this.token = token;
             this.tokenID = token.get("id");
             this.name = token.get("name");
 
@@ -645,7 +646,7 @@ const GDF3 = (() => {
             for (let i=1;i<11;i++) {
                 if (aa["weapon" + i + "equipped"] === "Equipped") {
                     let key = (aa["weapon" + i + "special"] || " ").split(",");
-                    let keywords = key.map((e) => e.trim());
+                    let keywords = key.map((e) => e.trim()) || [""];
 
                     let weapon = {
                         name: aa["weapon" + i + "name"],
@@ -1456,7 +1457,7 @@ log(label)
                 no.push(weapon.name + " - lacks Range");
                 continue;
             }
-            weaponArray.push({info: weapon}); //can add hits, rolls etc 
+            weaponArray.push(weapon); //can add hits, rolls etc 
         }
 
         if (weaponArray.length === 0) {
@@ -1493,9 +1494,12 @@ log(weaponArray)
             if (weapon.keywords.includes("Reliable")) {
                 quality = 2;
             }
+            let blast = weapon.keywords.find(key => key.includes("Blast")) || "0";
+            blast = blast.replace(/\D/g,'');
+
             let cover;
             let neededTip = "Quality: " + quality;
-            let hitTips = "";
+            let hitTip = "", tip;
             //modifiers here
             //cover
             if (weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Blast") === false) {
@@ -1526,8 +1530,8 @@ log(weaponArray)
             needed = Math.max(2,needed); //1 is always a miss
 
 
-            let dice = weapon.info.number * weapon.info.attacks;
-            let verb = (weapon.info.number === 1) ? " scores ": " score ";
+            let dice = weapon.number * weapon.attacks;
+            let verb = (weapon.number === 1) ? " scores ": " score ";
 
 
             do {
@@ -1542,11 +1546,11 @@ log(weaponArray)
                         crits++;
                         if (weapon.keywords.includes("Relentless") && losResult.distance > 4) {
                             hits++;
-                            hitTips += "<br>Relentless +1 hit";
+                            hitTip += "<br>Relentless +1 hit";
                         }
                         if (weapon.keywords.includes("Surge")) {
                             hits++;
-                            hitTips += "<br>Surge +1 hit";
+                            hitTip += "<br>Surge +1 hit";
                         }
                     }
                     
@@ -1563,10 +1567,23 @@ log(weaponArray)
                 dice--;
             } while (dice > 0);
 
+            if (blast > 0) {
+                let max = Math.ceil(parseInt(defender.token.get("bar1_value")) / defender.toughness);
+                let blastHits = Math.min(max,blast);
+                hitTip += "<br>Blast +" + ((blastHits-1) * hits) + " hits"
+                hits *= blastHits;
+                let s = (blastHits === 1) ? "":"s";
+            }
+
             rolls = rolls.sort((a,b)=>b-a);
-            let hitTip = "Rolls: " + rolls.toString() + " vs. " + needed + "+";
-            let tip = '[' + hits + '](#" class="showtip" title="' + hitTip + ')';;
-            outputCard.body.push(weapon.info.name + verb + tip + ' hits');
+            hitTip = "Rolls: " + rolls.toString() + " vs. " + needed + "+" + hitTip;
+            if (hits > 0) {
+                tip = '[' + hits + '](#" class="showtip" title="' + hitTip + ')';
+                outputCard.body.push(weapon.name + verb + tip + ' hits');
+            } else {
+                tip = '[ Misses](#" class="showtip" title="' + hitTip + ')';
+                outputCard.body.push(weapon.name + tip);
+            }
 
             //applies damage to defender, and puts out results
             //ApplyDamage(defender,weapon,crits,hits);
