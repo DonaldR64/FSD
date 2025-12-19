@@ -1,5 +1,5 @@
 const GDF3 = (() => {
-    const version = '2025.11.8';
+    const version = '2025.12.18';
     if (!state.GDF3) {state.GDF3 = {}};
 
     const pageInfo = {};
