@@ -1490,15 +1490,17 @@ log(label)
 log(weaponArray)
         _.each(weaponArray,weapon => {
             let rolls = [], hits = 0, crits = 0;
+            let relentless = 0,surge = 0;
             let needed = quality; 
+            let neededTip = "<br>Quality: " + quality + "+";
             if (weapon.keywords.includes("Reliable")) {
-                quality = 2;
+                needed = 2;
+                neededTip = "<br>Reliable: 2+";
             }
             let blast = weapon.keywords.find(key => key.includes("Blast")) || "0";
             blast = blast.replace(/\D/g,'');
 
             let cover;
-            let neededTip = "Quality: " + quality;
             let hitTip = "", tip;
             //modifiers here
             //cover
@@ -1531,8 +1533,6 @@ log(weaponArray)
 
 
             let dice = weapon.number * weapon.attacks;
-            let verb = (weapon.number === 1) ? " scores ": " score ";
-
 
             do {
                 let roll = randomInteger(6);
@@ -1545,12 +1545,10 @@ log(weaponArray)
                     if (roll === 6) {
                         crits++;
                         if (weapon.keywords.includes("Relentless") && losResult.distance > 4) {
-                            hits++;
-                            hitTip += "<br>Relentless +1 hit";
+                            relentless++;
                         }
                         if (weapon.keywords.includes("Surge")) {
-                            hits++;
-                            hitTip += "<br>Surge +1 hit";
+                            surge++;
                         }
                     }
                     
@@ -1560,30 +1558,42 @@ log(weaponArray)
 
                 }
                 
-
+                if (relentless > 0) {
+                    hits += relentless;
+                    s = (relentless === 1) ? "":"s";
+                    hitTip += "<br>Relentless adds " + relentless + " hit" + s;
+                }
+                if (surge > 0) {
+                    hits += surge;
+                    s = (surge === 1) ? "":"s";
+                    hitTip += "<br>Surge adds " + surge + " hit" + s;
+                }
 
 
 
                 dice--;
             } while (dice > 0);
 
-            if (blast > 0) {
+            if (blast > 0 && hits > 0) {
                 let max = Math.ceil(parseInt(defender.token.get("bar1_value")) / defender.toughness);
                 let blastHits = Math.min(max,blast);
-                hitTip += "<br>Blast +" + ((blastHits-1) * hits) + " hits"
+                hitTip += "<br>Blast adds " + ((blastHits-1) * hits) + " hits"
                 hits *= blastHits;
                 let s = (blastHits === 1) ? "":"s";
             }
 
             rolls = rolls.sort((a,b)=>b-a);
-            hitTip = "Rolls: " + rolls.toString() + " vs. " + needed + "+" + hitTip;
+            hitTip = "Rolls: " + rolls.toString() + " vs. " + needed + "+" + neededTip + hitTip;
             if (hits > 0) {
+                let s = (hits === 1) ? "":"s";
                 tip = '[' + hits + '](#" class="showtip" title="' + hitTip + ')';
-                outputCard.body.push(weapon.name + verb + tip + ' hits');
+                outputCard.body.push(tip + ' hit' + s + ' with ' + weapon.name) ;
             } else {
                 tip = '[ Misses](#" class="showtip" title="' + hitTip + ')';
                 outputCard.body.push(weapon.name + tip);
             }
+
+
 
             //applies damage to defender, and puts out results
             //ApplyDamage(defender,weapon,crits,hits);
