@@ -1529,8 +1529,7 @@ log(weaponArray)
             }
 
 
-            needed = Math.max(2,needed); //1 is always a miss
-
+            needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
 
             let dice = weapon.number * weapon.attacks;
 
@@ -1593,8 +1592,7 @@ log(weaponArray)
                 outputCard.body.push(weapon.name + tip);
             }
 
-            //applies damage to defender, and puts out results
-            //ApplyDamage(defender,weapon,crits,hits);
+            ApplyDamage(defender,weapon,crits,hits);
 
 
 
@@ -1616,7 +1614,125 @@ log(weaponArray)
     }
 
 
+    const ApplyDamage = (defender,weapon,crits,hits) => {
+        //crits is subset. of hits
+        let needed = defender.defense;
+        let neededTip = "<br>Defense: " + needed + "+";
+        let defenseTip = "";
 
+        needed += weapon.ap;
+        if (weapon.ap > 0) {
+            neededTip += "<br>AP +" + weapon.ap;
+        }
+
+        let wounds = 0;
+        let defenseRolls = [],bane = 0,rending = 0;
+
+        do {
+            let reroll = false;
+            let indNeeded = needed;
+            let roll = randomInteger(6);
+            if (roll === 6 && weapon.keywords.includes("Bane")) {
+                roll = randomInteger(6);
+                reroll = true;
+                bane++;
+            }
+            defenseRolls.push(roll);
+
+            if (crits > 0 && weapon.keywords.includes("Rending")) {
+                indNeeded += 4;
+                rending++;
+            }
+
+            indNeeded = Math.min(6,Math.max(2,indNeeded)); //1 is always a miss, 6 a hit
+
+            if (roll < indNeeded) {
+                wounds++;
+                if (weapon.keywords.includes("Deadly")) {
+                    let hp = parseInt(defender.token.get("bar1_value"));
+                    let remModels = Math.floor(hp/defender.toughness);
+                    let remainder = hp - (remModels * defender.toughness);
+                    if (remainder === 0) {
+                        remainder = defender.toughness;
+                    }
+                    remainder -= 1;
+                    if (remainder > 0) {
+                        wounds += remainder;
+                        defenseTip += "<br>Deadly adds " + remainder + " Wounds";
+                    }
+                }
+
+
+
+
+
+            }
+
+
+
+
+            hits--;
+            crits--;
+
+
+        } while (hits > 0);
+
+        defenseRolls = defenseRolls.sort((a,b)=>b-a);
+
+        let regen = 0;
+        let regenRolls = [];
+        let regenTarget = 5; /// alter ?
+
+
+
+        if (wounds > 0 && defender.keywords.includes("Regeneration") && weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Bane") === false) {
+            _.each(wounds,wound => {
+                let roll = randomInteger(6);
+                regenRolls.push(roll);
+                if (roll >= regenTarget) {
+                    regen++;
+                }
+            })
+        }
+        regenRolls = regenRolls.sort((a,b) => b-a);
+        wounds -= regen;
+
+        let tip = "Rolls: " + defenseRolls.toString + " vs. " + needed + "+";
+        tip += neededTip + defenseTip;
+        if (bane > 0) {
+            tip += "<br>Bane caused " + bane + " Rerolls";
+        }
+        if (rending > 0) {
+            tip += "<br>Rending affected " + rending + " Rolls";
+        }
+        if (regenRolls.length > 0) {
+            tip += "<br>" + regen + " Wounds Regenerated";
+            tip += "<br>Regen Rolls: " + regenRolls.length + " vs. " + regenTarget + "+";
+        }
+
+        if (wounds > 0) {
+            let s = (wounds === 1) ? "":"s";
+            tip = '[' + wounds + '](#" class="showtip" title="' + tip + ')';
+            outputCard.body.push(defender.name + ' takes ' + tip + " Wounds") ;
+        } else {
+            tip = '[No](#" class="showtip" title="' + tip + ')';
+            outputCard.body.push(defender.name + " takes " + tip + " Wounds");
+        }
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
 
 
 
