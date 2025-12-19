@@ -1583,16 +1583,19 @@ log(weaponArray)
 
             rolls = rolls.sort((a,b)=>b-a);
             hitTip = "Rolls: " + rolls.toString() + " vs. " + needed + "+" + neededTip + hitTip;
+            let noun = (weapon.number === 1) ? " Misses":" Miss"
             if (hits > 0) {
                 let s = (hits === 1) ? "":"s";
                 tip = '[' + hits + '](#" class="showtip" title="' + hitTip + ')';
                 outputCard.body.push(tip + ' hit' + s + ' with ' + weapon.name) ;
             } else {
-                tip = '[ Misses](#" class="showtip" title="' + hitTip + ')';
+                tip = '[' + noun + '](#" class="showtip" title="' + hitTip + ')';
                 outputCard.body.push(weapon.name + tip);
             }
 
-            ApplyDamage(defender,weapon,crits,hits);
+            if (hits > 0) {
+                ApplyDamage(defender,weapon,crits,hits);
+            }
 
 
 
@@ -1658,7 +1661,8 @@ log(weaponArray)
                     remainder -= 1;
                     if (remainder > 0) {
                         wounds += remainder;
-                        defenseTip += "<br>Deadly adds " + remainder + " Wounds";
+                        let s = (wounds === 1) ? "":"s"
+                        defenseTip += "<br>Deadly adds " + remainder + " Wound" + s;
                     }
                 }
 
@@ -1697,7 +1701,10 @@ log(weaponArray)
         regenRolls = regenRolls.sort((a,b) => b-a);
         wounds -= regen;
 
-        let tip = "Rolls: " + defenseRolls.toString + " vs. " + needed + "+";
+
+        needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
+
+        let tip = "Rolls: " + defenseRolls.toString() + " vs. " + needed + "+";
         tip += neededTip + defenseTip;
         if (bane > 0) {
             tip += "<br>Bane caused " + bane + " Rerolls";

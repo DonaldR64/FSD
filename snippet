@@ -81,7 +81,7 @@ const ApplyDamage = (defender,weapon,crits,hits) => {
     regenRolls = regenRolls.sort((a,b) => b-a);
     wounds -= regen;
 
-    let tip = "Rolls: " + defenseRolls.toString + " vs. " + needed + "+";
+    let tip = "Rolls: " + defenseRolls.toString() + " vs. " + needed + "+";
     tip += neededTip + defenseTip;
     if (bane > 0) {
         tip += "<br>Bane caused " + bane + " Rerolls";
