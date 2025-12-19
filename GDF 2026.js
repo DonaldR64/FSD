@@ -735,8 +735,7 @@ const GDF3 = (() => {
             "Heavy2": [],
             "Heavy3": [],
             "Mod": [],
-            "CCW1": [],
-            "CCW2": [],
+            "CCW": [],
             "Sniper": [],
             "Bomb": [],
         }
@@ -761,19 +760,19 @@ const GDF3 = (() => {
             names = names.replaceAll(",","+");
             abilityName = weaponNum + ": " + names;
             weaponNum += 1;
-            if (keys[i].includes("CCW") && unit.type !== "Titan") {
-                action = "!Attack;@{selected|token_id};Melee;Melee;CCW1";
+            if (keys[i] === ("CCW") && unit.type !== "Titan") {
+                action = "!Attack;@{selected|token_id};Melee;Melee;CCW";
             } else {
-                let ct = (keys[i].includes("CCW")) ? "Melee":"Ranged";
+                let ct = (keys[i] === ("CCW")) ? "Melee":"Ranged";
                 action = "!Attack;@{selected|token_id};@{target|token_id};" + ct + ";" + keys[i];
             }
             AddAbility(abilityName,action,unit.charID);
         }
 
+a
 
 
 
-        
 
 
         sendChat("","Abilities Added")
@@ -1657,12 +1656,29 @@ log(weaponArray)
         })
 
 
-        if (weaponArray.length > 1) {
+        if (weaponArray.length > 1 && combatType !== "Melee") {
             outputCard.body.push("[hr]");
             outputCard.body.push("Total Wounds: " + totalWounds);
         }
 
+        if (combatType === "Melee") {
+            outputCard.body.push("[hr]");
+            outputCard.body.push("Total Wounds: " + totalWounds);
+            let fear = attacker.keywords.find((key) => key.includes("Fear"));
+            if (fear) {
+                fear = parseInt(fear.replace(/[^\d]/g,""));
+                outputCard.body.push("Fear makes this " + (totalWounds + fear));
+                outputCard.body.push("For Combat Resolution");
+            }
+        }
+
+
+
         //apply wounds
+
+
+
+
 
 
 
