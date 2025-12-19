@@ -1724,6 +1724,10 @@ const ApplyDamage = (defenders,weaponHits) => {
         if (ad === false && bd === true) {return 1};
     })
 
+
+//move unit, total wounds out here ?
+
+
     weaponLoop:
     for (let w = 0;w<weaponHits.length; w++) {
 
