@@ -1755,14 +1755,14 @@ log(weaponArray)
             let s = (ignore === 1) ? "":"s";
             tip = "Rolls: " + ignoreRolls.toString() + " vs. " + ig.target + "+";
             tip = '[' + ignore + '](#" class="showtip" title="' + tip + ')';
-            outputCard.body.push(tip + " Wound" + s + " ignored due to " + ig.reason);
+            outputCard.body.push("(" + tip + " Wound" + s + " ignored due to " + ig.reason + ")");
         }
 
         if (regenRolls.length > 0) {
             let s = (regen === 1) ? "":"s";
             tip = "Rolls: " + regenRolls.toString() + " vs. " + rg.target + "+";
             tip = '[' + regen + '](#" class="showtip" title="' + tip + ')';
-            outputCard.body.push(tip + " Wound" + s + " healed due to " + rg.reason);
+            outputCard.body.push("(" + tip + " Wound" + s + " healed due to " + rg.reason + ")");
         }
 
 
