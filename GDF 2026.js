@@ -735,7 +735,8 @@ const GDF3 = (() => {
             "Heavy2": [],
             "Heavy3": [],
             "Mod": [],
-            "CCW": [],
+            "CCW1": [],
+            "CCW2": [],
             "Sniper": [],
             "Bomb": [],
         }
@@ -760,10 +761,10 @@ const GDF3 = (() => {
             names = names.replaceAll(",","+");
             abilityName = weaponNum + ": " + names;
             weaponNum += 1;
-            if (keys[i] === "CCW" && unit.type !== "Titan") {
-                action = "!Attack;@{selected|token_id};Melee;Melee;CCW";
+            if (keys[i].includes("CCW") && unit.type !== "Titan") {
+                action = "!Attack;@{selected|token_id};Melee;Melee;CCW1";
             } else {
-                let ct = (keys[i] === "CCW") ? "Melee":"Ranged";
+                let ct = (keys[i].includes("CCW")) ? "Melee":"Ranged";
                 action = "!Attack;@{selected|token_id};@{target|token_id};" + ct + ";" + keys[i];
             }
             AddAbility(abilityName,action,unit.charID);
