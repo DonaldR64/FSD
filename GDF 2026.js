@@ -760,16 +760,12 @@ const GDF3 = (() => {
             names = names.replaceAll(",","+");
             abilityName = weaponNum + ": " + names;
             weaponNum += 1;
-            if (keys[i] === ("CCW") && unit.type !== "Titan") {
-                action = "!Attack;@{selected|token_id};Melee;Melee;CCW";
-            } else {
-                let ct = (keys[i] === ("CCW")) ? "Melee":"Ranged";
-                action = "!Attack;@{selected|token_id};@{target|token_id};" + ct + ";" + keys[i];
-            }
+            let ct = (keys[i] === ("CCW")) ? "Melee":"Ranged";
+            action = "!Attack;@{selected|token_id};@{target|token_id};" + ct + ";" + keys[i];
             AddAbility(abilityName,action,unit.charID);
         }
 
-a
+
 
 
 
@@ -1440,60 +1436,65 @@ log(label)
         let Tag = msg.content.split(";");
         let attacker = UnitArray[Tag[1]];
         let attackerHex = HexMap[attacker.hexLabel()];
-
-        let defenderID = Tag[2];
+        let defender = UnitArray[Tag[2]];
+        let defenderHex = HexMap[defender.hexLabel()];
         let combatType = Tag[3];  //Ranged, Melee
         let weaponType = Tag[4]; //CCW, Rifle etc
         let errorMsg = [];
 
-        let defender;
-        let meleeFlag = false;
-        if (defenderID === "Melee") {
-            let keys = Object.keys(UnitArray);
-            for (let i=0;i<keys.length;i++) {
-                let assoc = UnitArray[keys[i]];
-                if (assoc.faction === attacker.faction) {continue};
-                let assocHex = HexMap[assoc.hexLabel()];
-                if (assocHex.label === attackerHex.label) {
-                    defender = assoc;
-                    meleeFlag = true;
-                    break;
+        if (attacker.faction === defender.faction) {
+            //see if can find the unit meant to be clicked on
+            let flag = false;
+            _.each(UnitArray,unit => {
+                if (unit.faction !== attacker.faction && unit.hexLabel() === attackerHex.label) {
+                    defender = unit;
+                    flag = true;
                 }
-                if (assoc.type === "Titan" && attackerHex.distance(assocHex) === 1) {
-                    defender = assoc;
-                    meleeFlag = true;
-                    break;
-                }
+            })
+            if (flag === false) {
+                errorMsg.push("Friendly Fire!");
             }
-            if (meleeFlag === false) {
-                defender = attacker; //temp
-                errorMsg.push("Not in Contact");
-            }
-        } else {
-            defender = UnitArray[defenderID];
         }
 
-        let defenderHexLabel = defender.hexLabel();
 
+        let attackers = [attacker];
+        let defenders = [defender];
+
+        //check if assoc infantry for either if heros, add to start of array
+        //for attacker, only combine if melee,otherwise each fires independently
+        if (attacker.type === "Hero" && combatType === "Melee") {
+            _.each(UnitArray,unit => {
+                if (unit.faction === attacker.faction && unit.models > 1 & unit.hexLabel() === attackerHex.label) {
+                    attackers.unshift(unit);
+                }
+            })
+        }
         if (defender.type === "Hero") {
-            //check for assoc in same hex
-            let keys = Object.keys(UnitArray);
-            for (let i=0;i<keys.length;i++) {
-                let assoc = UnitArray[keys[i]];
-                if (assoc.faction !== defender.faction) {continue};
-                if (assoc.models === 1) {continue};
-                if (assoc.hexLabel() === defenderHexLabel) {
-                    defender = assoc;
-                    break;
+            _.each(UnitArray,unit => {
+                if (unit.faction === defender.faction && unit.models > 1 & unit.hexLabel() === defenderHex.label) {
+                    defenders.unshift(unit);
                 }
-            }
+            })
+        }
+        //check if assoc hero, add to end of array
+        if (attacker.models > 1) {
+            _.each(UnitArray,unit => {
+                if (unit.faction === attacker.faction && unit.type === "Hero" & unit.hexLabel() === attackerHex.label) {
+                    attackers.push(unit);
+                }
+            })
+        }
+        if (defender.models > 1) {
+            _.each(UnitArray,unit => {
+                if (unit.faction === defender.faction && unit.type === "Hero" & unit.hexLabel() === defenderHex.label) {
+                    defenders.push(unit);
+                }
+            })
         }
 
-        if (attacker.faction === defender.faction && combatType === "Ranged") {
-            errorMsg.push("Friendly Fire!");
-        }
+        if (attackers.length === 0 || defenders.length === 0) {sendChat("","Someones not in Array");return};
 
-        if (!attacker || !defender) {sendChat("","Someones not in Array");return};
+        defender = defenders[0]; //will shift to an assoc unit if hero was initially targeted
 
         let losResult = LOS(attacker,defender);
 
@@ -1655,10 +1656,31 @@ log(weaponArray)
 
         })
 
+        let defenderHP = parseInt(defender.token.get("bar1_value"));
+        defenderHP = Math.max(0,defenderHP - totalWounds);
+
+        if (defenderHP > 0)
+
+
+
+//is unit destroyed ?
+//morale tests ?
+
 
         if (weaponArray.length > 1 && combatType !== "Melee") {
             outputCard.body.push("[hr]");
             outputCard.body.push("Total Wounds: " + totalWounds);
+
+            if (defenderHP === 0) {
+                outputCard.body.push(defender.name + " was Destroyed!");
+            } else if (defenderHP < Math.round(this.woundsMax/2)) {
+                //take morale test
+                //place SM to indicate has done this, remove that SM when next unit activates
+
+
+            }
+
+
         }
 
         if (combatType === "Melee") {
@@ -1667,9 +1689,12 @@ log(weaponArray)
             let fear = attacker.keywords.find((key) => key.includes("Fear"));
             if (fear) {
                 fear = parseInt(fear.replace(/[^\d]/g,""));
-                outputCard.body.push("Fear makes this " + (totalWounds + fear));
                 outputCard.body.push("For Combat Resolution");
+                outputCard.body.push("Fear makes this " + (totalWounds + fear));
             }
+
+            //Fatigue
+
         }
 
 
