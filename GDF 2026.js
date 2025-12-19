@@ -1519,7 +1519,7 @@ log(weaponArray)
                 needed -= 1;
                 neededTip += "<br>Artillery at Range +1 to Hit";
             }
-            if (weapon.keywords.includes("Indirect") && attacker.token.get(SM.moved) === true) {
+            if (weapon.keywords.includes("Indirect") && attacker.token.get(SM.moved) === true && weapon.keywords.includes("Unstoppable") == false) {
                 needed += 1;
                 neededTip += "<br>Indirect and Moved -1 to Hit";
             }
