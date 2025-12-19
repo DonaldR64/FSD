@@ -1736,10 +1736,12 @@ log(weaponArray)
         let tip = "Rolls: " + defenseRolls.toString() + " vs. " + needed + "+";
         tip += neededTip + defenseTip;
         if (bane > 0) {
-            tip += "<br>Bane caused " + bane + " Rerolls";
+            let s = (bane === 1) ? "":"s";
+            tip += "<br>Bane caused " + bane + " Reroll" + s;
         }
         if (rending > 0) {
-            tip += "<br>Rending affected " + rending + " Rolls";
+            let s = (rending === 1) ? "":"s";
+            tip += "<br>Rending affected " + rending + " Roll" + s;
         }
 
         if (wounds > 0) {
