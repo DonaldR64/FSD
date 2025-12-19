@@ -754,15 +754,18 @@ const GDF3 = (() => {
         let weaponNum = 1;
         for (let i=0;i<keys.length;i++) {
             let names = types[keys[i]];
-            let typ = "Ranged;";
-            if (keys[i] === "CCW") {typ = "Melee;"};
             if (names.length === 0) {continue};
             names = names.toString();
             if (names.charAt(0) === ",") {names = names.replace(",","")};
             names = names.replaceAll(",","+");
             abilityName = weaponNum + ": " + names;
             weaponNum += 1;
-            action = "!Attack;@{selected|token_id};@{target|token_id};" + typ + keys[i];
+            if (keys[i] === "CCW" && unit.type !== "Titan") {
+                action = "!Attack;@{selected|token_id};Melee;Melee;CCW";
+            } else {
+                let ct = (keys[i] === "CCW") ? "Melee":"Ranged";
+                action = "!Attack;@{selected|token_id};@{target|token_id};" + ct + ";" + keys[i];
+            }
             AddAbility(abilityName,action,unit.charID);
         }
 
@@ -1436,15 +1439,67 @@ log(label)
     const Attack = (msg) => {
         let Tag = msg.content.split(";");
         let attacker = UnitArray[Tag[1]];
-        let defender = UnitArray[Tag[2]];
-        if (!attacker || !defender) {sendChat("","Someones not in Array");return};
+        let attackerHex = HexMap[attacker.hexLabel()];
+
+        let defenderID = Tag[2];
         let combatType = Tag[3];  //Ranged, Melee
         let weaponType = Tag[4]; //CCW, Rifle etc
         let errorMsg = [];
+
+        let defender;
+        let meleeFlag = false;
+        if (defenderID === "Melee") {
+            let keys = Object.keys(UnitArray);
+            for (let i=0;i<keys.length;i++) {
+                let assoc = UnitArray[keys[i]];
+                if (assoc.faction === attacker.faction) {continue};
+                let assocHex = HexMap[assoc.hexLabel()];
+                if (assocHex.label === attackerHex.label) {
+                    defender = assoc;
+                    meleeFlag = true;
+                    break;
+                }
+                if (assoc.type === "Titan" && attackerHex.distance(assocHex) === 1) {
+                    defender = assoc;
+                    meleeFlag = true;
+                    break;
+                }
+            }
+            if (meleeFlag === false) {
+                defender = attacker; //temp
+                errorMsg.push("Not in Contact");
+            }
+        } else {
+            defender = UnitArray[defenderID];
+        }
+
+        let defenderHexLabel = defender.hexLabel();
+
+        if (defender.type === "Hero") {
+            //check for assoc in same hex
+            let keys = Object.keys(UnitArray);
+            for (let i=0;i<keys.length;i++) {
+                let assoc = UnitArray[keys[i]];
+                if (assoc.faction !== defender.faction) {continue};
+                if (assoc.models === 1) {continue};
+                if (assoc.hexLabel() === defenderHexLabel) {
+                    defender = assoc;
+                    break;
+                }
+            }
+        }
+
+        if (attacker.faction === defender.faction && combatType === "Ranged") {
+            errorMsg.push("Friendly Fire!");
+        }
+
+        if (!attacker || !defender) {sendChat("","Someones not in Array");return};
+
         let losResult = LOS(attacker,defender);
 
         let weaponArray = [];
         let no = [];
+        let totalWounds = 0;
         for (let i=0;i<attacker.weapons.length;i++) {
             let weapon = attacker.weapons[i];
             if (weapon.type !== weaponType) {continue};
@@ -1466,10 +1521,6 @@ log(label)
         }
 
         SetupCard(attacker.name,defender.name,attacker.faction);
-
-        if (attacker.faction === defender.faction) {
-            errorMsg.push("Friendly Fire!");
-        }
 
         if (combatType === "Melee" && losResult.distance > 0) {
             errorMsg.push("Not in Contact");
@@ -1594,19 +1645,23 @@ log(weaponArray)
             }
 
             if (hits > 0) {
-                ApplyDamage(defender,weapon,crits,hits);
+                wounds = ApplyDamage(defender,weapon,crits,hits);
+                totalWounds += wounds;
             }
 
-
+            
 
 
 
         })
 
 
+        if (weaponArray.length > 1) {
+            outputCard.body.push("[hr]");
+            outputCard.body.push("Total Wounds: " + totalWounds);
+        }
 
-
-
+        //apply wounds
 
 
 
@@ -1778,7 +1833,7 @@ log(weaponArray)
 
 
 
-
+        return wounds;
 
 
 
