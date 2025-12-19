@@ -1683,13 +1683,34 @@ log(weaponArray)
 
         defenseRolls = defenseRolls.sort((a,b)=>b-a);
 
+
+        //Ignore Wound abilities
+        let ignore = 0;
+        let ignoreRolls = [];
+        let ignoreReasons = [{reason: "Plaguebound", target: 6},];
+
+        let ig = ignoreReasons.find((e) => defender.keywords.includes(e.reason));
+        if (wounds > 0 && ig) {
+            for (let i=0;i<wounds;i++) {
+                let roll = randomInteger(6);
+                ignoreRolls.push(roll);
+                if (roll >= ig.target) {
+                    ignore++;
+                }
+            }
+        }
+        ignoreRolls = ignoreRolls.sort((a,b) => b-a);
+        ignore = Math.min(wounds,ignore);
+        wounds = wounds - ignore;
+
+
+        //Regen Abilities
         let regen = 0;
         let regenRolls = [];
-        let regenTarget = 5; /// alter ?
+        let regenReasons = [{reason: "Regeneration", target: 5},];
 
-
-
-        if (wounds > 0 && defender.keywords.includes("Regeneration") && weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Bane") === false) {
+        let rg = regenReasons.find((e) => defender.keywords.includes(e.reason));
+        if (wounds > 0 && rg && weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Bane") === false) {
             _.each(wounds,wound => {
                 let roll = randomInteger(6);
                 regenRolls.push(roll);
@@ -1699,7 +1720,15 @@ log(weaponArray)
             })
         }
         regenRolls = regenRolls.sort((a,b) => b-a);
-        wounds -= regen;
+        regen = Math.min(wounds,regen);
+        wounds = wounds - regen;
+
+
+
+
+
+
+
 
 
         needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
@@ -1712,20 +1741,32 @@ log(weaponArray)
         if (rending > 0) {
             tip += "<br>Rending affected " + rending + " Rolls";
         }
-        if (regenRolls.length > 0) {
-            tip += "<br>" + regen + " Wounds Regenerated";
-            tip += "<br>Regen Rolls: " + regenRolls.length + " vs. " + regenTarget + "+";
-        }
 
         if (wounds > 0) {
             let s = (wounds === 1) ? "":"s";
             tip = '[' + wounds + '](#" class="showtip" title="' + tip + ')';
-            outputCard.body.push(defender.name + ' takes ' + tip + " Wounds") ;
+            outputCard.body.push(defender.name + ' takes ' + tip + " Wound" + s) ;
         } else {
             tip = '[No](#" class="showtip" title="' + tip + ')';
             outputCard.body.push(defender.name + " takes " + tip + " Wounds");
         }
         
+        if (ignoreRolls.length > 0) {
+            let s = (ignore === 1) ? "":"s";
+            tip = "Rolls: " + ignoreRolls.toString() + " vs. " + ig.target + "+";
+            tip = '[' + ignore + '](#" class="showtip" title="' + tip + ')';
+            outputCard.body.push(tip + " Wound" + s + " ignored due to " + ig.reason);
+        }
+
+        if (regenRolls.length > 0) {
+            let s = (regen === 1) ? "":"s";
+            tip = "Rolls: " + regenRolls.toString() + " vs. " + rg.target + "+";
+            tip = '[' + regen + '](#" class="showtip" title="' + tip + ')';
+            outputCard.body.push(tip + " Wound" + s + " healed due to " + rg.reason);
+        }
+
+
+
 
 
 
