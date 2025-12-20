@@ -105,11 +105,10 @@ main {
   height: 800px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas:"flag     header    header    flag2"
                       "common   common    common    att"
                       "common   common    common    att"
-                      "keywords keywords  keywords  keywords"
                       "weapon   weapon    weapon    weapon"
                       "weapon   weapon    weapon    weapon";
 }
@@ -222,42 +221,6 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
 
 
 
-.keywords {
-    grid-area: keywords;
-    flex-direction: center;
-    background-color: white;
-  }
-  
-input[type="hidden"][value="Off"].keyword1-status ~ .key1{
-    display: none;
-}
-input[type="hidden"][value="Off"].keyword2-status ~ .key2{
-    display: none;
-}
-input[type="hidden"][value="Off"].keyword3-status ~ .key3{
-    display: none;
-}
-input[type="hidden"][value="Off"].keyword4-status ~ .key4{
-    display: none;
-}
-input[type="hidden"][value="Off"].keyword5-status ~ .key5{
-    display: none
-}
-input[type="hidden"][value="Off"].keyword6-status ~ .key6{
-    display: none;
-}
-input[type="hidden"][value="Off"].keyword7-status ~ .key7{
-    display: none;
-}
-input[type="hidden"][value="Off"].keyword8-status ~ .key8{
-    display: none;
-}
-input[type="hidden"][value="Off"].keyword9-status ~ .key9{
-    display: none;
-}
-input[type="hidden"][value="Off"].keyword10-status ~ .key10{
-    display: none;
-}
 
 .common {
   grid-area: common;

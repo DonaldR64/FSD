@@ -639,12 +639,15 @@ const GDF3 = (() => {
 
             this.type = aa.type;
             let keywords = [];
+            let keywordDisplay = "";
             for (let i=1;i<11;i++) {
                 let eq = "key" + i + "equipped";
                 let k = "key" + i + "name";
                 if (aa[eq] === "Equipped") {
-                    let keyword = aa[k];
+                    let keyword = aa[k].trim();
                     if (!keyword) {continue};
+                    if (i > 1) {keywordDisplay += "<br>"};
+                    keywordDisplay += keyword;
                     if (keyword.includes("[")) {
                         let i1 = keyword.indexOf("[");
                         let i2 = keyword.indexOf("]");
@@ -655,6 +658,8 @@ const GDF3 = (() => {
                 }
             }
             this.keywords = keywords;
+
+            AttributeSet(this.charID,"keywords",keywordDisplay);
 
             let weapons = [];
             for (let i=1;i<11;i++) {
