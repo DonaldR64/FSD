@@ -131,6 +131,11 @@ const GDF3 = (() => {
     const SM = {
         moved: "status_blue",
         fired: "status_red",
+        fatigue: "status_yellow",
+        vAP: "status_lightning-helix",
+        vTH: "status_fist",
+
+
 
     }
 
@@ -1503,11 +1508,26 @@ log(label)
 
         let losResult = LOS(attacker,defender);
 
+        let upTH = 0,upAP = 0;
+        if (attacker.keywords.includes("Unpredictable") || (attacker.keywords.includes("Unpredictable Fighter") && combatType === "Melee")) {
+            let roll = randomInteger(6);
+            if (roll < 4) {
+                upAP = 1;
+            } else {
+                upTH = 1;
+            }
+        }
+
+
+
+
+
+
         let weaponArray = [];
         let no = [];
         let totalWounds = 0;
         for (let i=0;i<attacker.weapons.length;i++) {
-            let weapon = attacker.weapons[i];
+            let weapon = DeepCopy(attacker.weapons[i]);
             if (weapon.type !== weaponType) {continue};
             if (losResult.los === false && weapon.keywords.includes("Indirect") === false) {
                 no.push(weapon.name + " - no LOS");
@@ -1543,14 +1563,26 @@ log(label)
         //run through weapons, roll to hit/save any hits
         let quality = attacker.quality;
 
+
+
+
+
+
+
         let weaponHits = [];
 log(weaponArray)
         _.each(weaponArray,weapon => {
             let weaponOut;
-            let rolls = [], hits = 0, crits = 0;
+            let rolls = [], hits = 0, crits = 0
             let relentless = 0,surge = 0;
+            let notes = [];
             let needed = quality; 
             let neededTip = "<br>Quality: " + quality + "+";
+            if (attacker.token.get(SM.fatigue) === true && combatType === "Melee") {
+                needed = 6;
+                neededTip = "<br>Fatigue: 6+";
+            }
+
             if (weapon.keywords.includes("Reliable")) {
                 needed = 2;
                 neededTip = "<br>Reliable: 2+";
@@ -1562,13 +1594,24 @@ log(weaponArray)
             let hitTip = "", tip;
             //modifiers here
             //cover
-            if (weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Blast") === false) {
-                if (weapon.keywords.includes("Indirect")) {
-                    cover = losResult.targetHexCover;
-                } else {
-                    cover = Math.max(losResult.targetHexCover,losResult.interveningCover);
-                }
+            let ignoreCover = ["Unstoppable","Blast","Slam"];
+            if (weapon.keywords.includes("Indirect")) {
+                cover = losResult.targetHexCover;
+            } else {
+                cover = Math.max(losResult.targetHexCover,losResult.interveningCover);
             }
+
+            if (cover > 0) {
+                for (let i=0;i<weapon.keywords.length; i++) {
+                    for (let j=0;j<ignoreCover.length;j++) {
+                        if (weapon.keywords[i].includes(ignoreCover[j])) {
+                            cover = 0;
+                            neededTip += "<br>" + ignoreCover[j] + " ignores Cover";
+                        }
+                    }
+                }  
+            }
+
             if (cover > 0 && weapon.type !== "CCW") {
                 needed += 1;
                 neededTip += "<br>Cover -1 to Hit";
@@ -1585,6 +1628,23 @@ log(weaponArray)
                 needed += 1;
                 neededTip += "<br>Stealth -1 to Hit";
             }
+            if (upTH === 1) {
+                needed -= 1;
+                neededTip += "<br>Unpredictable +1 to Hit";
+            }
+            if (upAP === 1) {
+                weapon.ap++;
+                notes.push("Unpredictable +1 to AP");
+            }
+            if (attacker.token.get(SM.vTH) === true) {
+                needed -= 1;
+                neededTip += "<br>Versatile +1 to Hit";
+            }
+            if (attacker.token.get(SM.vAP) === true) {
+                weapon.ap++;
+                notes.push("Versatile +1 to AP");
+            }
+
 
 
             needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
@@ -1594,7 +1654,6 @@ log(weaponArray)
             do {
                 let roll = randomInteger(6);
                 rolls.push(roll);
-
 
 
                 if (roll >= needed) {
@@ -1651,6 +1710,7 @@ log(weaponArray)
                     crits: crits,
                     hits: hits,
                     cover: cover,
+                    notes: notes,
                 }
                 weaponHits.push(info);
             } else {
@@ -1712,8 +1772,11 @@ log(weaponArray)
 
 
 
-
-
+        if (combatType === "Melee") {
+            attacker.token.set(SM.fatigue,true);
+        } else {
+            attacker.token.set(SM.fired,true);
+        }
 
         PrintCard();
 
@@ -1738,6 +1801,11 @@ const ApplyDamage = (weaponHits,defenders) => {
             let s = (results.rending === 1) ? "":"s";
             tip += "<br>Rending affected " + results.rending + " Roll" + s;
         }
+        if (results.slam > 0) {
+            let s = (results.slam === 1) ? "":"s";
+            tip += "<br>Slam added " + results.slam + " Wound" + s;
+        }
+
 
         let s = (results.saves === 1) ? "":"s";
         let s2 = (results.wounds === 1) ? "":"s";
@@ -1796,7 +1864,6 @@ const ApplyDamage = (weaponHits,defenders) => {
         let hits = weaponHits[w].hits;
         let cover = weaponHits[w].cover;
 
-
         let unitWounds = 0;
         let results = ZeroResults();
         results.hitOut = weaponHits[w].hitOut;
@@ -1817,6 +1884,20 @@ const ApplyDamage = (weaponHits,defenders) => {
             needed += weapon.ap;
             results.neededTip += "<br>AP +" + weapon.ap;
         }
+        if (weaponHits[w].notes.includes("Unpredictable +1 to AP")) {
+            needed++;
+            results.neededTip += "<br>Unpredicatbe +1 to AP";
+        }
+        if (weaponHits[w].notes.includes("Versatile +1 to AP")) {
+            needed++;
+            results.neededTip += "Versatile +1 to AP";
+        }
+        
+
+
+
+
+
         if (cover === 2 && weapon.type !== "CCW") {
             needed--;
             results.neededTip += "<br>Hard Cover -1";
@@ -1844,6 +1925,11 @@ const ApplyDamage = (weaponHits,defenders) => {
 
             if (defenseRoll < indivNeeded) {
                 let wounds = 1;
+                if (defenseRoll === 1 && weapon.keywords.includes("Slam")) {
+                    wounds++;
+                    results.slam++;
+                }
+
                 if (deadly) {
                     max = hp - (Math.floor(hp/defender.toughness) * defender.toughness);
                     if (max === 0) {
@@ -1854,7 +1940,7 @@ const ApplyDamage = (weaponHits,defenders) => {
                 }
 
                 //Ignore Wound abilities
-                let ignoreReasons = [{reason: "Plaguebound", target: 6, verb: " ignored "},];
+                let ignoreReasons = [{reason: "Plaguebound", target: 6, verb: " ignored "},{reason: "Protected", target: 6, verb: " ignored "}];
                 for (let i=0;i<ignoreReasons.length;i++) {
                     if (defender.keywords.includes(ignoreReasons[i].reason)) {
                         let ignore = 0;
@@ -1980,6 +2066,7 @@ const ApplyDamage = (weaponHits,defenders) => {
             deadlyTip: "",
             bane: 0,
             rending: 0,
+            slam: 0,
             needed: 6,
             neededTip: "",
             reduce: [],
