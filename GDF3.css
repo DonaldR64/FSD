@@ -236,13 +236,12 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
 
 .att {
   grid-area: att;
+  display: grid;
   background-color: white;
   place-items: center;
 }
 
 .attinfo {
-    grid-area: attinfo;
-    display: grid;
     grid-gap: 2px;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
