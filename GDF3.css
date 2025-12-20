@@ -208,18 +208,12 @@ section {
   border-style: none;
 }
 
-.header h1,h3 {
-  color: white;
-}
-
-input[type="hidden"][name="attr_faction"]:is([value="Plague Disciples"],[value="Space Wolves"],[value="Grey Knights"],[value="Ratlings"],[value="Goblins"],[value="Slaanesh"],[value="Infected Colony"],[value="Eldar"]) ~ .header :is(h1,h3){
+.header h1 {
   color: black;
 }
-
-input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,h3) {
-  color: #39FF14;
+.header h3 {
+  color: black;
 }
-
 
 
 
