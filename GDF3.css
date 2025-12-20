@@ -208,15 +208,15 @@ section {
   border-style: none;
 }
 
-.fac h3 {
+.header h1,h3 {
   color: white;
 }
 
-input[type="hidden"][name="attr_faction"]:is([value="Plague Disciples"],[value="Space Wolves"],[value="Grey Knights"],[value="Ratlings"],[value="Goblins"],[value="Slaanesh"],[value="Infected Colony"],[value="Eldar"]) ~ .fac :is(h1,h3){
+input[type="hidden"][name="attr_faction"]:is([value="Plague Disciples"],[value="Space Wolves"],[value="Grey Knights"],[value="Ratlings"],[value="Goblins"],[value="Slaanesh"],[value="Infected Colony"],[value="Eldar"]) ~ .header :is(h1,h3){
   color: black;
 }
 
-input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .fac :is(h1,h3) {
+input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,h3) {
   color: #39FF14;
 }
 
@@ -246,13 +246,6 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .fac :is(h1,h3)
   color: red;
 }
 
-.kw h3 {
-  color: red;
-}
-
-input[type="hidden"][name="attr_faction"]:is([value="Alien Hives"]) ~ .kw :is(h3) {
-  color: black;
-}
 
 
 
