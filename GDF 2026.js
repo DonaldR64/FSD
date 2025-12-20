@@ -1546,6 +1546,7 @@ log(label)
         let weaponHits = [];
 log(weaponArray)
         _.each(weaponArray,weapon => {
+            let weaponOut;
             let rolls = [], hits = 0, crits = 0;
             let relentless = 0,surge = 0;
             let needed = quality; 
@@ -1555,7 +1556,7 @@ log(weaponArray)
                 neededTip = "<br>Reliable: 2+";
             }
             let blast = weapon.keywords.find(key => key.includes("Blast")) || "0";
-            blast = blast.replace(/\D/g,'');
+            blast = parseInt(blast.replace(/\D/g,''));
 
             let cover;
             let hitTip = "", tip;
@@ -1643,7 +1644,15 @@ log(weaponArray)
             if (hits > 0) {
                 let s = (hits === 1) ? "":"s";
                 tip = '[' + hits + '](#" class="showtip" title="' + hitTip + ')';
-                outputCard.body.push(tip + ' hit' + s + ' with ' + weapon.name) ;
+                weaponOut = tip + ' hit' + s + ' with ' + weapon.name ;
+                let info = {
+                    hitOut: weaponOut,
+                    weapon: weapon,
+                    crits: crits,
+                    hits: hits,
+                    cover: cover,
+                }
+                weaponHits.push(info);
             } else {
                 tip = '[' + noun + '](#" class="showtip" title="' + hitTip + ')';
                 outputCard.body.push(weapon.name + tip);
@@ -1652,28 +1661,61 @@ log(weaponArray)
 
 
 
-
-
-            if (hits > 0) {
-                let info = {
-                    weapon: weapon,
-                    crits: crits,
-                    hits: hits,
-                    cover: cover,
-                }
-                weaponHits.push(info);
-            }
-
             
 
 
 
         })
 
+
+        let active = true;
         if (weaponHits.length > 0) {
-            outputCard.body.push("[hr]")
-            ApplyDamage(weaponHits,defenders);
+            let results = ApplyDamage(weaponHits,defenders);
+            totalWounds = results.totalWounds;
+            active = results.active;
+            if (weaponHits.length > 1) {
+                outputCard.body.push("[hr]");
+                outputCard.body.push("Total Wounds Inflicted: " + totalWounds);
+            }
         }
+log("Total" + totalWounds)
+log("Active: " + active)
+        if (active === true) {
+            if (combatType === "Melee") {
+                let fear = attacker.keywords.find((e) => e.includes("Fear")) || "0";
+                fear = parseInt(fear.replace(/\D/g,''));
+                if (fear > 0) {
+                    outputCard.body.push("Add " + fear + " for Combat Resolution for Fear");
+                }
+            } else if (weaponHits.length > 0) {
+                //check for morale
+                let current = 0;
+                let total = 0;
+                _.each(defenders,defender => {
+                    current += parseInt(defender.token.get("bar1_value")) || 0;
+                    total += parseInt(defender.woundsMax);
+                })
+                if ((current/total) <= 0.5) {
+                    outputCard.body.push("Defenders take a Morale Test");
+//buttons for morale test here
+log("C: " + current)
+log("T: " + total)
+
+                }
+
+
+            }
+        } else if (active === false && combatType === "Melee") {
+            outputCard.body.push("[hr]");
+            outputCard.body.push(attacker.name + " can make a Consolidation Move of 2 hexes");
+        }
+
+
+
+
+
+
+
 
 
         PrintCard();
@@ -1686,6 +1728,8 @@ const ApplyDamage = (weaponHits,defenders) => {
     //if more than one defender (hero) then apply to 1st until dead etc.
 
     const WeaponOutput = (results) => {
+        output.push(results.hitOut);
+
         results.rolls.sort((a,b) => b - a);
         let tip = "Rolls: " + results.rolls.toString() + " vs. " + results.needed + "+";
         tip += results.neededTip + results.deadlyTip;
@@ -1713,7 +1757,6 @@ const ApplyDamage = (weaponHits,defenders) => {
         _.each(results.reduce,reduce => {
             reduce.rolls = reduce.rolls.sort((a,b) => b-a).toString();
             tip = "Rolls: " + reduce.rolls + " vs. " + reduce.target + "+"; 
-            if (reduce.wounds === 0) {reduce.wounds = "No"}
             tip = '[' + reduce.wounds + '](#" class="showtip" title="' + tip + ')';
             let s = (reduce.wounds === 1) ? "":"s";
             output.push(tip + " Wound" + s + reduce.verb + " by " + reduce.reason);
@@ -1730,6 +1773,8 @@ const ApplyDamage = (weaponHits,defenders) => {
                 statusmarkers: "dead",
             });
         }
+
+        output.push("[hr]");
     }
 
     //sort weapon hits to put any deadly weapons first
@@ -1745,6 +1790,7 @@ const ApplyDamage = (weaponHits,defenders) => {
     let output = [];
     let totalWounds = 0;
     let currentDefender = 0;
+    let active = true;
 
     weaponLoop:
     for (let w = 0;w<weaponHits.length; w++) {
@@ -1753,8 +1799,10 @@ const ApplyDamage = (weaponHits,defenders) => {
         let hits = weaponHits[w].hits;
         let cover = weaponHits[w].cover;
 
+
         let unitWounds = 0;
         let results = ZeroResults();
+        results.hitOut = weaponHits[w].hitOut;
 
         let deadly = parseInt(weapon.keywords.find((e) => e.includes("Deadly")));
         if (deadly) {
@@ -1886,6 +1934,7 @@ const ApplyDamage = (weaponHits,defenders) => {
                         currentDefender = 1;
                     } else {
                         //end weapons/hits, no other living units
+                        active = false;
                         break weaponLoop;
                     }
                 } 
@@ -1909,14 +1958,13 @@ const ApplyDamage = (weaponHits,defenders) => {
         outputCard.body.push(output[i]);
     }
 
-    //sum - morale, melee etc
-    //total wounds for melee
+    let res = {
+        totalWounds: totalWounds,
+        active: active,
+    }
 
 
-
-
-
-
+    return res;
 
 }
 
