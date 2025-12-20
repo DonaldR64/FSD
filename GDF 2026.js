@@ -644,7 +644,7 @@ const GDF3 = (() => {
             let unitKey = aa.unitkeywords || " ";
             unitKey = unitKey.split(",");
             _.each(unitKey,key => {
-                keywords.push(unitKey.trim());
+                keywords.push(key.trim());
             })
 
             //upgrades, which may be in [ ] with flavour text before
@@ -667,7 +667,7 @@ const GDF3 = (() => {
                 }
             }
             this.keywords = keywords;
-
+log(keywords)
             let weapons = [];
             for (let i=1;i<11;i++) {
                 if (aa["weapon" + i + "equipped"] === "Equipped") {
@@ -1480,7 +1480,6 @@ log(label)
         let attackerAuras = Auras(attacker);
         let attackerHex = HexMap[attacker.hexLabel()];
         let defender = UnitArray[Tag[2]];
-        let defenderHex = HexMap[defender.hexLabel()];
         let combatType = Tag[3];  //Ranged, Melee
         let weaponType = Tag[4]; //CCW, Rifle etc
         let errorMsg = [];
@@ -1498,6 +1497,9 @@ log(label)
                 errorMsg.push("Friendly Fire!");
             }
         }
+
+        let defenderHex = HexMap[defender.hexLabel()];
+
 
         let attackers = [attacker];
         let defenders = [defender];
