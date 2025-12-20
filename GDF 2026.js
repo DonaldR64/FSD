@@ -2004,7 +2004,8 @@ log(defenderAuras)
                         let reason = ignoreReasons[i].reason;
                         let ignore = 0;
                         let ignoreRolls = [];
-                        let target = ignoreReasons[i].target;
+                        let target = (weapon.spell === true && ignoreReasons[i].spellTarget) ? ignoreReasons[i].spellTarget : ignoreReasons[i].target;
+
                         if (reason === "Plaguebound" && defenderAuras.includes("Plaguebound Boost")) {
                             target--;
                             reason = "Plaguebound + Boost";
