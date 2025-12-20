@@ -132,10 +132,11 @@ const GDF3 = (() => {
         moved: "status_blue",
         fired: "status_red",
         fatigue: "status_yellow",
-        vAP: "status_lightning-helix",
-        vTH: "status_fist",
+        vAAP: "status_lightning-helix", //versatile attack, ap
+        vATH: "status_fist", //versatile attack, to hit
         charge: "status_overdrive",
-
+        vDD: "", //versatile defense, defense
+        vDTH: "", //versatile defense, to hit
 
     }
 
@@ -1264,18 +1265,19 @@ log(hex)
     }
    
 
-    const Aura = (unit) => {
+    const Auras = (unit) => {
         ///checks if model or assoc leader has an active aura and returns their names
         let auras = unit.keywords.filter((e) => e.includes("Aura"));
         let label = unit.hexLabel();
         _.each(UnitArray,unit2 => {
             if (unit2.faction === unit.faction) {
-                if (unit2.hexLabel === label) {
-                    auras = auras.concat(unit.keywords.filter((e) => e.includes("Aura")));
+                if (unit2.hexLabel() === label) {
+                    auras = auras.concat(unit2.keywords.filter((e) => e.includes("Aura")));
                 }
             }
         })
         auras = auras.map((e) => e.replace(" Aura",""));
+        auras = [...new Set(auras)];
         return auras;
     }
 
@@ -1521,6 +1523,7 @@ log(label)
         if (attackers.length === 0 || defenders.length === 0) {sendChat("","Someones not in Array");return};
 
         defender = defenders[0]; //will shift to an assoc unit if hero was initially targeted
+        defenderAura = Auras(defender);
 
         let losResult = LOS(attacker,defender);
 
@@ -1652,11 +1655,11 @@ log(weaponArray)
                 weapon.ap++;
                 notes.push("Unpredictable +1 to AP");
             }
-            if (attacker.token.get(SM.vTH)) {
+            if (attacker.token.get(SM.vATH)) {
                 needed -= 1;
                 neededTip += "<br>Versatile +1 to Hit";
             }
-            if (attacker.token.get(SM.vAP)) {
+            if (attacker.token.get(SM.vAAP)) {
                 weapon.ap++;
                 notes.push("Versatile +1 to AP");
             }
@@ -1666,6 +1669,12 @@ log(weaponArray)
                 needed -= 1;
                 neededTip += "<br>Thrust/Charge +1 to Hit";
             }
+            if (defender.token.get(SM.vDTH) && weapon.keywords.includes("Unstoppable") === false) {
+                needed += 1;
+                neededTip += "<br>Versatile Defense -1 to Hit"
+            }
+
+
 
 
 
@@ -1682,13 +1691,13 @@ log(weaponArray)
                     hits++;
                     if (roll === 6) {
                         crits++;
-                        if (weapon.keywords.includes("Relentless") && losResult.distance > 4) {
+                        if ((weapon.keywords.includes("Relentless") || attackerAuras.includes("Relentless")) && losResult.distance > 4) {
                             relentless++;
                         }
                         if (weapon.keywords.includes("Surge")) {
                             surge++;
                         }
-                        if (attacker.keywords.includes("Furious") || attackerAura.includes("Furious")) {
+                        if (attacker.keywords.includes("Furious") || attackerAuras.includes("Furious")) {
                             furious++;
                         }
 
@@ -1907,8 +1916,8 @@ const ApplyDamage = (weaponHits,defenders) => {
         let defender = defenders[currentDefender];
         results.defender = defender;
 
-        let defenderAura = Auras(defender);
-
+        let defenderAuras = Auras(defender);
+log(defenderAuras)
         let hp = parseInt(defender.token.get("bar1_value"));
 
         let needed = defender.defense;
@@ -1930,7 +1939,10 @@ const ApplyDamage = (weaponHits,defenders) => {
             needed++;
             results.neededTip += "<br>Thrust/Charge +1 to AP";
         }
-
+        if (defender.token.get(SM.vDD) && weapon.keywords.includes("Unstoppable") === false) {
+            needed--;
+            results.neededTip += "<br>Versatile Defense +1 Defense";
+        }
 
 
 
@@ -1976,29 +1988,44 @@ const ApplyDamage = (weaponHits,defenders) => {
                     results.deadlyTip += "<br>Deadly - " + wounds + " Wounds";
                 }
 
+
+                //add in any auras that would otherwise be recognized as keywords
+                let keywords = DeepCopy(defender.keywords);
+                if (defenderAuras.includes("Resistance")) {
+                    keywords.push("Resistance");
+                }
+
                 //Ignore Wound abilities
-                let ignoreReasons = [{reason: "Plaguebound", target: 6, verb: " ignored "},{reason: "Protected", target: 6, verb: " ignored "}];
+                let ignoreReasons = [{reason: "Plaguebound", target: 6, verb: " ignored "},{reason: "Protected", target: 6, verb: " ignored "},{reason: "Resistance", target: 6, spellTarget: 2, verb: " ignored "}];
+                
+
                 for (let i=0;i<ignoreReasons.length;i++) {
-                    if (defender.keywords.includes(ignoreReasons[i].reason)) {
+                    if (keywords.includes(ignoreReasons[i].reason)) {
+                        let reason = ignoreReasons[i].reason;
                         let ignore = 0;
                         let ignoreRolls = [];
+                        let target = ignoreReasons[i].target;
+                        if (reason === "Plaguebound" && defenderAuras.includes("Plaguebound Boost")) {
+                            target--;
+                            reason = "Plaguebound + Boost";
+                        }
                         for (let i=0;i<wounds;i++) {
                             let roll = randomInteger(6);
                             ignoreRolls.push(roll);
-                            if (roll >= ignoreReasons[i].target) {
+                            if (roll >= target) {
                                 ignore++;
                             }
                         }
                         ignore = Math.min(wounds,ignore);
                         wounds = wounds - ignore;
-                        let index = results.reduce.findIndex(reduce => reduce.reason === ignoreReasons[i].reason);
+                        let index = results.reduce.findIndex(reduce => reduce.reason === reason);
                         if (index > -1) {
                             results.reduce[index].rolls = results.reduce[index].rolls.concat(ignoreRolls);
                             results.reduce[index].wounds += ignore;
                         } else {
                             let igresult = {
-                                reason: ignoreReasons[i].reason,
-                                target: ignoreReasons[i].target,
+                                reason: reason,
+                                target: target,
                                 rolls: ignoreRolls,
                                 wounds: ignore,
                                 verb: ignoreReasons[i].verb,
@@ -2012,7 +2039,7 @@ const ApplyDamage = (weaponHits,defenders) => {
                 if (wounds > 0 && weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Bane") === false) {
                     let regenReasons = [{reason: "Regeneration", target: 5, verb: " removed "},];
                     for (let i=0;i<regenReasons.length;i++) {
-                        if (defender.keywords.includes(regenReasons[i].reason)) {
+                        if (keywords.includes(regenReasons[i].reason)) {
                             let regen = 0;
                             let regenRolls = [];
                             for (let i=0;i<wounds;i++) {
