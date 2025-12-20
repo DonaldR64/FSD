@@ -1568,7 +1568,7 @@ log(weaponArray)
                     cover = Math.max(losResult.targetHexCover,losResult.interveningCover);
                 }
             }
-            if (cover > 0) {
+            if (cover > 0 && weapon.type !== "CCW") {
                 needed += 1;
                 neededTip += "<br>Cover -1 to Hit";
             }
