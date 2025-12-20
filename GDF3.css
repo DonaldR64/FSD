@@ -15,7 +15,7 @@
 
 
 .mysheet {
-    width: 1030px;
+    width: 830;
     height: 830px;
 }
 .attributes {
@@ -101,17 +101,17 @@ input[type="hidden"][name="attr_faction"][value="Thousand Sons"] ~ .mysheet {
 
 main {
   display: grid;
-  width: 1000px;
+  width: 800px;
   height: 800px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"flag     header    header   header   flag2"
-                      "common   common    common   keywords keywords"
-                      "common   common    common   keywords keywords"
-                      "att      att       att      att      att"
-                      "weapon   weapon    weapon   weapon   weapon"
-                      "weapon   weapon    weapon   weapon   weapon";
+  grid-template-areas:"flag     header    header    flag2"
+                      "common   common    common    att"
+                      "common   common    common    att"
+                      "keywords keywords  keywords  keywords"
+                      "weapon   weapon    weapon    weapon"
+                      "weapon   weapon    weapon    weapon";
 }
 
 
