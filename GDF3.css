@@ -47,7 +47,7 @@ input[type="hidden"][name="attr_faction"][value="Space Wolves"] ~ .mysheet {
     background-color: #dae6ef;
 }
 input[type="hidden"][name="attr_faction"][value="Alien Hives"] ~ .mysheet {
-  background-color: #800080;
+  background-color: #8000809d;
 }
 input[type="hidden"][name="attr_faction"][value="Genestealer Cult"] ~ .mysheet {
   background-color: #9E1F15;
