@@ -15,7 +15,7 @@
 
 
 .mysheet {
-    width: 830px;
+    width: 1030px;
     height: 830px;
 }
 .attributes {
@@ -101,17 +101,17 @@ input[type="hidden"][name="attr_faction"][value="Thousand Sons"] ~ .mysheet {
 
 main {
   display: grid;
-  width: 800px;
+  width: 1000px;
   height: 800px;
   grid-gap: 4px;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
-  grid-template-areas:"flag     header    header   flag2"
-                      "common   common    common   keywords"
-                      "common   common    common   keywords"
-                      "att      att       att      att"
-                      "weapon   weapon    weapon   weapon"
-                      "weapon   weapon    weapon   weapon";
+  grid-template-areas:"flag     header    header   header   flag2"
+                      "common   common    common   keywords keywords"
+                      "common   common    common   keywords keywords"
+                      "att      att       att      att      att"
+                      "weapon   weapon    weapon   weapon   weapon"
+                      "weapon   weapon    weapon   weapon   weapon";
 }
 
 
@@ -228,34 +228,34 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
     background-color: white;
   }
   
-input[type="hidden"][value="Off"].keygrade1-status ~ .key1{
+input[type="hidden"][value="Off"].keyword1-status ~ .key1{
     display: none;
 }
-input[type="hidden"][value="Off"].keygrade2-status ~ .key2{
+input[type="hidden"][value="Off"].keyword2-status ~ .key2{
     display: none;
 }
-input[type="hidden"][value="Off"].keygrade3-status ~ .key3{
+input[type="hidden"][value="Off"].keyword3-status ~ .key3{
     display: none;
 }
-input[type="hidden"][value="Off"].keygrade4-status ~ .key4{
+input[type="hidden"][value="Off"].keyword4-status ~ .key4{
     display: none;
 }
-input[type="hidden"][value="Off"].keygrade5-status ~ .key5{
+input[type="hidden"][value="Off"].keyword5-status ~ .key5{
     display: none
 }
-input[type="hidden"][value="Off"].keygrade6-status ~ .key6{
+input[type="hidden"][value="Off"].keyword6-status ~ .key6{
     display: none;
 }
-input[type="hidden"][value="Off"].keygrade7-status ~ .key7{
+input[type="hidden"][value="Off"].keyword7-status ~ .key7{
     display: none;
 }
-input[type="hidden"][value="Off"].keygrade8-status ~ .key8{
+input[type="hidden"][value="Off"].keyword8-status ~ .key8{
     display: none;
 }
-input[type="hidden"][value="Off"].keygrade9-status ~ .key9{
+input[type="hidden"][value="Off"].keyword9-status ~ .key9{
     display: none;
 }
-input[type="hidden"][value="Off"].keygrade10-status ~ .key10{
+input[type="hidden"][value="Off"].keyword10-status ~ .key10{
     display: none;
 }
 
