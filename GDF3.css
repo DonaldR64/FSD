@@ -246,7 +246,7 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
     background-color: white;
-    text-align: center;
+    place-items: center;
 }
 
 .upgrades {
