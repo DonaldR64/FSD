@@ -643,7 +643,15 @@ const GDF3 = (() => {
                 let eq = "key" + i + "equipped";
                 let k = "key" + i + "name";
                 if (aa[eq] === "Equipped") {
-                    keywords.push(aa[k].trim());
+                    let keyword = aa[k];
+                    if (!keyword) {continue};
+                    if (keyword.includes("[")) {
+                        let i1 = keyword.indexOf("[");
+                        let i2 = keyword.indexOf("]");
+                        keyword = keyword.substring(i1 + 1,i2);
+                    }
+                    keyword = keyword.trim();
+                    keywords.push(keyword);
                 }
             }
             this.keywords = keywords;
