@@ -245,6 +245,17 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
   color: red;
 }
 
+.unitkey h3 {
+  color: red;
+}
+
+input[type="hidden"][name="attr_faction"]:is([value="Alien Hives"]) ~ .unitkey h3 {
+  color: black;
+}
+
+
+
+ 
 
 .upgrades {
   grid-area: upgrades;
