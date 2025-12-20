@@ -1678,8 +1678,7 @@ log(weaponArray)
                 outputCard.body.push("Total Wounds Inflicted: " + totalWounds);
             }
         }
-log("Total" + totalWounds)
-log("Active: " + active)
+
         if (active === true) {
             if (combatType === "Melee") {
                 let fear = attacker.keywords.find((e) => e.includes("Fear")) || "0";
@@ -1698,8 +1697,6 @@ log("Active: " + active)
                 if ((current/total) <= 0.5) {
                     outputCard.body.push("Defenders take a Morale Test");
 //buttons for morale test here
-log("C: " + current)
-log("T: " + total)
 
                 }
 
