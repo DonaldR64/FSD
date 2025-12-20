@@ -1659,6 +1659,7 @@ log(weaponArray)
                     weapon: weapon,
                     crits: crits,
                     hits: hits,
+                    cover: cover,
                 }
                 weaponHits.push(info);
             }
@@ -1670,6 +1671,7 @@ log(weaponArray)
         })
 
         if (weaponHits.length > 0) {
+            outputCard.body.push("[hr]")
             ApplyDamage(weaponHits,defenders);
         }
 
@@ -1695,17 +1697,38 @@ const ApplyDamage = (weaponHits,defenders) => {
             let s = (results.rending === 1) ? "":"s";
             tip += "<br>Rending affected " + results.rending + " Roll" + s;
         }
+
+        let s = (results.saves === 1) ? "":"s";
+        let s2 = (results.wounds === 1) ? "":"s";
+        if (results.saves === 0) {results.saves = "No"};
+        let c = "[#ff0000]",c1 = "[/#]";
+        if (results.wounds === 0) {
+            results.wounds = "No"
+            c = "",c1 = "";
+        };
+
+        tip = '[' + results.saves + '](#" class="showtip" title="' + tip + ')';
+        output.push(tip + " Save" + s + " Made");
+
         _.each(results.reduce,reduce => {
-            reduce.rolls = reduce.rolls.sort((a,b) => b-a);
-            tip += "<br>" + reduce.reason + " removes " + reduce.wounds + " Wounds";
-            tip += "<br>Rolls: " + reduce.rolls.toString() + " vs. " + reduce.target + "+"; 
+            reduce.rolls = reduce.rolls.sort((a,b) => b-a).toString();
+            tip = "Rolls: " + reduce.rolls + " vs. " + reduce.target + "+"; 
+            if (reduce.wounds === 0) {reduce.wounds = "No"}
+            tip = '[' + reduce.wounds + '](#" class="showtip" title="' + tip + ')';
+            let s = (reduce.wounds === 1) ? "":"s";
+            output.push(tip + " Wound" + s + reduce.verb + " by " + reduce.reason);
         })
-        let s = (results.wounds === 1) ? "":"s";
-        if (results.wounds === 0) {results.wounds = "No"};
-        tip = '[' + results.wounds + '](#" class="showtip" title="' + tip + ')';
-        output.push(results.defender.name + ' takes ' + tip + " Wound" + s) ;
+
+
+        output.push(c + results.defender.name + ' takes ' + results.wounds + " Wound" + s2 + c1) ;
+
         if (results.destroyed === true) {
-            output.push(results.defender.name + " is Destroyed!");
+            output.push("[#ff0000]" + results.defender.name + " is Destroyed![/#]");
+            results.defender.token.set({
+                bar1_value: 0,
+                layer: "map",
+                statusmarkers: "dead",
+            });
         }
     }
 
@@ -1728,6 +1751,8 @@ const ApplyDamage = (weaponHits,defenders) => {
         let weapon = weaponHits[w].weapon;
         let crits = weaponHits[w].crits;
         let hits = weaponHits[w].hits;
+        let cover = weaponHits[w].cover;
+
         let unitWounds = 0;
         let results = ZeroResults();
 
@@ -1747,6 +1772,11 @@ const ApplyDamage = (weaponHits,defenders) => {
             needed += weapon.ap;
             results.neededTip += "<br>AP +" + weapon.ap;
         }
+        if (cover === 2 && weapon.type !== "CCW") {
+            needed--;
+            results.neededTip += "<br>Hard Cover -1";
+        }
+
         results.needed = Math.min(6,Math.max(2,needed));
 
         for (let i=0;i<hits;i++) {
@@ -1779,7 +1809,7 @@ const ApplyDamage = (weaponHits,defenders) => {
                 }
 
                 //Ignore Wound abilities
-                let ignoreReasons = [{reason: "Plaguebound", target: 6},];
+                let ignoreReasons = [{reason: "Plaguebound", target: 6, verb: " ignored "},];
                 for (let i=0;i<ignoreReasons.length;i++) {
                     if (defender.keywords.includes(ignoreReasons[i].reason)) {
                         let ignore = 0;
@@ -1793,19 +1823,26 @@ const ApplyDamage = (weaponHits,defenders) => {
                         }
                         ignore = Math.min(wounds,ignore);
                         wounds = wounds - ignore;
-                        let igresult = {
-                            reason: ignoreReasons[i].reason,
-                            target: ignoreReasons[i].target,
-                            rolls: ignoreRolls,
-                            wounds: ignore,
+                        let index = results.reduce.findIndex(reduce => reduce.reason === ignoreReasons[i].reason);
+                        if (index > -1) {
+                            results.reduce[index].rolls = results.reduce[index].rolls.concat(ignoreRolls);
+                            results.reduce[index].wounds += ignore;
+                        } else {
+                            let igresult = {
+                                reason: ignoreReasons[i].reason,
+                                target: ignoreReasons[i].target,
+                                rolls: ignoreRolls,
+                                wounds: ignore,
+                                verb: ignoreReasons[i].verb,
+                            }
+                            results.reduce.push(igresult);
                         }
-                        results.reduce.push(igresult);
                     }
                 }
 
                 //Regen Abilities, disabled by Bane, Unstoppable
                 if (wounds > 0 && weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Bane") === false) {
-                    let regenReasons = [{reason: "Regeneration", target: 5},];
+                    let regenReasons = [{reason: "Regeneration", target: 5, verb: " removed "},];
                     for (let i=0;i<regenReasons.length;i++) {
                         if (defender.keywords.includes(regenReasons[i].reason)) {
                             let regen = 0;
@@ -1813,19 +1850,26 @@ const ApplyDamage = (weaponHits,defenders) => {
                             for (let i=0;i<wounds;i++) {
                                 let roll = randomInteger(6);
                                 regenRolls.push(roll);
-                                if (roll >= regenRolls[i].target) {
+                                if (roll >= regenReasons[i].target) {
                                     regen++;
                                 }
                             }
                             regen = Math.min(wounds,regen);
                             wounds = wounds - regen;
-                            let rgresult = {
-                                reason: regenReasons[i].reason,
-                                target: regenReasons[i].target,
-                                rolls: regenRolls,
-                                wounds: regen,
+                            let index = results.reduce.findIndex(reduce => reduce.reason === regenReasons[i].reason);
+                            if (index > -1) {
+                                results.reduce[index].rolls = results.reduce[index].rolls.concat(regenRolls);
+                                results.reduce[index].wounds += regen;
+                            } else {
+                                let igresult = {
+                                    reason: regenReasons[i].reason,
+                                    target: regenReasons[i].target,
+                                    rolls: regenRolls,
+                                    wounds: regen,
+                                    verb: regenReasons[i].verb,
+                                }
+                                results.reduce.push(igresult);
                             }
-                            results.reduce.push(rgresult);
                         }
                     }
                 }
@@ -1846,7 +1890,10 @@ const ApplyDamage = (weaponHits,defenders) => {
                     }
                 } 
                 //continue to next hit as unit still alive
+            } else {
+                results.saves++;
             }
+
         }
         //next weapon, unit still alive
         results.wounds = unitWounds;
@@ -1883,6 +1930,8 @@ const ApplyDamage = (weaponHits,defenders) => {
         //zeros the results and creates the array
         results = {
             rolls: [],
+            wounds: 0,
+            saves: 0,
             deadlyTip: "",
             bane: 0,
             rending: 0,
