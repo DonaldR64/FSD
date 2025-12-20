@@ -208,9 +208,13 @@ section {
   border-style: none;
 }
 
-.fac h3 {
+.fac h1,h3 {
   color: white;
 }
+
+
+
+
 
 input[type="hidden"][name="attr_faction"]:is([value="Plague Disciples"],[value="Space Wolves"],[value="Grey Knights"],[value="Ratlings"],[value="Goblins"],[value="Slaanesh"],[value="Infected Colony"],[value="Eldar"]) ~ .fac :is(h1,h3){
   color: black;
