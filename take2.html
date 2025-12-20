@@ -2,7 +2,7 @@
 <div>
     <button type="action" name="act_input" >Input</button>
     <button type="action" name="act_display" >Display</button>
-    <button type="action" name="act_abilities" >Special Rules</button>
+    <button type="action" name="act_abilities" >Keywords</button>
 </div>
 
 <div class="sheet-input">
@@ -56,15 +56,98 @@
                 <option value="Vehicle">Vehicle</option>
                 <option value="Monster">Monster</option>
                 <option value="Aircraft">Aircraft</option>
+                <option value="Titan">Titan</option>
             </select>        
           </div>
     </div>    
     <div class="row">
-        <h3>Keywords</h3>
-        <div class="keywords">
-            <label>Keywords:</label><input type="text" name="attr_keywords">
-        </div>            
+        <label>Unit Keywords:</label><input type="text" name="attr_unitkeywords">
+    </div>
 
+    <div class="row">
+        <h3>Upgrades</h3>
+        <div class="keywords">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Active</th>
+                        <th>Upgrade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><select name="attr_key1equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key1name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key2equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key2name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key3equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key3name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key4equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key4name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key5equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key5name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key6equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key6name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key7equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key7name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key8equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key8name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key9equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key9name"></td>  
+                    </tr>
+                    <tr>
+                        <td><select name="attr_key10equipped">
+                            <option value = "Off">Off</option>
+                            <option value = "Equipped">Equipped</option>
+                        </select></td>
+                        <td><input type="text" name="attr_key10name"></td>  
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="row">
@@ -100,6 +183,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -126,6 +210,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -178,6 +263,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -204,6 +290,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -230,6 +317,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -256,6 +344,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -282,6 +371,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -308,6 +398,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -334,6 +425,7 @@
                         <option value="CCW">CCW</option>
                         <option value="Heavy">Heavy</option>
                         <option value="Heavy2">Heavy 2</option>
+                        <option value="Heavy3">Heavy 3</option>
                         <option value="Sniper">Sniper</option>
                         <option value="Pistol">Pistol</option>
                         <option value="Mod">Mod</option>
@@ -371,7 +463,7 @@
           <section class="header f-center">
             <h1><span name="attr_character_name"></span></h1>
             <h3><span name="attr_faction"></span> <span name="attr_type"></span> [<span name="attr_models"></span>]</h3>
-
+            <h3 style="color: #FF0000;"><span name="attr_unitkeywords"></span></h3>
           </section>
 
           <section class="common f-center">
@@ -379,14 +471,11 @@
           </section>
 
           <section class="att">
-            <h3>Attributes</h3>
-            <div class="attinfo">
-                <h3>Quality</h3>
-                <h3><span name="attr_quality"></span></h3>
-                <h3>Defense</h3>
-                <h3><span name="attr_defense"></span></h3>
-                <h3>Toughness</h3>
-                <h3><span name="attr_toughness"></span></h3>
+            <h3>Attributes</h3>  
+            <div class ="attinfo">
+                <h3><span>Quality: </span><span name="attr_quality"></span></h3>
+                <h3><span>Defense: </span><span name="attr_defense"></span></h3>
+                <h3><span>Toughness: </span><span name="attr_toughness"></span></h3>
             </div>
           </section>
 
@@ -398,10 +487,61 @@
             <img name="attr_factionImage">
           </section>
 
-          <section class="key">
-            <h3>Unit Keywords</h3>
-            <h4><span name="attr_keywords"></span></h4>
+          <section class="upgrades">
+            <h3>Upgrades</h3>
+            <input type="hidden" name="attr_key1equipped" class="keyword1-status" value="Off">
+            <div class="key1">
+                <h4><span name="attr_key1name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key2equipped" class="keyword2-status" value="Off">
+            <div class="key2">
+                <h4><span name="attr_key2name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key3equipped" class="keyword3-status" value="Off">
+            <div class="key3">
+                <h4><span name="attr_key3name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key4equipped" class="keyword4-status" value="Off">
+            <div class="key4">
+                <h4><span name="attr_key4name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key5equipped" class="keyword5-status" value="Off">
+            <div class="key5">
+                <h4><span name="attr_key5name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key6equipped" class="keyword6-status" value="Off">
+            <div class="key6">
+                <h4><span name="attr_key6name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key7equipped" class="keyword7-status" value="Off">
+            <div class="key7">
+                <h4><span name="attr_key7name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key8equipped" class="keyword8-status" value="Off">
+            <div class="key8">
+                <h4><span name="attr_key8name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key9equipped" class="keyword9-status" value="Off">
+            <div class="key9">
+                <h4><span name="attr_key9name"></span></h4>
+            </div>
+            <input type="hidden" name="attr_key10equipped" class="keyword10-status" value="Off">
+            <div class="key10">
+                <h4><span name="attr_key10name"></span></h4>
+            </div>
+
           </section>
+
+
+
+
+
+
+
+
+
+
+
 
 
           <section class="weapon">
@@ -608,6 +748,92 @@
         setAttrs({sheetTab:"display"});
     });
 
+    on("change:attrs sheet:opened", function() { 
+        getAttrs(["faction"], function(values) {
+            let faction = values.faction;
+            let factionImage = "";
+
+            if (faction === "Ultramarines") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/353049529/KtPvktw8dgMFRyHJIW-i6w/thumb.png?1690989195";
+            }
+            if (faction === "Blood Angels") {
+              factionImage = "https://s3.amazonaws.com/files.d20.io/images/354261572/BMAsmC28Ap91qYIfra71yw/thumb.png?1691796541";
+            }
+            if (faction === "Grey Knights") {
+              factionImage = "https://s3.amazonaws.com/files.d20.io/images/441422174/OhuW8niQM9Tx4nyCy388oA/thumb.png?1747552495";
+            }
+            if (faction === "Plague Disciples") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/353239057/GIITPAhD-JdRRD2D6BREWw/thumb.png?1691112406";
+            }
+            if (faction === "Thousand Sons") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/429856139/k2ziPm7uaaUbQg-75C3vaA/thumb.png?1740102178";
+            }
+            if (faction === "Tau") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/354348305/k_izI31oM8lRsHHma1xfag/thumb.png?1691855991";
+            }      
+            if (faction === "Imperial Guard") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/354557308/CrRWn51EJHMtijUM1wqB-g/thumb.webp?1691958030";
+            }    
+            if (faction === "Space Wolves") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/360961940/GOg8nIXa8AfvA3v69KT-Vw/thumb.png?1695929748";
+            }    
+            if (faction === "Alien Hives") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/362007142/CjTYql17F5VDkqGlW_yorg/thumb.png?1696555948";
+            }    
+            if (faction === "Orks") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/366987627/gNuK1M5Vx2b-oNvQ4kSQOg/thumb.png?1699583671";
+            }    
+            if (faction === "Ratlings") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/370033286/f7j3naWZOV20oCTltjIOcA/thumb.png?1701549101";
+            }  
+            if (faction === "Necron") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/372027898/gkX7zvKurSd7UQv3IOVP0Q/thumb.png?1702870563";
+            }  
+            if (faction === "Harlequin") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/375565026/7KwGdOduTiN7y6UlUJhAkQ/thumb.png?1705284834";
+            }  
+            if (faction === "Skitarii") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/376117525/oUCncQsuGex7cTGWCBawlg/thumb.png?1705622184";
+            }  
+            if (faction === "Drukhari") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/377279496/8B8Gere84r2qqbS5JVuGmQ/thumb.png?1706281396";
+            }  
+            if (faction === "Adeptus Sororitas") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/378405665/zZCv4Z4TRaEkLeveAhLAiQ/thumb.png?1706900477";
+            }  
+            if (faction === "Inquisition") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/274145152/UOAkvHfOH4nQa3ZuF2953Q/thumb.png?1646521832";
+            }  
+            if (faction === "Kroot") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/381780609/_PAYsFEXUcG5ZeBxRwUgPw/thumb.png?1708817065";
+            }  
+            if (faction === "Slaanesh") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/384972410/s5lV2Qa0IyWrSASrNtHJRw/thumb.png?1710704726";
+            }  
+            if (faction === "Dark Angels") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/385857621/bc1rJaCKBR4cvxgNjrMHNg/thumb.png?1711251000";
+            }  
+            if (faction === "Genestealer Cult") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/387457752/wUZt9zY_P6GaGh2-DHSnrg/thumb.jpg?1712277605";
+            }    
+            if (faction === "Dwarf") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/394633538/bcGvptsRqHQRt4Lu-dUMKg/thumb.png?1716840373";
+            }    
+            if (faction === "Infected Colony") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/400794989/MurIU9BsMJkGwaq1WBKJkg/thumb.png?1720908000";
+            }  
+            if (faction === "Goblins") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/403056599/M5FqkVgyhled0Jz7rFgIzg/thumb.png?1722383373";
+            } 
+            if (faction === "Eldar") {
+                factionImage = "https://s3.amazonaws.com/files.d20.io/images/436353798/cF5gvCR7OO8DGV7A_HK-Bw/thumb.png?1744215807";
+            } 
+
+            setAttrs({
+                "factionImage": factionImage,
+            });
+        });    
+    }); 
 
 
  
