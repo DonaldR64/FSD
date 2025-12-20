@@ -1575,6 +1575,9 @@ log(label)
                 continue;
             }
             let range = (defender.type === "Aircraft" && weapon.keywords.includes("Unstoppable") === false) ? weapon.range - 6:weapon.range;
+            if (attacker.keywords.includes("Increased Shooting Range")) {
+                range += 3;
+            }
             if (losResult.distance > range) {
                 no.push(weapon.name + " - lacks Range");
                 continue;
@@ -1615,7 +1618,7 @@ log(weaponArray)
         _.each(weaponArray,weapon => {
             let weaponOut;
             let rolls = [], hits = 0, crits = 0
-            let relentless = 0,surge = 0, furious = 0;
+            let relentless = 0,surge = 0, furious = 0,predator = 0
             let notes = [];
             let needed = quality; 
             let neededTip = "<br>Quality: " + quality + "+";
@@ -1695,7 +1698,10 @@ log(weaponArray)
                 needed += 1;
                 neededTip += "<br>Versatile Defense -1 to Hit"
             }
-
+            if (attacker.keywords.includes("Precise")) {
+                needed -= 1;
+                neededTip += "<br>Precise +1 to Hit";
+            }
 
 
 
@@ -1722,7 +1728,14 @@ log(weaponArray)
                         if (attacker.keywords.includes("Furious") || attackerAuras.includes("Furious")) {
                             furious++;
                         }
-
+                        if (attacker.keywords.includes("Predator Fighter")) {
+                            predator++;
+                            let roll = randomInteger(6);
+                            rolls.push(roll);
+                            if (roll >= needed) {
+                                hits++;
+                            }
+                        }
 
                     }
                     
@@ -1735,21 +1748,28 @@ log(weaponArray)
                 dice--;
             } while (dice > 0);
 
+            if (predator > 0) {
+                s = (predator === 1) ? "":"s";
+                hitTips += "<br<Predator Fighter added " + predator + " Attack" + s;
+            }
+
+
             if (furious > 0) {
                 hits += furious;
                 s = (furious === 1) ? "":"s";
-                hitTip += "<br>Furioous adds " + furious + " hit" + s;
+                hitTip += "<br>Furious added " + furious + " hit" + s;
             }
             if (relentless > 0) {
                 hits += relentless;
                 s = (relentless === 1) ? "":"s";
-                hitTip += "<br>Relentless adds " + relentless + " hit" + s;
+                hitTip += "<br>Relentless added " + relentless + " hit" + s;
             }
             if (surge > 0) {
                 hits += surge;
                 s = (surge === 1) ? "":"s";
-                hitTip += "<br>Surge adds " + surge + " hit" + s;
+                hitTip += "<br>Surge added " + surge + " hit" + s;
             }
+
 
 
             if (blast > 0 && hits > 0) {
