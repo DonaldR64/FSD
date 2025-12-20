@@ -238,6 +238,8 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
   grid-area: att;
   display: grid;
   background-color: white;
+  place-items: center;
+
 }
 
 .attinfo {
@@ -251,6 +253,7 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
 
 .upgrades {
   grid-area: upgrades;
+  place-items: center;
   flex-direction: center;
   background-color: white;
 }
