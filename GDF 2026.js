@@ -639,6 +639,15 @@ const GDF3 = (() => {
 
             this.type = aa.type;
             let keywords = [];
+
+            //Unit Keywords, separated by a comma
+            let unitKey = aa.unitkeywords || " ";
+            unitKey = unitKey.split(",");
+            _.each(unitKey,key => {
+                keywords.push(unitKey.trim());
+            })
+
+            //upgrades, which may be in [ ] with flavour text before
             let keywordDisplay = "";
             for (let i=1;i<11;i++) {
                 let eq = "key" + i + "equipped";
@@ -658,8 +667,6 @@ const GDF3 = (() => {
                 }
             }
             this.keywords = keywords;
-
-            AttributeSet(this.charID,"keywords",keywordDisplay);
 
             let weapons = [];
             for (let i=1;i<11;i++) {
