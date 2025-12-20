@@ -1655,12 +1655,12 @@ log(weaponArray)
 
 
             if (hits > 0) {
-                weaponHits.push({
+                let info = {
                     weapon: weapon,
                     crits: crits,
                     hits: hits,
-                })
-                
+                }
+                weaponHits.push(info);
             }
 
             
@@ -1679,39 +1679,33 @@ log(weaponArray)
     }
 
 
-const ApplyDamage = (defenders,weaponHits) => {
+const ApplyDamage = (weaponHits,defenders) => {
     //crits is subset. of hits
     //if more than one defender (hero) then apply to 1st until dead etc.
 
-    const DefenseOutput = () => {
-        defenseRolls.sort((a,b) => b - a);
-        let tip = "Rolls: " + defenseRolls.toString() + " vs. " + needed + "+";
-        tip += neededTip + defenseTip;
-        if (bane > 0) {
-            let s = (bane === 1) ? "":"s";
-            tip += "<br>Bane caused " + bane + " Reroll" + s;
+    const WeaponOutput = (results) => {
+        results.rolls.sort((a,b) => b - a);
+        let tip = "Rolls: " + results.rolls.toString() + " vs. " + results.needed + "+";
+        tip += results.neededTip + results.deadlyTip;
+        if (results.bane > 0) {
+            let s = (results.bane === 1) ? "":"s";
+            tip += "<br>Bane caused " + results.bane + " Reroll" + s;
         }
-        if (rending > 0) {
-            let s = (rending === 1) ? "":"s";
-            tip += "<br>Rending affected " + rending + " Roll" + s;
+        if (results.rending > 0) {
+            let s = (results.rending === 1) ? "":"s";
+            tip += "<br>Rending affected " + results.rending + " Roll" + s;
         }
-        ignoreRolls = ignoreRolls.sort((a,b) => b-a);
-        if (ignoreRolls.length > 0) {
-            tip += "<br>" + ig.reason + " removes " + ignore + " Wounds";
-            tip += "<br>Rolls: " + ignoreRolls.toString() + " vs. " + ig.target + "+";
-
-        }
-        regenRolls = regenRolls.sort((a,b) => b-a);
-        if (regenRolls.length > 0) {
-            tip += "<br>" + rg.reason + " removes " + regen + " Wounds";
-            tip += "<br>Rolls: " + regenRolls.toString() + " vs. " + rg.target + "+";
-        }
-
-        let s = (totalWounds === 1) ? "":"s";
-        tip = '[' + totalWounds + '](#" class="showtip" title="' + tip + ')';
-        output.push(defender.name + ' takes ' + tip + " Wound" + s) ;
-        if (totalWounds >= hp) {
-            output.push(defender.name + " is Destroyed!");
+        _.each(results.reduce,reduce => {
+            reduce.rolls = reduce.rolls.sort((a,b) => b-a);
+            tip += "<br>" + reduce.reason + " removes " + reduce.wounds + " Wounds";
+            tip += "<br>Rolls: " + reduce.rolls.toString() + " vs. " + reduce.target + "+"; 
+        })
+        let s = (results.wounds === 1) ? "":"s";
+        if (results.wounds === 0) {results.wounds = "No"};
+        tip = '[' + results.wounds + '](#" class="showtip" title="' + tip + ')';
+        output.push(results.defender.name + ' takes ' + tip + " Wound" + s) ;
+        if (results.destroyed === true) {
+            output.push(results.defender.name + " is Destroyed!");
         }
     }
 
@@ -1725,65 +1719,55 @@ const ApplyDamage = (defenders,weaponHits) => {
     })
 
 
-//move unit, total wounds out here ?
-
+    let output = [];
+    let totalWounds = 0;
+    let currentDefender = 0;
 
     weaponLoop:
     for (let w = 0;w<weaponHits.length; w++) {
-
         let weapon = weaponHits[w].weapon;
         let crits = weaponHits[w].crits;
         let hits = weaponHits[w].hits;
-
-        let defenseRolls = [];
-        let defenseTip = "";
-
-        let bane = 0,rending = 0;
-        let totalWounds = 0;
         let unitWounds = 0;
+        let results = ZeroResults();
 
         let deadly = parseInt(weapon.keywords.find((e) => e.includes("Deadly")));
         if (deadly) {
             deadly = deadly.replace(/[^\d]/g,"");
         }
 
-        let output = [];
-
-        let defender = defenders[0];
+        let defender = defenders[currentDefender];
+        results.defender = defender;
         let hp = parseInt(defender.token.get("bar1_value"));
 
         let needed = defender.defense;
-        let neededTip = "<br>Defense: " + needed + "+";
+        results.neededTip = "<br>Defense: " + needed + "+";
 
         if (weapon.ap > 0) {
             needed += weapon.ap;
-            neededTip += "<br>AP +" + weapon.ap;
+            results.neededTip += "<br>AP +" + weapon.ap;
         }
-
-        let ignoreTotal = 0,regenTotal = 0;
-        let ignoreRolls = [],regenRolls = [];
-
-        let active = true;
+        results.needed = Math.min(6,Math.max(2,needed));
 
         for (let i=0;i<hits;i++) {
-
+            indivNeeded = needed; //so rending can modify the base
             if (i < crits && weapon.keywords.includes("Rending")) {
-                needed += 4;
-                rending++;
+                indivNeeded += 4;
+                results.rending++;
             }
 
-            needed = Math.min(6,Math.max(2,needed));
+            indivNeeded = Math.min(6,Math.max(2,indivNeeded));
 
             let defenseRoll = randomInteger(6);
             
             if (defenseRoll === 6 && weapon.keywords.includes("Bane")) {
                 roll = randomInteger(6);
-                bane++;
+                results.bane++;
             }
 
-            defenseRolls.push(defenseRoll);
+            results.rolls.push(defenseRoll);
 
-            if (defenseRoll < needed) {
+            if (defenseRoll < indivNeeded) {
                 let wounds = 1;
                 if (deadly) {
                     max = hp - (Math.floor(hp/defender.toughness) * defender.toughness);
@@ -1791,95 +1775,125 @@ const ApplyDamage = (defenders,weaponHits) => {
                         max = defender.toughness;
                     }
                     wounds = Math.min(deadly,max);
-                    defenseTip += "<br>Deadly - " + wounds + " Wounds";
+                    results.deadlyTip += "<br>Deadly - " + wounds + " Wounds";
                 }
 
                 //Ignore Wound abilities
-                let ignore = 0;
                 let ignoreReasons = [{reason: "Plaguebound", target: 6},];
-
-                let ig = ignoreReasons.find((e) => defender.keywords.includes(e.reason));
-                if (ig) {
-                    for (let i=0;i<wounds;i++) {
-                        let roll = randomInteger(6);
-                        ignoreRolls.push(roll);
-                        if (roll >= ig.target) {
-                            ignore++;
+                for (let i=0;i<ignoreReasons.length;i++) {
+                    if (defender.keywords.includes(ignoreReasons[i].reason)) {
+                        let ignore = 0;
+                        let ignoreRolls = [];
+                        for (let i=0;i<wounds;i++) {
+                            let roll = randomInteger(6);
+                            ignoreRolls.push(roll);
+                            if (roll >= ignoreReasons[i].target) {
+                                ignore++;
+                            }
                         }
+                        ignore = Math.min(wounds,ignore);
+                        wounds = wounds - ignore;
+                        let igresult = {
+                            reason: ignoreReasons[i].reason,
+                            target: ignoreReasons[i].target,
+                            rolls: ignoreRolls,
+                            wounds: ignore,
+                        }
+                        results.reduce.push(igresult);
                     }
-                    ignore = Math.min(wounds,ignore);
-                    wounds = wounds - ignore;
-                    ignoreTotal += ignore;
                 }
 
-                //Regen Abilities
-                let regen = 0;
-                let regenReasons = [{reason: "Regeneration", target: 5},];
-
-                let rg = regenReasons.find((e) => defender.keywords.includes(e.reason));
-                if (wounds > 0 && rg && weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Bane") === false) {
-                    _.each(wounds,wound => {
-                        let roll = randomInteger(6);
-                        regenRolls.push(roll);
-                        if (roll >= regenTarget) {
-                            regen++;
+                //Regen Abilities, disabled by Bane, Unstoppable
+                if (wounds > 0 && weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Bane") === false) {
+                    let regenReasons = [{reason: "Regeneration", target: 5},];
+                    for (let i=0;i<regenReasons.length;i++) {
+                        if (defender.keywords.includes(regenReasons[i].reason)) {
+                            let regen = 0;
+                            let regenRolls = [];
+                            for (let i=0;i<wounds;i++) {
+                                let roll = randomInteger(6);
+                                regenRolls.push(roll);
+                                if (roll >= regenRolls[i].target) {
+                                    regen++;
+                                }
+                            }
+                            regen = Math.min(wounds,regen);
+                            wounds = wounds - regen;
+                            let rgresult = {
+                                reason: regenReasons[i].reason,
+                                target: regenReasons[i].target,
+                                rolls: regenRolls,
+                                wounds: regen,
+                            }
+                            results.reduce.push(rgresult);
                         }
-                    })
-                    regen = Math.min(wounds,regen);
-                    wounds = wounds - regen;
-                    regenTotal += regen;
+                    }
                 }
 
                 unitWounds += wounds;
-
+                
                 if (unitWounds >= hp) {
+                    totalWounds += unitWounds;
                     //defender is dead, check if another to apply next hit(s) to, or stop if none
-                    DefenseOutput();
-
+                    results.wounds = unitWounds;
+                    results.destroyed = true;
+                    WeaponOutput(results);
                     if (defenders.length > 1) {
-                        defenseRolls = [];
-                        defenseTip = "";
-                        bane = 0,rending = 0;
-                        ignoreTotal = 0,regenTotal = 0;
-                        ignoreRolls = [],regenRolls = [];
-                        unitWounds = 0;
-                        defender = defenders[1];
-                        hp = parseInt(defender.token.get("bar1_value"));
-                        needed = defender.defense;
-                        neededTip = "<br>Defense: " + needed + "+";
-                        if (weapon.ap > 0) {
-                            needed += weapon.ap;
-                            neededTip += "<br>AP +" + weapon.ap;
-                        }
-                        totalWounds += unitWounds;
+                        currentDefender = 1;
                     } else {
-                        //end hits, no other living units
-                        active = false;
+                        //end weapons/hits, no other living units
                         break weaponLoop;
                     }
                 } 
                 //continue to next hit as unit still alive
-
             }
         }
-        //end hits
-        if (active === true) {
-            totalWounds += unitWounds;
-            DefenseOutput();
-        }
-
-        for (let i=0;i<output.length;i++) {
-            outputCard.body.push(output[i]);
-        }
-
-
+        //next weapon, unit still alive
+        results.wounds = unitWounds;
+        WeaponOutput(results);
+        totalWounds += unitWounds;
+        hp -= unitWounds;
+        defender.token.set("bar1_value",hp);
     }
+    //end hits
+
+
+    for (let i=0;i<output.length;i++) {
+        outputCard.body.push(output[i]);
+    }
+
+    //sum - morale, melee etc
+    //total wounds for melee
+
+
+
+
 
 
 
 }
 
 
+
+
+
+
+
+    const ZeroResults = () => {
+        //zeros the results and creates the array
+        results = {
+            rolls: [],
+            deadlyTip: "",
+            bane: 0,
+            rending: 0,
+            needed: 6,
+            neededTip: "",
+            reduce: [],
+            destroyed: false,
+            defender: "",
+        }
+        return results;
+    }
 
 
 
