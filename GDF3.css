@@ -249,7 +249,7 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .fac :is(h1,h3)
   color: red;
 }
 
-input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .kw :is(h3) {
+input[type="hidden"][name="attr_faction"]:is([value="Alien Hives"]) ~ .kw :is(h3) {
   color: black;
 }
 
