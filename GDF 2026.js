@@ -1906,6 +1906,9 @@ const ApplyDamage = (weaponHits,defenders) => {
 
         let defender = defenders[currentDefender];
         results.defender = defender;
+
+        let defenderAura = Auras(defender);
+
         let hp = parseInt(defender.token.get("bar1_value"));
 
         let needed = defender.defense;
