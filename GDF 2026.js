@@ -134,7 +134,7 @@ const GDF3 = (() => {
         fatigue: "status_yellow",
         vAP: "status_lightning-helix",
         vTH: "status_fist",
-
+        charge: "status_overdrive",
 
 
     }
@@ -1264,6 +1264,21 @@ log(hex)
     }
    
 
+    const Aura = (unit) => {
+        ///checks if model or assoc leader has an active aura and returns their names
+        let auras = unit.keywords.filter((e) => e.includes("Aura"));
+        let label = unit.hexLabel();
+        _.each(UnitArray,unit2 => {
+            if (unit2.faction === unit.faction) {
+                if (unit2.hexLabel === label) {
+                    auras = auras.concat(unit.keywords.filter((e) => e.includes("Aura")));
+                }
+            }
+        })
+        auras = auras.map((e) => e.replace(" Aura",""));
+        return auras;
+    }
+
 
     const CheckLOS = (msg) => {
         let Tag = msg.content.split(";");
@@ -1440,6 +1455,7 @@ log(label)
     const Attack = (msg) => {
         let Tag = msg.content.split(";");
         let attacker = UnitArray[Tag[1]];
+        let attackerAuras = Auras(attacker);
         let attackerHex = HexMap[attacker.hexLabel()];
         let defender = UnitArray[Tag[2]];
         let defenderHex = HexMap[defender.hexLabel()];
@@ -1574,7 +1590,7 @@ log(weaponArray)
         _.each(weaponArray,weapon => {
             let weaponOut;
             let rolls = [], hits = 0, crits = 0
-            let relentless = 0,surge = 0;
+            let relentless = 0,surge = 0, furious = 0;
             let notes = [];
             let needed = quality; 
             let neededTip = "<br>Quality: " + quality + "+";
@@ -1636,13 +1652,19 @@ log(weaponArray)
                 weapon.ap++;
                 notes.push("Unpredictable +1 to AP");
             }
-            if (attacker.token.get(SM.vTH) === true) {
+            if (attacker.token.get(SM.vTH)) {
                 needed -= 1;
                 neededTip += "<br>Versatile +1 to Hit";
             }
-            if (attacker.token.get(SM.vAP) === true) {
+            if (attacker.token.get(SM.vAP)) {
                 weapon.ap++;
                 notes.push("Versatile +1 to AP");
+            }
+            if (attacker.token.get(SM.charge) && weapon.keywords.includes("Thrust")) {
+                weapon.ap++;
+                notes.push("Thrust");
+                needed -= 1;
+                neededTip += "<br>Thrust/Charge +1 to Hit";
             }
 
 
@@ -1666,6 +1688,11 @@ log(weaponArray)
                         if (weapon.keywords.includes("Surge")) {
                             surge++;
                         }
+                        if (attacker.keywords.includes("Furious") || attackerAura.includes("Furious")) {
+                            furious++;
+                        }
+
+
                     }
                     
 
@@ -1674,21 +1701,25 @@ log(weaponArray)
 
                 }
                 
-                if (relentless > 0) {
-                    hits += relentless;
-                    s = (relentless === 1) ? "":"s";
-                    hitTip += "<br>Relentless adds " + relentless + " hit" + s;
-                }
-                if (surge > 0) {
-                    hits += surge;
-                    s = (surge === 1) ? "":"s";
-                    hitTip += "<br>Surge adds " + surge + " hit" + s;
-                }
-
-
-
                 dice--;
             } while (dice > 0);
+
+            if (furious > 0) {
+                hits += furious;
+                s = (furious === 1) ? "":"s";
+                hitTip += "<br>Furioous adds " + furious + " hit" + s;
+            }
+            if (relentless > 0) {
+                hits += relentless;
+                s = (relentless === 1) ? "":"s";
+                hitTip += "<br>Relentless adds " + relentless + " hit" + s;
+            }
+            if (surge > 0) {
+                hits += surge;
+                s = (surge === 1) ? "":"s";
+                hitTip += "<br>Surge adds " + surge + " hit" + s;
+            }
+
 
             if (blast > 0 && hits > 0) {
                 let blastHits = Math.min(defenderModels,blast);
@@ -1886,13 +1917,16 @@ const ApplyDamage = (weaponHits,defenders) => {
         }
         if (weaponHits[w].notes.includes("Unpredictable +1 to AP")) {
             needed++;
-            results.neededTip += "<br>Unpredicatbe +1 to AP";
+            results.neededTip += "<br>Unpredictable +1 to AP";
         }
         if (weaponHits[w].notes.includes("Versatile +1 to AP")) {
             needed++;
-            results.neededTip += "Versatile +1 to AP";
+            results.neededTip += "<br>Versatile +1 to AP";
         }
-        
+        if (weaponHits[w].notes.includes("Thrust")) {
+            needed++;
+            results.neededTip += "<br>Thrust/Charge +1 to AP";
+        }
 
 
 
