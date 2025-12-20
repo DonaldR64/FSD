@@ -236,19 +236,9 @@ input[type="hidden"][name="attr_faction"]:is([value="Necron"]) ~ .header :is(h1,
 
 .att {
   grid-area: att;
-  display: grid;
-  background-color: white;
   place-items: center;
-
-}
-
-.attinfo {
-    display: grid;
-    grid-gap: 2px;
-    place-items: center;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-    background-color: white;
+  flex-direction: center;
+  background-color: white;
 }
 
 .upgrades {
