@@ -1410,6 +1410,11 @@ log(hex)
 
         let startHex = HexMap[unit.hexLabel()];
 
+        if (unit.type === "Aircraft") {
+            move = "15-18";
+        }
+
+
         switch(order) {
             case 'Hold':
                 outputCard.body.push("Unit stays in Place and may Fire");
@@ -2137,10 +2142,9 @@ const ApplyDamage = (weaponHits,defenders) => {
         let results = ZeroResults();
         results.hitOut = weaponHits[w].hitOut;
 
-        let deadly = parseInt(weapon.keywords.find((e) => e.includes("Deadly")));
-        if (deadly) {
-            deadly = deadly.replace(/[^\d]/g,"");
-        }
+        let deadly = weapon.keywords.find((e) => e.includes("Deadly")) ||  "0";
+        deadly = parseInt(deadly.replace(/[^\d]/g,""));
+
 
         let defender = defenders[currentDefender];
         results.defender = defender;
@@ -2222,13 +2226,13 @@ log(defenderAuras)
                     results.rupture++;
                 }
 
-                if (deadly) {
+                if (deadly > 0) {
                     max = hp - (Math.floor(hp/defender.toughness) * defender.toughness);
                     if (max === 0) {
                         max = defender.toughness;
                     }
                     wounds = Math.min(deadly,max);
-                    results.deadlyTip += "<br>Deadly - " + wounds + " Wounds";
+                    results.deadlyTip += "<br>Deadly = " + wounds + " Wounds";
                 }
 
 
