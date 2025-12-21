@@ -1340,12 +1340,19 @@ log(hex)
 
         SetupCard("Activate " + unit.name,"",unit.faction);
 
+
         activeID = id;
 
         if (unit.token.get("aura1_color") === "#ffff00") {
             //shaken
             order = "Rally";
         }
+
+        if ((unit.keywords.includes("Bounding") || unitAuras.includes("Bounding")) && order !== "Rally") {
+            let roll = random(2);
+            outputCard.body.push("The Unit may immediately be placed anywhere within " + roll + " Hexes")
+        }
+
 
         outputCard.subtitle = order;
         unit.token.set("aura1_color","#000000");
@@ -1382,6 +1389,14 @@ log(hex)
             outputCard.body.push("Unit has Rapid Charge and has +2 to Charge");
             charge += 2;
         }
+        if (unit.keywords.includes("Rapid Rush")) {
+            note = true;
+            outputCard.body.push("Unit has Rapid Rush and has +3 to Rush");
+            rush += 3;
+        }
+
+
+
 
         if (unit.keywords.includes("Strider")) {
             note = true;
@@ -1453,6 +1468,11 @@ log(hex)
                         }       
                     }
                 }
+                if (unit.keywords.includes("Hit and Run Fighter")) {
+                    outputCard.body.push("The Unit may move up to 2 Hexes after Melee");
+                }
+
+
                 break;
             case 'Rally':
                 outputCard.body.push("Unit Stays in Hex and Rallies");
@@ -1460,8 +1480,18 @@ log(hex)
         }
 
 
-    //Bounding
+        if (unit.keyword.includes("Versatile Attack") || unitAuras.includes("Versatile Attack")) {
+            outputCard.body.push("Unit has Versatile Attack")
+            
 
+
+        }
+        if (unit.keyword.includes("Versatile Defense") || unitAuras.includes("Versatile Defense")) {
+            outputCard.body.push("Unit has Versatile Defense")
+
+
+            
+        }
 
         
 
@@ -1755,7 +1785,7 @@ log(label)
                 continue;
             }
             let range = (defender.type === "Aircraft" && weapon.keywords.includes("Unstoppable") === false) ? weapon.range - 6:weapon.range;
-            if (attacker.keywords.includes("Increased Shooting Range")) {
+            if (attacker.keywords.includes("Increased Shooting Range") || attackerAuras.includes("Increased Shooting Range")) {
                 range += 3;
             }
             if (losResult.distance > range) {
@@ -1799,7 +1829,7 @@ log(weaponArray)
         _.each(weaponArray,weapon => {
             let weaponOut;
             let rolls = [], hits = 0, crits = 0
-            let relentless = 0,surge = 0, furious = 0,predator = 0
+            let relentless = 0,surge = 0, furious = 0,predator = 0,butcher = 0;
             let notes = [];
             let needed = quality; 
             let neededTip = "<br>Quality: " + quality + "+";
@@ -1813,6 +1843,12 @@ log(weaponArray)
                 needed = 6;
                 neededTip = "<br>Ravage: 6+";
             }
+            if (weapon.name === "Impact") {
+                needed = 2;
+                neededTip = "<br>Impact: 2+";
+            }
+
+
 
             if (weapon.keywords.includes("Reliable")) {
                 needed = 2;
@@ -1898,6 +1934,14 @@ log(weaponArray)
 
             let dice = weapon.number * weapon.attacks;
 
+
+///? may be different if weapons have counter
+            if (weapon.name === "Impact" && defender.keywords.includes("Counter")) {
+                dice -= defender.models;
+            }
+
+
+
             do {
                 let roll = randomInteger(6);
                 rolls.push(roll);
@@ -1924,6 +1968,10 @@ log(weaponArray)
                                 hits++;
                             }
                         }
+                        if (weapon.keywords.includes("Butcher")) {
+                            butcher++;
+                        }
+
 
                     }
                     
@@ -1940,7 +1988,10 @@ log(weaponArray)
                 s = (predator === 1) ? "":"s";
                 hitTips += "<br<Predator Fighter added " + predator + " Attack" + s;
             }
-
+            if (butcher > 0) {
+                s = (butcher === 1) ? "":"s";
+                hitTips += "<br<Butcher added " + butcher + " hit" + s;
+            }
 
             if (furious > 0) {
                 hits += furious;
@@ -2176,6 +2227,12 @@ log(defenderAuras)
             needed--;
             results.neededTip += "<br>Versatile Defense +1 Defense";
         }
+        if ((defender.keywords.includes("Shielded") || defenderAuras.includes("Shielded")) && weapon.spell !== true) {
+            needed--;
+            results.neededTip += "<br>Shielded +1 Defense";
+        }
+
+
 
         if (cover === 2 && weapon.type !== "CCW") {
             needed--;
@@ -2284,7 +2341,7 @@ log(defenderAuras)
                 }
 
                 //Regen Abilities, disabled by Bane, Unstoppable
-                denyRegen = ["Unstoppable","Bane","Rupture"];
+                denyRegen = ["Unstoppable","Bane","Rupture","Butcher"];
 
 
                 if (wounds > 0 && weapon.keywords.some((e) => denyRegen.includes(e)) === false) {
