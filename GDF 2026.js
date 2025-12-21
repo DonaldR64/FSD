@@ -1135,7 +1135,6 @@ log(keywords)
         _.each(tokens,token => {
             let name = token.get("name");
             let terrain = TerrainInfo[name];
-log(name)
             if (terrain) {
                 let centre = new Point(token.get("left"),token.get('top'));
                 let centreLabel = centre.toCube().label();
