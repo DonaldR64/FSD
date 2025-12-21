@@ -164,11 +164,11 @@ const GDF3 = (() => {
     //height => most are height 1, used to check re higher levels
 
     const TerrainInfo = {
-        "Open": {name: "Open",cover: 0,los: false,height: 0},
-        "Woods": {name: "Woods",cover: 1,los: true,height: 1},
-        "Building 1": {name: "Building 1",cover: 2,los: true,height: 1},
-        "Building 2": {name: "Building 2",cover: 2,los: true,height: 2},
-        "Crops": {name: "Crops",cover: 1,los: false,height: 0},
+        "Open": {name: "Open",cover: 0,los: false,height: 0, difficult: false},
+        "Woods": {name: "Woods",cover: 1,los: true,height: 1,difficult: true},
+        "Building 1": {name: "Building 1",cover: 2,los: true,height: 1,difficult: true},
+        "Building 2": {name: "Building 2",cover: 2,los: true,height: 2, difficult: true},
+        "Crops": {name: "Crops",cover: 1,los: false,height: 0, difficult: false},
 
 
 
@@ -603,6 +603,7 @@ const GDF3 = (() => {
             this.terrainHeight = 0;
             this.terrain = "Open";
             this.los = false;
+            this.difficult = false;
             this.edges = {};
             _.each(DIRECTIONS,a => {
                 this.edges[a] = "Open";
@@ -630,6 +631,10 @@ const GDF3 = (() => {
             this.name = token.get("name");
 
             this.faction = aa.faction;
+
+
+
+
 
             this.models = parseInt(aa.models) || 1;
             this.quality = parseInt(aa.quality);
@@ -806,6 +811,16 @@ log(keywords)
             action = "!Attack;@{selected|token_id};@{target|token_id};" + ct + ";" + keys[i];
             AddAbility(abilityName,action,unit.charID);
         }
+
+        //activation 
+        let orders = ";?{Order|Hold|Advance|Charge/Rush}";
+        if (unit.type === "Aircraft") {orders = ";Advance"};
+        if (unit.keywords.includes("Artillery") || unit.keywords.includes("Immobile")) {orders = ";Hold"}
+
+        action = "!Activate;@{selected|token_id}" + orders;
+        AddAbility("Activate",action,unit.charID);
+
+
 
 
 
@@ -1097,6 +1112,7 @@ log(name)
                 hex.cover = terrain.cover;
                 hex.los = terrain.los;
                 hex.terrainHeight = terrain.height;
+                hex.difficult = terrain.difficult;
             }
         })
 
@@ -1205,39 +1221,32 @@ log(hex)
 
     const RollDice = (msg) => {
         PlaySound("Dice");
-        let roll = randomInteger(8);
+        let roll = randomInteger(6);
         let playerID = msg.playerid;
-        let id,model,player;
+        let id,player;
         if (msg.selected) {
             id = msg.selected[0]._id;
         }
         let faction = "Neutral";
 
-        if (!id && !playerID) {
-            log("Back")
-            return;
-        }
         if (id) {
-            model = ModelArray[id];
-            if (model) {
-                faction = model.faction;
-                player = model.player;
+            faction = UnitArray[id].faction;
+            player = state.GDF3.factions.indexOf(faction);
+            if (player === -1) {
+                state.GDF3.factions.push(faction);
+                state.GDF3.playerIDs.push(playerID);
             }
-        }
-        if ((!id || !model) && playerID) {
-            faction = state.Warpath.players[playerID];
-            player = (state.Warpath.factions[0] === faction) ? 0:1;
+        } else {
+           let player = state.GDF3.playerIDs.indexOf(playerID); 
+           if (player > -1) {
+                faction = state.GDF3.factions[player];
+           }  
         }
 
-        if (!state.Warpath.players[playerID] || state.Warpath.players[playerID] === undefined) {
-            if (faction !== "Neutral") {    
-                state.Warpath.players[playerID] = faction;
-            } else {
-                sendChat("","Click on one of your tokens then select Roll again");
-                return;
-            }
-        } 
-        let res = "/direct " + DisplayDice(roll,faction,40);
+        let dice = Factions[faction].dice;
+
+        let res = "/direct " + DisplayDice(roll,dice,40);
+        PlaySound("Dice");
         sendChat("player|" + playerID,res);
     }
 
@@ -1254,9 +1263,8 @@ log(hex)
         UnitArray = {};
 
         state.GDF3 = {
-            playerIDs: ["",""],
-            players: {},
-            factions: ["",""],
+            playerIDs: [],
+            factions: [],
             turn: 0,
 
         }
@@ -1316,6 +1324,154 @@ log(hex)
         auras = [...new Set(auras)];
         return auras;
     }
+
+
+    const Activate = (msg) => {
+        let Tag = msg.content.split(";");
+        let id = Tag[1];
+        let order = Tag[2];
+        let unit = UnitArray[id];
+
+        let unitAuras = Auras(unit);
+        let note = false;
+        let ignoreDifficult = false;
+
+        //RemoveDead();
+
+        SetupCard("Activate " + unit.name,"",unit.faction);
+
+        activeID = id;
+
+        if (unit.token.get("aura1_color") === "#ffff00") {
+            //shaken
+            order = "Rally";
+        }
+
+        outputCard.subtitle = order;
+        unit.token.set("aura1_color","#000000");
+
+        let move = 3;
+        if (unit.keywords.includes("Fast")) {
+            note = true;
+            move++
+            outputCard.body.push("Unit has Fast and has +1 to Move");
+        };
+        if (unit.keywords.includes("Very Fast")) {
+            note = true;
+            move += 2
+            outputCard.body.push("Unit has Very Fast and has +2 to Move");
+        }
+        if (unit.keywords.includes("Slow")) {
+            note = true;
+            move--;
+            outputCard.body.push("Unit has Slow and has -1 to Move");
+        }
+
+    //othter modifiers
+
+        let charge = move * 2;
+        let rush = move * 2;
+
+        if (unit.keywords.includes("Agile")) {
+            charge += 1, rush+= 1;
+            note = true;
+            outputCard.body.push("Unit has Agile and has +1 to Charge/Rush");
+        }
+        if (unit.keywords.includes("Rapid Charge") || unitAuras.includes("Rapid Charge")) {
+            note = true;
+            outputCard.body.push("Unit has Rapid Charge and has +2 to Charge");
+            charge += 2;
+        }
+
+        if (unit.keywords.includes("Strider")) {
+            note = true;
+            outputCard.body.push("Unit has Strider and may ignore the effects of Difficult Terrain");
+            ignoreDifficult = true;
+        }
+        if (unit.keywords.includes("Fly")) {
+            note = true;
+            outputCard.body.push("Unit has Flying and may Ignore Terrain and Units while Moving");
+            ignoreDifficult = true;
+        }
+        if (unit.type === "Aircraft") {
+            note = true;
+            ignoreDifficult = true;
+            outputCard.body.push("Unit is an Aircraft and Ignores Units and Terrain");
+        }
+
+        if (note === true) {
+            outputCard.body.push("[hr]");
+        }
+
+
+        let difMove = Math.min(move,3);
+        let difCharge = Math.min(charge, 3);
+        let difRush = Math.min(rush,3)
+
+        let startHex = HexMap[unit.hexLabel()];
+
+        switch(order) {
+            case 'Hold':
+                outputCard.body.push("Unit stays in Place and may Fire");
+                break;
+            case 'Advance':
+                if (startHex.difficult === true && ignoreDifficult === false) {
+                    outputCard.body.push("Unit starts in Difficult Ground");
+                    outputCard.body.push("Movement is " + difMove + " Hexes");
+                } else {
+                    outputCard.body.push("Movement is " + move + " Hexes");
+                    if (ignoreDifficult === false && difMove !== move) {
+                        outputCard.body.push("Entering or Crossing Difficult Terrain limits Move to " + difMove + " Hexes");
+                    }
+                }
+                break;
+            case 'Charge/Rush':
+                if (startHex.difficult === true && ignoreDifficult === false) {
+                    outputCard.body.push("Unit starts in Difficult Ground");
+                    if (difCharge !== difRush) {
+                        outputCard.body.push("Charge is " + difCharge + " Hexes");
+                        outputCard.body.push("Charge is " + difRush + " Hexes");
+                    } else {
+                        outputCard.body.push("Charge/Rush is " + difCharge + " Hexes");
+                    }
+                } else {
+                    if (charge === rush) {
+                        outputCard.body.push("Charge/Rush is " + charge + " Hexes");
+                    } else {
+                        outputCard.body.push("Charge is " + charge + " Hexes, Rush is " + rush + " Hexes");
+                    }
+                    if (ignoreDifficult === false) {
+                        if (difCharge !== difRush) {
+                            outputCard.body.push("Entering/Crossing Difficult Terrain limits Charge to " + difCharge + " Hexes and Rush to " + difRush + " Hexes");
+                        } else {
+                            outputCard.body.push("Entering or Crossing Difficult Terrain limits Charge/Rush to " + difCharge + " Hexes");
+                        }       
+                    }
+                }
+                break;
+            case 'Rally':
+                outputCard.body.push("Unit Stays in Hex and Rallies");
+                break;
+        }
+
+
+    //Bounding
+
+
+        
+
+
+
+        PrintCard();
+
+
+    }
+
+
+
+
+
+
 
 
     const CheckLOS = (msg) => {
@@ -2300,6 +2456,10 @@ log(defenderAuras)
             case '!Attack':
                 Attack(msg);
                 break;
+            case '!Activate':
+                Activate(msg);
+                break;
+
 
 
         }

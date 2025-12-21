@@ -1,48 +1,136 @@
+const Activate = (msg) => {
+    let Tag = msg.content.split(";");
+    let id = Tag[1];
+    let order = Tag[2];
+    let unit = UnitArray[id];
+
+    let unitAuras = Auras(unit);
+    let note = false;
+    let ignoreDifficult = false;
+
+    //RemoveDead();
+
+    SetupCard("Activate " + unit.name,"",unit.faction);
+
+    activeID = id;
+
+    if (unit.token.get("aura1_color") === "#ffff00") {
+        //shaken
+        order = "Rally";
+    }
+
+    outputCard.subtitle = order;
+    unit.token.set("aura1_color","#000000");
+
+    let move = 3;
+    if (unit.keywords.includes("Fast")) {
+        note = true;
+        move++
+        outputCard.body.push("Unit has Fast and has +1 to Move");
+    };
+    if (unit.keywords.includes("Very Fast")) {
+        note = true;
+        move += 2
+        outputCard.body.push("Unit has Very Fast and has +2 to Move");
+    }
+    if (unit.keywords.includes("Slow")) {
+        note = true;
+        move--;
+        outputCard.body.push("Unit has Slow and has -1 to Move");
+    }
+
+//othter modifiers
+
+    let charge = move * 2;
+    let rush = move * 2;
+
+    if (unit.keywords.includes("Agile")) {
+        charge += 1, rush+= 1;
+        note = true;
+        outputCard.body.push("Unit has Agile and has +1 to Charge/Rush");
+    }
+    if (unit.keywords.includes("Rapid Charge") || unitAuras.includes("Rapid Charge")) {
+        note = true;
+        outputCard.body.push("Unit has Rapid Charge and has +2 to Charge");
+        charge += 2;
+    }
+
+    if (unit.keywords.includes("Strider")) {
+        note = true;
+        outputCard.body.push("Unit has Strider and may ignore effects of Difficult Terrain");
+        ignoreDifficult = true;
+    }
+    if (unit.keywords.includes("Fly")) {
+        note = true;
+        outputCard.body.push("Unit has Flying and may Ignore Terrain and Units while Moving");
+        ignoreDifficult = true;
+    }
+    if (unit.type === "Aircraft") {
+        note = true;
+        ignoreDifficult = true;
+        outputCard.body.push("Unit is an Aircraft and Ignores Units and Terrain");
+    }
+
+    if (note === true) {
+        outputCard.body.push("[hr]");
+    }
 
 
+    let difMove = Math.min(move,3);
+    let difCharge = Math.min(charge, 6);
+    let difRush = Math.min(rush,6)
 
-//is unit destroyed ?
-//morale tests ?
+    let startHex = HexMap[unit.hexLabel()];
 
-
-        if (weaponArray.length > 1 && combatType !== "Melee") {
-            outputCard.body.push("[hr]");
-            outputCard.body.push("Total Wounds: " + totalWounds);
-
-            if (defenderHP === 0) {
-                outputCard.body.push(defender.name + " was Destroyed!");
-            } else if (defenderHP < Math.round(this.woundsMax/2)) {
-                //take morale test
-                //place SM to indicate has done this, remove that SM when next unit activates
-
-
+    switch(order) {
+        case 'Hold':
+            outputCard.body.push("Unit stays in Place and may Fire");
+            break;
+        case 'Advance':
+            if (startHex.difficult === true && ignoreDifficult === false) {
+                outputCard.body.push("Unit starts in Difficult Ground");
+                outputCard.body.push("Movement is " + difMove + " Hexes");
+            } else {
+                outputCard.body.push("Movement is " + move + " Hexes");
+                if (ignoreDifficult === false) {
+                    outputCard.body.push("Entering or Crossing Difficult Terrain limits Move to " + difMove + " Hexes");
+                }
             }
-
-
-        }
-
-        if (combatType === "Melee") {
-            outputCard.body.push("[hr]");
-            outputCard.body.push("Total Wounds: " + totalWounds);
-            let fear = attacker.keywords.find((key) => key.includes("Fear"));
-            if (fear) {
-                fear = parseInt(fear.replace(/[^\d]/g,""));
-                outputCard.body.push("For Combat Resolution");
-                outputCard.body.push("Fear makes this " + (totalWounds + fear));
+            break;
+        case 'Charge/Rush':
+            if (startHex.difficult === true && ignoreDifficult === false) {
+                outputCard.body.push("Unit starts in Difficult Ground");
+                if (difCharge !== difRush) {
+                    outputCard.body.push("Charge is " + difCharge + " Hexes");
+                    outputCard.body.push("Charge is " + difRush + " Hexes");
+                } else {
+                    outputCard.body.push("Charge/Rush is " + difCharge + " Hexes");
+                }
+            } else {
+                outputCard.body.push("Charge is " + charge + " Hexes");
+                if (ignoreDifficult === false) {
+                    if (difCharge !== difRush) {
+                        outputCard.body.push("Entering/Crossing Difficult Terrain limits Charge to " + difCharge + " Hexes and Rush to " + difRush + " Hexes");
+                    } else {
+                        outputCard.body.push("Entering or Crossing Difficult Terrain limits Charge/Rush to " + difCharge + " Hexes");
+                    }       
+                }
             }
-
-            //Fatigue
-
-        }
-
-
-
-        //apply wounds
+            break;
+        case 'Rally':
+            outputCard.body.push("Unit Stays in Hex and Rallies");
+            break;
+    }
 
 
+//Bounding
 
 
-
+    
 
 
 
+    PrintCard();
+
+
+}
