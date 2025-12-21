@@ -6,6 +6,7 @@ const GDF3 = (() => {
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
     let HexSize, HexInfo, DIRECTIONS;
+    let activeID;
 
     //math constants
     const M = {
@@ -688,6 +689,21 @@ log(keywords)
                     weapons.push(weapon);
                 }
             }
+
+            let ravage = keywords.find((e) => e.includes("Ravage")) || "0";
+            ravage = parseInt(ravage.replace(/\D/g,''));
+            if (ravage > 0) {
+                let weapon = {name: "Ravage",number: ravage,type: "CCW",range: 0,attacks: 1,ap: 0,keywords: [""],fx: "",sound: "Growl"};
+                weapons.push(weapon);
+            }
+
+            let impact = keywords.find((e) => e.includes("Impact")) || "0";
+            impact = parseInt(impact.replace(/\D/g,''));
+            if (impact > 0) {
+                let weapon = {name: "Impact",number: impact,type: "CCW",range: 0,attacks: 1,ap: 0,keywords: [""],fx: "",sound: ""};
+                weapons.push(weapon);
+            }
+
             this.weapons = weapons;
 
 
@@ -1570,6 +1586,9 @@ log(label)
         for (let i=0;i<attacker.weapons.length;i++) {
             let weapon = DeepCopy(attacker.weapons[i]);
             if (weapon.type !== weaponType) {continue};
+            if (weapon.name === "Impact" && (attacker.token.get(SM.fatigue) === true || attacker.id !== activeID)) {
+                continue;
+            }
             if (losResult.los === false && weapon.keywords.includes("Indirect") === false) {
                 no.push(weapon.name + " - no LOS");
                 continue;
@@ -1584,6 +1603,7 @@ log(label)
             }
             weaponArray.push(weapon); //can add hits, rolls etc 
         }
+
 
         if (weaponArray.length === 0) {
             errorMsg.push("No Weapons with LOS or Range");
@@ -1625,6 +1645,12 @@ log(weaponArray)
             if (attacker.token.get(SM.fatigue) === true && combatType === "Melee") {
                 needed = 6;
                 neededTip = "<br>Fatigue: 6+";
+            }
+
+
+            if (weapon.name === "Ravage") {
+                needed = 6;
+                neededTip = "<br>Ravage: 6+";
             }
 
             if (weapon.keywords.includes("Reliable")) {
@@ -1702,6 +1728,7 @@ log(weaponArray)
                 needed -= 1;
                 neededTip += "<br>Precise +1 to Hit";
             }
+
 
 
 
@@ -1887,7 +1914,10 @@ const ApplyDamage = (weaponHits,defenders) => {
             let s = (results.slam === 1) ? "":"s";
             tip += "<br>Slam added " + results.slam + " Wound" + s;
         }
-
+        if (results.rupture > 0) {
+            let s = (results.rupture === 1) ? "":"s";
+            tip += "<br>Rupture added " + results.rupture + " Wound" + s;
+        }
 
         let s = (results.saves === 1) ? "":"s";
         let s2 = (results.wounds === 1) ? "":"s";
@@ -1900,10 +1930,11 @@ const ApplyDamage = (weaponHits,defenders) => {
 
         tip = '[' + results.saves + '](#" class="showtip" title="' + tip + ')';
         output.push(tip + " Save" + s + " Made");
-
         _.each(results.reduce,reduce => {
-            reduce.rolls = reduce.rolls.sort((a,b) => b-a).toString();
-            tip = "Rolls: " + reduce.rolls + " vs. " + reduce.target + "+"; 
+            if (reduce.rolls.length > 1) {
+                reduce.rolls = reduce.rolls.sort((a,b) => b-a);
+            }
+            tip = "Rolls: " + reduce.rolls.toString() + " vs. " + reduce.target + "+"; 
             tip = '[' + reduce.wounds + '](#" class="showtip" title="' + tip + ')';
             let s = (reduce.wounds === 1) ? "":"s";
             output.push(tip + " Wound" + s + reduce.verb + " by " + reduce.reason);
@@ -1986,15 +2017,20 @@ log(defenderAuras)
             results.neededTip += "<br>Versatile Defense +1 Defense";
         }
 
-
-
-
         if (cover === 2 && weapon.type !== "CCW") {
             needed--;
             results.neededTip += "<br>Hard Cover -1";
         }
 
         results.needed = Math.min(6,Math.max(2,needed));
+
+
+
+        if (weapon.name === "Ravage") {
+            results.needed = 7;
+            results.neededTip = "<br>Ravage - no Save";
+        }
+
 
         for (let i=0;i<hits;i++) {
             indivNeeded = needed; //so rending can modify the base
@@ -2005,6 +2041,11 @@ log(defenderAuras)
 
             indivNeeded = Math.min(6,Math.max(2,indivNeeded));
 
+            if (weapon.name === "Ravage") {
+                indivNeeded = 7;
+            }
+
+            
             let defenseRoll = randomInteger(6);
             
             if (defenseRoll === 6 && weapon.keywords.includes("Bane")) {
@@ -2019,6 +2060,10 @@ log(defenderAuras)
                 if (defenseRoll === 1 && weapon.keywords.includes("Slam")) {
                     wounds++;
                     results.slam++;
+                }
+                if (i < crits && weapon.keywords.includes("Rupture")) {
+                    wounds++;
+                    results.rupture++;
                 }
 
                 if (deadly) {
@@ -2079,7 +2124,10 @@ log(defenderAuras)
                 }
 
                 //Regen Abilities, disabled by Bane, Unstoppable
-                if (wounds > 0 && weapon.keywords.includes("Unstoppable") === false && weapon.keywords.includes("Bane") === false) {
+                denyRegen = ["Unstoppable","Bane","Rupture"];
+
+
+                if (wounds > 0 && weapon.keywords.some((e) => denyRegen.includes(e)) === false) {
                     let regenReasons = [{reason: "Regeneration", target: 5, verb: " removed "},];
                     for (let i=0;i<regenReasons.length;i++) {
                         if (keywords.includes(regenReasons[i].reason)) {
@@ -2174,6 +2222,7 @@ log(defenderAuras)
             bane: 0,
             rending: 0,
             slam: 0,
+            rupture: 0,
             needed: 6,
             neededTip: "",
             reduce: [],
