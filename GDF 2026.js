@@ -1503,9 +1503,9 @@ log(hex)
         }
 
 
-        let difMove = Math.min(move,3);
-        let difCharge = Math.min(charge, 3);
-        let difRush = Math.min(rush,3)
+        let difMove = (ignoreDifficult === false) ? Math.min(move,3):move;
+        let difCharge = (ignoreDifficult === false) ? Math.min(charge, 3): charge;
+        let difRush = (ignoreDifficult === false) ? Math.min(rush,3): rush;
 
         let startHex = HexMap[unit.hexLabel()];
 
@@ -1513,59 +1513,71 @@ log(hex)
             move = "15-18";
         }
 
+        let situation = 1; //open
+        if (startHex.difficult === true && startHex.building === false && ignoreDifficult === false) {situation = 2}; //difficult but not building
+        if (startHex.building === true) {situation = 3}; //building
+
 
         switch(order) {
             case 'Hold':
                 outputCard.body.push("Unit stays in Place and may Fire");
                 break;
             case 'Advance':
-                if (startHex.difficult === true && ignoreDifficult === false && startHex.building === false) {
-                    outputCard.body.push("Unit starts in Difficult Ground");
-                    outputCard.body.push("Movement is " + difMove + " Hexes");
-                } else if (startHex.building === true) {
-                    outputCard.body.push("Unit starts in a Building");
-                    outputCard.body.push("Movement is " + move + " Hexes to a maximum of 3 Hexes from any part of the Building");
-                } else {
-                    outputCard.body.push("Movement is " + move + " Hexes");
-                    if (ignoreDifficult === false && difMove !== move) {
-                        outputCard.body.push("Entering or Crossing Difficult Terrain limits Move to " + difMove + " Hexes");
+                if (situation === 1) {
+                    outputCard.body.push("Advance is " + move + " Hexes");
+                    if (difMove !== move) {
+                        outputCard.body.push("Entering or Crossing Difficult Terrain limits Advance to " + difMove + " Hexes");
                     }
+                }
+                if (situation === 2) {
+                    outputCard.body.push("Unit starts in Difficult Ground");
+                    outputCard.body.push("Advance is " + difMove + " Hexes");
+                }
+                if (situation === 3) {
+                    outputCard.body.push("Unit starts in a Building");
+                    outputCard.body.push("Advance is " + difMove + " Hexes, to a maximum of 3 Hexes from any part of the Building");
                 }
                 break;
             case 'Charge/Rush':
-                if (startHex.difficult === true && ignoreDifficult === false && startHex.building === false) {
-                    outputCard.body.push("Unit starts in Difficult Ground");
-                    if (difCharge !== difRush) {
-                        outputCard.body.push("Charge is " + difCharge + " Hexes");
-                        outputCard.body.push("Charge is " + difRush + " Hexes");
-                    } else {
-                        outputCard.body.push("Charge/Rush is " + difCharge + " Hexes");
-                    }
-                } else if (startHex.building === true) {
-                    outputCard.body.push("Unit starts in a Building");
-
-
-
-                    outputCard.body.push("Movement is " + move + " Hexes to a maximum of 3 Hexes from any part of the Building");
-                } else {
+                if (situation === 1) {
                     if (charge === rush) {
                         outputCard.body.push("Charge/Rush is " + charge + " Hexes");
                     } else {
                         outputCard.body.push("Charge is " + charge + " Hexes, Rush is " + rush + " Hexes");
                     }
-                    if (ignoreDifficult === false) {
-                        if (difCharge !== difRush) {
-                            outputCard.body.push("Entering/Crossing Difficult Terrain limits Charge to " + difCharge + " Hexes and Rush to " + difRush + " Hexes");
-                        } else {
+                    if (difMove !== move) {
+                        if (charge === rush) {
                             outputCard.body.push("Entering or Crossing Difficult Terrain limits Charge/Rush to " + difCharge + " Hexes");
-                        }       
+                        } else {
+                            outputCard.body.push("Entering/Crossing Difficult Terrain limits Charge to " + difCharge + " Hexes and Rush to " + difRush + " Hexes");
+                        }
                     }
+                }
+                if (situation === 2) {
+                    outputCard.body.push("Unit starts in Difficult Ground");
+                    if (difCharge !== difRush) {
+                        outputCard.body.push("Charge is " + difCharge + " Hexes");
+                        outputCard.body.push("Rush is " + difRush + " Hexes");
+                    } else {
+                        outputCard.body.push("Charge/Rush is " + difCharge + " Hexes");
+                    }
+                }
+                if (situation === 3) {
+                    outputCard.body.push("Unit starts in a Building");
+                    if (difCharge !== difRush) {
+                        outputCard.body.push("Charge is " + difCharge + " Hexes");
+                        outputCard.body.push("Rush is " + difRush + " Hexes");
+                    } else {
+                        outputCard.body.push("Charge/Rush is " + difCharge + " Hexes");
+                    }
+                    outputCard.body.push("To a maximum of 3 Hexes from any part of the Building");
+
+
+
                 }
                 if (unit.keywords.includes("Hit and Run Fighter")) {
                     outputCard.body.push("The Unit may move up to 2 Hexes after Melee");
                 }
-
-
                 break;
             case 'Rally':
                 outputCard.body.push("Unit Stays in Hex and Rallies");
@@ -1574,13 +1586,13 @@ log(hex)
         }
 
 
-        if (unit.keyword.includes("Versatile Attack") || unitAuras.includes("Versatile Attack")) {
+        if (unit.keywords.includes("Versatile Attack") || unitAuras.includes("Versatile Attack")) {
             outputCard.body.push("Unit has Versatile Attack")
             
 
 
         }
-        if (unit.keyword.includes("Versatile Defense") || unitAuras.includes("Versatile Defense")) {
+        if (unit.keywords.includes("Versatile Defense") || unitAuras.includes("Versatile Defense")) {
             outputCard.body.push("Unit has Versatile Defense")
 
 
