@@ -141,7 +141,7 @@ const GDF3 = (() => {
         vATH: "Versatile Attack = +1 to Hit",
         vDD: "Versatile Defense = +1 to Defense",
         vDTH: "Versatile Defense = -1 to Be Hit",
-
+        steadfast: "Steadfast Buff",
 
 
     }
@@ -173,9 +173,9 @@ const GDF3 = (() => {
     const TerrainInfo = {
         "Open": {name: "Open",cover: 0,los: false,height: 0, difficult: false},
         "Woods": {name: "Woods",cover: 1,los: true,height: 1,difficult: true},
-        "Building 1": {name: "Building 1",cover: 2,los: true,height: 1,difficult: true},
-        "Building 2": {name: "Building 2",cover: 2,los: true,height: 2, difficult: true},
-        "Crops": {name: "Crops",cover: 1,los: false,height: 0, difficult: false},
+        "Building 1": {name: "Building 1",cover: 2,los: true,height: 1,difficult: true, building: true},
+        "Building 2": {name: "Building 2",cover: 2,los: true,height: 2, difficult: true, building: true},
+        "Crops": {name: "Crops",cover: 1,los: false,height: 0, difficult: false, building: true},
 
 
 
@@ -611,6 +611,7 @@ const GDF3 = (() => {
             this.terrain = "Open";
             this.los = false;
             this.difficult = false;
+            this.building = false;
             this.edges = {};
             _.each(DIRECTIONS,a => {
                 this.edges[a] = "Open";
@@ -760,6 +761,7 @@ log(keywords)
             this.token.set("layer","map");
             this.token.set("statusmarkers","");
             this.token.set("status_dead",true);
+            delete UnitArray[this.tokenID];
         }
 
         hexLabel() {
@@ -1142,7 +1144,8 @@ log(name)
                 hex.cover = terrain.cover;
                 hex.los = terrain.los;
                 hex.terrainHeight = terrain.height;
-                hex.difficult = terrain.difficult;
+                if (terrain.difficult) {hex.difficult = terrain.difficult};
+                if (terrain.building) {hex.building = terrain.building};
             }
         })
 
@@ -1342,14 +1345,10 @@ log(hex)
     const Auras = (unit) => {
         ///checks if model or assoc leader has an active aura and returns their names
         let auras = unit.keywords.filter((e) => e.includes("Aura"));
-        let label = unit.hexLabel();
-        _.each(UnitArray,unit2 => {
-            if (unit2.faction === unit.faction) {
-                if (unit2.hexLabel() === label) {
-                    auras = auras.concat(unit2.keywords.filter((e) => e.includes("Aura")));
-                }
-            }
-        })
+        let associated = Associated(unit);
+        if (associated && associated !== false) {
+            auras = auras.concat(associated.keywords.filter((e) => e.includes("Aura")));
+        }
         auras = auras.map((e) => e.replace(" Aura",""));
         auras = [...new Set(auras)];
         return auras;
@@ -1362,6 +1361,37 @@ log(hex)
         return tooltip;
     }
 
+    const RemoveTTip = (unit,tip) => {
+        let tooltip = unit.token.get("tooltip") || "";
+        tooltip = tooltip.split(",");
+        tooltip = tooltip.map((e) => e.trim());
+        tip = TT.tip;
+        let index = tooltip.indexOf(tip);
+        if (index > -1) {
+            tooltip.splice(index,1);
+            unit.token.set("tooltip",tooltip);
+        }
+    }
+
+    const Associated = (unit) => {
+        if (unit.type !== "Hero" && unit.models === 1) {return false};
+        let label = unit.hexLabel();
+        let associated = false;
+        let keys = Object.keys(UnitArray);
+        for (let i=0;i<keys.length;i++) {
+            if (keys[i] === unit.tokenID) {continue};
+            let unit2 = UnitArray[keys[i]];
+            if (unit2.faction !== unit.faction) {continue};
+            if (unit2.type !== "Hero" && unit.models === 1) {continue};
+            if (unit2.hexLabel() === label) {
+                associated = unit2;
+                break;
+            }
+        }
+        return associated;
+    }
+
+
 
 
     const Activate = (msg) => {
@@ -1371,17 +1401,33 @@ log(hex)
         let unit = UnitArray[id];
 
         let unitAuras = Auras(unit);
+        let unitTT = TTip(unit);
         let note = false;
         let ignoreDifficult = false;
 
         //RemoveDead();
 
+//redo to have difMove === move if has strider etc
+
+
         SetupCard("Activate " + unit.name,"",unit.faction);
 
+        if ((unit.keywords.includes("Steadfast") || unitAuras.includes("Steadfast") || unitTT.includes("steadfast")) && (unit.token.get("tint_color") === "#ffff00")) {
+            let steadRoll = randomInteger(6);
+            if (steadRoll > 3) {
+                unit.token.set("tint_color","transparent");
+                if (unitTT.includes("steadfast")) {
+                    RemoveTip(unit,TT.steadfast);
+                    outputCard.body.push("Steadfast Buff Used, Unit Rallies!");
+                } else {
+                    outputCard.body.push("Steadfast! Unit Rallies!");
+                }
+            }
+        }
 
         activeID = id;
 
-        if (unit.token.get("aura1_color") === "#ffff00") {
+        if (unit.token.get("tint_color") === "#ffff00") {
             //shaken
             order = "Rally";
         }
@@ -1473,9 +1519,12 @@ log(hex)
                 outputCard.body.push("Unit stays in Place and may Fire");
                 break;
             case 'Advance':
-                if (startHex.difficult === true && ignoreDifficult === false) {
+                if (startHex.difficult === true && ignoreDifficult === false && startHex.building === false) {
                     outputCard.body.push("Unit starts in Difficult Ground");
                     outputCard.body.push("Movement is " + difMove + " Hexes");
+                } else if (startHex.building === true) {
+                    outputCard.body.push("Unit starts in a Building");
+                    outputCard.body.push("Movement is " + move + " Hexes to a maximum of 3 Hexes from any part of the Building");
                 } else {
                     outputCard.body.push("Movement is " + move + " Hexes");
                     if (ignoreDifficult === false && difMove !== move) {
@@ -1484,7 +1533,7 @@ log(hex)
                 }
                 break;
             case 'Charge/Rush':
-                if (startHex.difficult === true && ignoreDifficult === false) {
+                if (startHex.difficult === true && ignoreDifficult === false && startHex.building === false) {
                     outputCard.body.push("Unit starts in Difficult Ground");
                     if (difCharge !== difRush) {
                         outputCard.body.push("Charge is " + difCharge + " Hexes");
@@ -1492,6 +1541,12 @@ log(hex)
                     } else {
                         outputCard.body.push("Charge/Rush is " + difCharge + " Hexes");
                     }
+                } else if (startHex.building === true) {
+                    outputCard.body.push("Unit starts in a Building");
+
+
+
+                    outputCard.body.push("Movement is " + move + " Hexes to a maximum of 3 Hexes from any part of the Building");
                 } else {
                     if (charge === rush) {
                         outputCard.body.push("Charge/Rush is " + charge + " Hexes");
@@ -1514,6 +1569,7 @@ log(hex)
                 break;
             case 'Rally':
                 outputCard.body.push("Unit Stays in Hex and Rallies");
+                unit.token.set("tint_color","transparent");
                 break;
         }
 
@@ -1539,6 +1595,147 @@ log(hex)
 
 
     }
+
+
+    const Morale = (msg) => {
+        let Tag = msg.content.split(";");
+        let units = [];
+        let unit = UnitArray[Tag[1]];
+        if (!unit) {return};
+        units.push(unit);
+
+        let melee = unit.melee;
+
+        let associated = Associated(unit);
+        if (associated !== false) {
+            if (associated.melee === true) {
+                melee = true;
+            }
+            units.push(associated);
+        }
+
+        for (let i=0;i<units.length;i++) {
+            let unit = units[i];
+            if (!unit) {return};
+
+            let unitAuras = Auras(unit);
+            let roll = randomInteger(6);
+            let target = unit.quality;
+            let fearless = false;
+            let shaken = false;
+            //mods
+            if (unit.keywords.includes("Hive Bond") || unitAuras.includes("Hive Bond")) {
+                target--;
+            }
+            if (unit.keywords.includes("Hive Bond Boost") || unitAuras.includes("Hive Bond Boost")) {
+                target -= 2;
+            }
+
+            let success = (roll >= target) ? true:false;
+            let subtitle = "Needing " + target + "+";
+
+            //Shaken
+            if (unit.token.get("tint_color") === "#ff0000") {
+                //shaken
+                success = false;
+                shaken = true;
+                subtitle = "Shaken";
+            }
+
+
+
+
+
+
+
+            //fearless
+            if (unit.keywords.includes("Fearless") && success === false) {
+                //can overcome shaken
+                subtitle += " & Fearless";
+                let fearlessRoll = randomInteger(6);
+                if (fearlessRoll > 3) {
+                    success = true;
+                    shaken = false;
+                }
+                fearless = "Fearless: " + DisplayDice(fearlessRoll,Factions[unit.faction].dice,32) + " vs. 4+";
+            }
+
+
+
+            //after failure changes - automatic
+            auto = [];
+            if (unit.keywords.includes("No Retreat") && success === false) {
+                success = "Auto";
+                auto.push("The Test is Passed due to No Retreat");
+                let hp = parseInt(unit.token.get("bar1_value"));
+                let wounds = 0;
+                let noRRolls = [];
+                _.each(hp,e => {
+                    let roll = randomInteger(6);
+                    noRRolls.push(roll);
+                    if (roll < 4) {wounds++};
+                })
+                noRRolls = noRRolls.sort((a,b) => b-a);
+                let tip = "Rolls: " + noRRolls + " vs. 4+";
+                tip = '[' + wounds + '](#" class="showtip" title="' + hitTip + ')';
+                auto.push("No Retreat causes " + tip + " Wounds");
+                let destroyed = unit.Damage(wounds);
+                if (destroyed === true) {
+                    auto.push(unit.name + " is Destroyed!");
+                }
+            }
+
+
+
+
+
+
+
+
+            SetupCard(unit.name,subtitle,unit.faction);
+            if (fearless !== false) {
+                outputCard.body.push(fearless);
+            }
+            outputCard.body.push("[hr]");
+            if (success === "Auto") {
+                _.each(auto,line => {
+                    outputCard.body.push(line);
+                })
+            } else if (success === true) {
+                outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
+                outputCard.body.push("Success!");
+            } else if (success === false) {
+                if (melee === true && unit.token.get(SM.halfStr)) {
+                    outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
+                    outputCard.body.push("Failure! Unit Routs from Melee!");
+                    unit.Destroyed();
+                    outputCard.body.push("Consolidation Moves may be taken");
+                } else if (shaken === false) {
+                    outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
+                    outputCard.body.push("Failure! Unit is Shaken");
+                    unit.token.set("tint_color","#ff0000");
+                } else if (shaken === true) {
+                    outputCard.body.push("Shaken Unit Routs!");
+                    unit.Destroyed();
+                }
+
+
+            }
+
+
+
+
+
+
+            PrintCard();
+
+        }
+
+
+
+    }
+
+
 
 
 
@@ -2108,11 +2305,15 @@ log(weaponArray)
 
         if (active === true) {
             if (combatType === "Melee") {
+                let cr = totalWounds;
                 let fear = attacker.keywords.find((e) => e.includes("Fear")) || "0";
                 fear = parseInt(fear.replace(/\D/g,''));
                 if (fear > 0) {
                     outputCard.body.push("Add " + fear + " for Combat Resolution for Fear");
+                    cr += fear;
                 }
+
+                outputCard.body.push("Melee CR: " + cr);
             } else if (weaponHits.length > 0) {
                 //check for morale
                 let current = 0;
@@ -2123,7 +2324,8 @@ log(weaponArray)
                 })
                 if ((current/total) <= 0.5) {
                     outputCard.body.push("Defenders take a Morale Test");
-//buttons for morale test here
+                    let action = "!Morale;" + defender.tokenID;
+                    ButtonInfo("Morale Check",action);
 
                 }
 
@@ -2143,11 +2345,23 @@ log(weaponArray)
 
 
 
-
+        //fatigue and melee flag
         if (combatType === "Melee") {
             attacker.token.set(SM.fatigue,true);
+            attacker.melee = true;
+            _.each(defenders,defender => {
+                if (defender) {
+                    defender.melee = true;
+                }
+            })
         } else {
             attacker.fired = true;
+            attacker.melee = false;
+            _.each(defenders,defender => {
+                if (defender) {
+                    defender.melee = false;
+                }
+            })
         }
 
         PrintCard();
@@ -2497,7 +2711,29 @@ log(defenderAuras)
 
 
     const changeGraphic = (tok,prev) => {
-   
+        let unit = UnitArray[tok.get("id")];
+        if (!unit) {return};
+        //rotate token to match direction of movement and mark moved
+        if (state.GDF3.turn > 0) {
+            if (tok.get("left") !== prev.left || tok.get("top") !== prev.top) {
+                let tokPt = new Point(tok.get("left"),tok.get("top"));
+                let tokCube = tokPt.toCube();
+                let tokLabel = tokCube.label();
+                let prevPt = new Point(prev.left,prev.top);
+                let prevCube = prevPt.toCube();
+                let prevLabel = prevCube.label();
+                if (tokLabel !== prevLabel) {
+                    unit.moved = true;
+                    log(unit.name + " moved");
+                    let angle = prevCube.angle(tokCube);
+                    if (unit.type !== "Aircraft") {
+                        let angle = prevCube.angle(tokCube);
+                        tok.set("rotation",angle);
+                    }
+                }
+            }
+        }
+
 
 
     }
@@ -2509,8 +2745,20 @@ log(defenderAuras)
 
 
     const addGraphic = (obj) => {
-
-
+        let unit = new Unit(obj);
+        unit.token.set({
+            bar1_value: unit.woundsMax,
+            bar1_max: unit.woundsMax,
+            showplayers_bar1: true,
+            aura1_color: "#00ff00",
+            aura1_radius: 0.05,
+            showplayers_aura1: true,
+            tooltip: "",
+            show_tooltip: true,
+            showplayers_tooltip: true,
+            showplayers_name: true,
+            statusmarkers: "",
+        })
 
 
 
@@ -2519,7 +2767,10 @@ log(defenderAuras)
     const destroyGraphic = (obj) => {
         let name = obj.get("name");
         log(name + " Destroyed")
-
+        let unit = UnitArray[obj.get("id")];
+        if (unit) {
+            delete UnitArray[unit.tokenID];
+        }
 
 
     }
@@ -2564,7 +2815,9 @@ log(defenderAuras)
             case '!Activate':
                 Activate(msg);
                 break;
-
+            case '!Morale':
+                Morale(msg);
+                break;
 
 
         }
