@@ -2929,7 +2929,7 @@ log(infoArray)
                 unitID = stringGen();
             }
             this.id = unitID;
-            this.name                    = unitName;
+            this.name = unitName;
             this.modelIDs = [];
             this.player = player;
             this.faction = faction;

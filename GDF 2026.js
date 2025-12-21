@@ -733,10 +733,33 @@ log(keywords)
         }
 
 
+        Damage (wounds) {
+            wounds = parseInt(wounds) || 0; //"No" turns into a 0 this way
+            if (wounds === 0) {return};
+            //can also 'heal' or repair via this, using neg wounds
+            let currentHP = parseInt(this.token.get("bar1_value")) - wounds;
+            currentHP = Math.max(0,Math.min(currentHP,this.woundsMax));
+            if (currentHP === 0) {
+                this.Destroyed();
+                return true;
+            } else {
+                this.token.set("bar1_value",currentHP);
+                let wounded = false;
+                if (currentHP <= (this.woundsMax/2) && this.type !== "Hero") {
+                    wounded = true;
+                } 
+                this.token.set(SM.halfStr,wounded);
+                return false;
+            }
+        }
+
+
+
 
         Destroyed () {
-            
-
+            this.token.set("layer","map");
+            this.token.set("statusmarkers","");
+            this.token.set("status_dead",true);
         }
 
         hexLabel() {
@@ -2033,9 +2056,12 @@ log(weaponArray)
 
             if (blast > 0 && hits > 0) {
                 let blastHits = Math.min(defenderModels,blast);
-                hitTip += "<br>Blast adds " + ((blastHits-1) * hits) + " hits"
-                hits *= blastHits;
-                let s = (blastHits === 1) ? "":"s";
+                if (blastHits > 1) {
+                    //if 1 model, blast does no extra hits
+                    hitTip += "<br>Blast adds " + ((blastHits-1) * hits) + " hits"
+                    hits *= blastHits;
+                }
+
             }
 
             rolls = rolls.sort((a,b)=>b-a);
@@ -2110,6 +2136,11 @@ log(weaponArray)
 
 
 
+        if (attacker.type !== "Aircraft") {
+            let angle = attackerHex.cube.angle(defenderHex.cube);
+            attacker.token.set('rotation',angle);
+        }
+
 
 
 
@@ -2174,16 +2205,10 @@ const ApplyDamage = (weaponHits,defenders) => {
 
 
         output.push(c + results.defender.name + ' takes ' + results.wounds + " Wound" + s2 + c1) ;
-
-        if (results.destroyed === true) {
+        destroyed = results.defender.Damage(results.wounds);
+        if (destroyed === true) {
             output.push("[#ff0000]" + results.defender.name + " is Destroyed![/#]");
-            results.defender.token.set({
-                bar1_value: 0,
-                layer: "map",
-                statusmarkers: "dead",
-            });
         }
-
         output.push("[hr]");
     }
 
@@ -2366,36 +2391,37 @@ log(defenderAuras)
 
 
                 if (wounds > 0 && weapon.keywords.some((e) => denyRegen.includes(e)) === false) {
-                    let regenReasons = [{reason: "Regeneration", target: 5, verb: " removed "},];
-                    for (let i=0;i<regenReasons.length;i++) {
-                        if (keywords.includes(regenReasons[i].reason)) {
-                            let regen = 0;
-                            let regenRolls = [];
-                            for (let i=0;i<wounds;i++) {
-                                let roll = randomInteger(6);
-                                regenRolls.push(roll);
-                                if (roll >= regenReasons[i].target) {
-                                    regen++;
-                                }
+                    let rtarget = 5;
+
+                    if (keywords.includes("Regeneration")) {
+                        let regen = 0;
+                        let regenRolls = [];
+                        for (let i=0;i<wounds;i++) {
+                            let roll = randomInteger(6);
+                            regenRolls.push(roll);
+                            if (roll >= rtarget) {
+                                regen++;
                             }
-                            regen = Math.min(wounds,regen);
-                            wounds = wounds - regen;
-                            let index = results.reduce.findIndex(reduce => reduce.reason === regenReasons[i].reason);
-                            if (index > -1) {
-                                results.reduce[index].rolls = results.reduce[index].rolls.concat(regenRolls);
-                                results.reduce[index].wounds += regen;
-                            } else {
-                                let igresult = {
-                                    reason: regenReasons[i].reason,
-                                    target: regenReasons[i].target,
-                                    rolls: regenRolls,
-                                    wounds: regen,
-                                    verb: regenReasons[i].verb,
-                                }
-                                results.reduce.push(igresult);
+
+                        }
+                        regen = Math.min(wounds,regen);
+                        wounds = wounds - regen;
+                        let index = results.reduce.findIndex(reduce => reduce.reason === "Regeneration");
+                        if (index > -1) {
+                            results.reduce[index].rolls = results.reduce[index].rolls.concat(regenRolls);
+                            results.reduce[index].wounds += regen;
+                        } else {
+                            let igresult = {
+                                reason: "Regeneration",
+                                target: rtarget,
+                                rolls: regenRolls,
+                                wounds: regen,
+                                verb: " removes ",
                             }
+                            results.reduce.push(igresult);
                         }
                     }
+                    
                 }
 
                 unitWounds += wounds;
@@ -2404,7 +2430,6 @@ log(defenderAuras)
                     totalWounds += unitWounds;
                     //defender is dead, check if another to apply next hit(s) to, or stop if none
                     results.wounds = unitWounds;
-                    results.destroyed = true;
                     WeaponOutput(results);
                     if (defenders.length > 1) {
                         currentDefender = 1;
@@ -2424,8 +2449,6 @@ log(defenderAuras)
         results.wounds = unitWounds;
         WeaponOutput(results);
         totalWounds += unitWounds;
-        hp -= unitWounds;
-        defender.token.set("bar1_value",hp);
     }
     //end hits
 
