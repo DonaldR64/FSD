@@ -130,16 +130,23 @@ const GDF3 = (() => {
 
 //improve this
     const SM = {
-        moved: "status_blue",
-        fired: "status_red",
-        fatigue: "status_yellow",
-        vAAP: "status_lightning-helix", //versatile attack, ap
-        vATH: "status_fist", //versatile attack, to hit
-        charge: "status_overdrive",
-        vDD: "", //versatile defense, defense
-        vDTH: "", //versatile defense, to hit
+        fatigue: "status_brown",
+        halfStr: "status_Blood::2006465",
+
 
     }
+
+    const TT = {
+        vAAP: "Versatile Attack = +1 AP",
+        vATH: "Versatile Attack = +1 to Hit",
+        vDD: "Versatile Defense = +1 to Defense",
+        vDTH: "Versatile Defense = -1 to Be Hit",
+
+
+
+    }
+
+
 
 
     //height is height of terrain element
@@ -711,7 +718,7 @@ log(keywords)
 
             this.weapons = weapons;
 
-
+            this.moved = false;
 
 
 
@@ -1325,6 +1332,14 @@ log(hex)
         return auras;
     }
 
+    const TTip = (unit) => {
+        let tooltip = unit.token.get("tooltip") || "";
+        tooltip = tooltip.split(",");
+        tooltip = tooltip.map((e) => e.trim());
+        return tooltip;
+    }
+
+
 
     const Activate = (msg) => {
         let Tag = msg.content.split(";");
@@ -1685,6 +1700,7 @@ log(label)
         let Tag = msg.content.split(";");
         let attacker = UnitArray[Tag[1]];
         let attackerAuras = Auras(attacker);
+        let attackerTT = TTip(attacker);
         let attackerHex = HexMap[attacker.hexLabel()];
         let defender = UnitArray[Tag[2]];
         let combatType = Tag[3];  //Ranged, Melee
@@ -1752,7 +1768,8 @@ log(label)
         if (attackers.length === 0 || defenders.length === 0) {sendChat("","Someones not in Array");return};
 
         defender = defenders[0]; //will shift to an assoc unit if hero was initially targeted
-        defenderAura = Auras(defender);
+        let defenderAura = Auras(defender);
+        let defenderTT = TTip(defender);
 
         let losResult = LOS(attacker,defender);
 
@@ -1887,7 +1904,7 @@ log(weaponArray)
                 needed -= 1;
                 neededTip += "<br>Artillery at Range +1 to Hit";
             }
-            if (weapon.keywords.includes("Indirect") && attacker.token.get(SM.moved) === true && weapon.keywords.includes("Unstoppable") == false) {
+            if (weapon.keywords.includes("Indirect") && attacker.moved === true && weapon.keywords.includes("Unstoppable") == false) {
                 needed += 1;
                 neededTip += "<br>Indirect and Moved -1 to Hit";
             }
@@ -1903,29 +1920,32 @@ log(weaponArray)
                 weapon.ap++;
                 notes.push("Unpredictable +1 to AP");
             }
-            if (attacker.token.get(SM.vATH)) {
+            if (attackerTT.includes(TT.vATH)) {
                 needed -= 1;
-                neededTip += "<br>Versatile +1 to Hit";
+                neededTip += "<br>" + TT.vATH;
             }
-            if (attacker.token.get(SM.vAAP)) {
+            if (attackerTT.includes(TT.vAAP)) {
                 weapon.ap++;
-                notes.push("Versatile +1 to AP");
+                notes.push("<br>" + TT.vAAP);
             }
-            if (attacker.token.get(SM.charge) && weapon.keywords.includes("Thrust")) {
+            if (attacker.id === activeID && combatType === "Melee" && weapon.keywords.includes("Thrust")) {
                 weapon.ap++;
                 notes.push("Thrust");
                 needed -= 1;
                 neededTip += "<br>Thrust/Charge +1 to Hit";
             }
-            if (defender.token.get(SM.vDTH) && weapon.keywords.includes("Unstoppable") === false) {
+            if (defenderTT.includes(TT.vDTH) && weapon.keywords.includes("Unstoppable") === false) {
                 needed += 1;
-                neededTip += "<br>Versatile Defense -1 to Hit"
+                neededTip += "<br>" + TT.vDTH;
             }
             if (attacker.keywords.includes("Precise")) {
                 needed -= 1;
                 neededTip += "<br>Precise +1 to Hit";
             }
-
+            if (attacker.token.get(SM.halfStr) && weapon.keywords.includes("Unstoppable") === false) {
+                needed ++;
+                neededTip += "<br>Wounded -1 to Hit";
+            }
 
 
 
@@ -2096,7 +2116,7 @@ log(weaponArray)
         if (combatType === "Melee") {
             attacker.token.set(SM.fatigue,true);
         } else {
-            attacker.token.set(SM.fired,true);
+            attacker.fired = true;
         }
 
         PrintCard();
@@ -2201,6 +2221,7 @@ const ApplyDamage = (weaponHits,defenders) => {
         results.defender = defender;
 
         let defenderAuras = Auras(defender);
+        let defenderTT = TTip(defender);
 log(defenderAuras)
         let hp = parseInt(defender.token.get("bar1_value"));
 
@@ -2223,9 +2244,9 @@ log(defenderAuras)
             needed++;
             results.neededTip += "<br>Thrust/Charge +1 to AP";
         }
-        if (defender.token.get(SM.vDD) && weapon.keywords.includes("Unstoppable") === false) {
+        if (defenderTT.includes(TT.vDD) && weapon.keywords.includes("Unstoppable") === false) {
             needed--;
-            results.neededTip += "<br>Versatile Defense +1 Defense";
+            results.neededTip += "<br>" + TT.vDD;
         }
         if ((defender.keywords.includes("Shielded") || defenderAuras.includes("Shielded")) && weapon.spell !== true) {
             needed--;
