@@ -174,10 +174,14 @@ const GDF3 = (() => {
     const TerrainInfo = {
         "Open": {name: "Open",cover: 0,los: false,height: 0, difficult: false},
         "Woods": {name: "Woods",cover: 1,los: true,height: 1,difficult: true},
-        "Building 1": {name: "Building 1",cover: 2,los: true,height: 1,difficult: true, building: true},
-        "Building 2": {name: "Building 2",cover: 2,los: true,height: 2, difficult: true, building: true},
-        "Crops": {name: "Crops",cover: 1,los: false,height: 0, difficult: false, building: true},
-
+        "Concrete Building 1": {name: "Stone Building 1",cover: 2,los: true,height: 1,difficult: true, building: true},
+        "Concrete Building 2": {name: "Stone Building 2",cover: 2,los: true,height: 2, difficult: true, building: true},
+        "Brick Building 1": {name: "Brick Building 1",cover: 2,los: true,height: 1,difficult: true, building: true},
+        "Brick Building 2": {name: "Brick Building 2",cover: 2,los: true,height: 2, difficult: true, building: true},
+        "Wood Building 1": {name: "Wood Building 1",cover: 2,los: true,height: 1,difficult: true, building: true},
+        "Wood Building 2": {name: "Wood Building 2",cover: 2,los: true,height: 2, difficult: true, building: true},
+        "Crops": {name: "Crops",cover: 1,los: false,height: 0, difficult: false, building: false},
+        "Water": {name: "Water",cover: 1,los: false,height: 0, difficult: true, building: false},
 
 
     }
@@ -189,7 +193,7 @@ const GDF3 = (() => {
     }
 
 
-
+    const RoadInfo = ["#d9d9d9"];
 
 
 
@@ -1116,8 +1120,10 @@ log(keywords)
     const AddEdges = () => {
         let paths = findObjs({_pageid: Campaign().get("playerpageid"),_type: "pathv2",layer: "map",});
         _.each(paths,path => {
-            let type = EdgeInfo[path.get("stroke").toLowerCase()];
-            if (type) {
+            let colour = path.get("stroke").toLowerCase();//hex colour
+            let edge = EdgeInfo[colour];
+            let road = RoadInfo.includes(colour);
+            if (edge) {
                 let vertices = translatePoly(path);
                 //work through pairs of vertices
                 for (let i=0;i<(vertices.length -1);i++) {
@@ -1151,6 +1157,14 @@ log(keywords)
                     }
                 }
             }
+            if (road) {
+                path.set("stroke_width",40);
+
+
+
+            }
+
+
         })
     }
 
@@ -1161,11 +1175,20 @@ log(keywords)
         _.each(tokens,token => {
             let name = token.get("name");
             let terrain = TerrainInfo[name];
+            let buildingTypes = ["Wood","Brick","Concrete"];
             if (terrain) {
                 let centre = new Point(token.get("left"),token.get('top'));
                 let centreLabel = centre.toCube().label();
                 let hex = HexMap[centreLabel];
                 hex.terrain = name;
+                if (name.includes("Building")) {
+                    for (let i=0;i<buildingTypes.length;i++) {
+                        if (name.includes(buildingTypes[i])) {
+                            hex.hp = 3 * (i+2);
+                            break;
+                        }
+                    }
+                }
                 hex.cover = terrain.cover;
                 hex.los = terrain.los;
                 hex.terrainHeight = terrain.height;
