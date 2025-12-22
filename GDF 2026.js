@@ -1963,12 +1963,12 @@ log(hex)
     const LOS = (shooter,target) => {
         let shooterHex = HexMap[shooter.hexLabel()];
         let shooterElevation = shooterHex.elevation;
-        if ((shooter.type.includes("Infantry") || shooter.type.includes("Hero")) && shooterHex.terrain.includes("Building")) {
+        if ((shooter.type.includes("Core") || shooter.type.includes("Hero")) && shooterHex.terrain.includes("Building")) {
             shooterElevation += Math.max(shooterHex.terrainHeight - 1,0);
         }
         let targetHex = HexMap[target.hexLabel()];
         let targetElevation = targetHex.elevation;
-        if ((target.type.includes("Infantry") || target.type.includes("Hero")) && targetHex.terrain.includes("Building")) {
+        if ((target.type.includes("Core") || target.type.includes("Hero")) && targetHex.terrain.includes("Building")) {
             targetElevation += Math.max(targetHex.terrainHeight - 1,0);
         }
 
@@ -2877,8 +2877,19 @@ log(defenderAuras)
     const changeGraphic = (tok,prev) => {
         let unit = UnitArray[tok.get("id")];
         if (!unit) {return};
+
+
         //rotate token to match direction of movement and mark moved
         if (state.GDF3.turn > 0) {
+            if (tok.get("width") !== prev.width || tok.get("height") !== prev.height) {
+                tok.set({
+                    width: prev.width,
+                    height: prev.height,
+                })
+            }
+
+
+
             if (tok.get("left") !== prev.left || tok.get("top") !== prev.top) {
                 let tokPt = new Point(tok.get("left"),tok.get("top"));
                 let tokCube = tokPt.toCube();
