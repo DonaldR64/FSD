@@ -1,136 +1,69 @@
-const Activate = (msg) => {
-    let Tag = msg.content.split(";");
-    let id = Tag[1];
-    let order = Tag[2];
-    let unit = UnitArray[id];
-
-    let unitAuras = Auras(unit);
-    let note = false;
-    let ignoreDifficult = false;
-
-    //RemoveDead();
-
-    SetupCard("Activate " + unit.name,"",unit.faction);
-
-    activeID = id;
-
-    if (unit.token.get("aura1_color") === "#ffff00") {
-        //shaken
-        order = "Rally";
-    }
-
-    outputCard.subtitle = order;
-    unit.token.set("aura1_color","#000000");
-
-    let move = 3;
-    if (unit.keywords.includes("Fast")) {
-        note = true;
-        move++
-        outputCard.body.push("Unit has Fast and has +1 to Move");
-    };
-    if (unit.keywords.includes("Very Fast")) {
-        note = true;
-        move += 2
-        outputCard.body.push("Unit has Very Fast and has +2 to Move");
-    }
-    if (unit.keywords.includes("Slow")) {
-        note = true;
-        move--;
-        outputCard.body.push("Unit has Slow and has -1 to Move");
-    }
-
-//othter modifiers
-
-    let charge = move * 2;
-    let rush = move * 2;
-
-    if (unit.keywords.includes("Agile")) {
-        charge += 1, rush+= 1;
-        note = true;
-        outputCard.body.push("Unit has Agile and has +1 to Charge/Rush");
-    }
-    if (unit.keywords.includes("Rapid Charge") || unitAuras.includes("Rapid Charge")) {
-        note = true;
-        outputCard.body.push("Unit has Rapid Charge and has +2 to Charge");
-        charge += 2;
-    }
-
-    if (unit.keywords.includes("Strider")) {
-        note = true;
-        outputCard.body.push("Unit has Strider and may ignore effects of Difficult Terrain");
-        ignoreDifficult = true;
-    }
-    if (unit.keywords.includes("Fly")) {
-        note = true;
-        outputCard.body.push("Unit has Flying and may Ignore Terrain and Units while Moving");
-        ignoreDifficult = true;
-    }
-    if (unit.type === "Aircraft") {
-        note = true;
-        ignoreDifficult = true;
-        outputCard.body.push("Unit is an Aircraft and Ignores Units and Terrain");
-    }
-
-    if (note === true) {
-        outputCard.body.push("[hr]");
-    }
-
-
-    let difMove = Math.min(move,3);
-    let difCharge = Math.min(charge, 6);
-    let difRush = Math.min(rush,6)
-
-    let startHex = HexMap[unit.hexLabel()];
-
-    switch(order) {
-        case 'Hold':
-            outputCard.body.push("Unit stays in Place and may Fire");
-            break;
-        case 'Advance':
-            if (startHex.difficult === true && ignoreDifficult === false) {
-                outputCard.body.push("Unit starts in Difficult Ground");
-                outputCard.body.push("Movement is " + difMove + " Hexes");
-            } else {
-                outputCard.body.push("Movement is " + move + " Hexes");
-                if (ignoreDifficult === false) {
-                    outputCard.body.push("Entering or Crossing Difficult Terrain limits Move to " + difMove + " Hexes");
-                }
-            }
-            break;
-        case 'Charge/Rush':
-            if (startHex.difficult === true && ignoreDifficult === false) {
-                outputCard.body.push("Unit starts in Difficult Ground");
-                if (difCharge !== difRush) {
-                    outputCard.body.push("Charge is " + difCharge + " Hexes");
-                    outputCard.body.push("Charge is " + difRush + " Hexes");
-                } else {
-                    outputCard.body.push("Charge/Rush is " + difCharge + " Hexes");
-                }
-            } else {
-                outputCard.body.push("Charge is " + charge + " Hexes");
-                if (ignoreDifficult === false) {
-                    if (difCharge !== difRush) {
-                        outputCard.body.push("Entering/Crossing Difficult Terrain limits Charge to " + difCharge + " Hexes and Rush to " + difRush + " Hexes");
-                    } else {
-                        outputCard.body.push("Entering or Crossing Difficult Terrain limits Charge/Rush to " + difCharge + " Hexes");
-                    }       
-                }
-            }
-            break;
-        case 'Rally':
-            outputCard.body.push("Unit Stays in Hex and Rallies");
-            break;
-    }
-
-
-//Bounding
-
-
-    
-
-
-
+const StartGame = () => {
+    SetupCard("Start New Game","Turn 1","Neutral");
+    outputCard.body.push("Players Roll for Deployment/Initiative");
     PrintCard();
+    state.GDF3.turn = 1;
+}
+
+const EndTurn = () => {
+    //RemoveDead();
+    //check if any units havent activted
+    _.each(UnitArray,unit => {
+        let token = unit.token;
+        if (token) {
+            if (token.get("aura1_color") === "#00ff00") {
+                sendPing(token.get("left"),token.get("top"), Campaign().get('playerpageid'), null, true); 
+                SetupCard(unit.name,"",unit.faction);
+                outputCard.body.push("Unit has not been activated");
+                PrintCard();
+                return;
+            }
+        }
+    });
+    state.GDF3.turn += 1;
+    let gameContinues = true;
+    if (state.GDF3.turn > 6) {
+        let roll = randomInteger(6);
+        let needed = Math.min(state.GDF3.turn - 3,6);
+        outputCard.body.push("Prolonged: " + roll + " vs. " + needed + "+");                
+        if (roll < needed) {
+            gameContinues = false;
+            outputCard.body.push("The Battle Ends");
+        } else {                    
+            outputCard.body.push("The Battle continues for at least one more turn...");
+        }
+        outputCard.body.push("[hr]");
+    } 
+    if (gameContinues === true) {
+        let lastUnit = UnitArray[activeID];
+        if (lastUnit) {
+            outputCard.body.push(lastUnit.faction + " has the First Activation");
+        } else {
+            outputCard.body.push("The Faction that went last goes first this Turn");
+        }
+        ClearMarkers();
+    } else {
+        outputCard.body.push("The Game Ends");
+    }
+    PrintCard();
+}
+
+const ClearMarkers = () => {
+    //persists turn to turn
+    let persistantTT = ["Steadfast Buff",];
+
+
+    //reset fatigue, activation, tooltips
+    _.each(UnitArray,unit => {
+        unit.moved = false; 
+        let tt = TTip(unit);
+        let persistant = tt.filter((e) => persistantTT.includes(e));
+        persistant = persistant.toString();
+        unit.token.set("tooltip",persistant);
+        unit.token.set(SM.fatigue,false);
+        unit.token.set("aura1_color","#00ff00");
+
+    })
 
 
 }

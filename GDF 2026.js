@@ -1224,21 +1224,7 @@ log(keywords)
 
     }
 
-    const DefineOffboard = (token) => {
-        let centre = new Point(token.get("left"),token.get('top'));
-        let halfW = token.get("width")/2;
-        let halfH = token.get("height")/2;
-        let minX = centre.x - halfW;
-        let maxX = centre.x + halfW;
-        let minY = centre.y - halfH;
-        let maxY = centre.y + halfH;
-        _.each(HexMap,hex => {
-            if (hex.centre.x < minX || hex.centre.x > maxX || hex.centre.y < minY || hex.centre.y > maxY) {
-                hex.terrain = "Offboard";
-                hex.offboard = true;
-            }
-        })
-    }
+    
 
     const stringGen = () => {
         let text = "";
@@ -1250,7 +1236,75 @@ log(keywords)
     };
 
 
+    const StartGame = () => {
+        SetupCard("Start New Game","Turn 1","Neutral");
+        outputCard.body.push("Players Roll for Deployment/Initiative");
+        PrintCard();
+        state.GDF3.turn = 1;
+    }
 
+    const EndTurn = () => {
+        //RemoveDead();
+        //check if any units havent activted
+        _.each(UnitArray,unit => {
+            let token = unit.token;
+            if (token) {
+                if (token.get("aura1_color") === "#00ff00") {
+                    sendPing(token.get("left"),token.get("top"), Campaign().get('playerpageid'), null, true); 
+                    SetupCard(unit.name,"",unit.faction);
+                    outputCard.body.push("Unit has not been activated");
+                    PrintCard();
+                    return;
+                }
+            }
+        });
+        state.GDF3.turn += 1;
+        let gameContinues = true;
+        if (state.GDF3.turn > 6) {
+            let roll = randomInteger(6);
+            let needed = Math.min(state.GDF3.turn - 3,6);
+            outputCard.body.push("Prolonged: " + roll + " vs. " + needed + "+");                
+            if (roll < needed) {
+                gameContinues = false;
+                outputCard.body.push("The Battle Ends");
+            } else {                    
+                outputCard.body.push("The Battle continues for at least one more turn...");
+            }
+            outputCard.body.push("[hr]");
+        } 
+        if (gameContinues === true) {
+            let lastUnit = UnitArray[activeID];
+            if (lastUnit) {
+                outputCard.body.push(lastUnit.faction + " has the First Activation");
+            } else {
+                outputCard.body.push("The Faction that went last goes first this Turn");
+            }
+            ClearMarkers();
+        } else {
+            outputCard.body.push("The Game Ends");
+        }
+        PrintCard();
+    }
+
+    const ClearMarkers = () => {
+        //persists turn to turn
+        let persistantTT = ["Steadfast Buff",];
+
+
+        //reset fatigue, activation, tooltips
+        _.each(UnitArray,unit => {
+            unit.moved = false; 
+            let tt = TTip(unit);
+            let persistant = tt.filter((e) => persistantTT.includes(e));
+            persistant = persistant.toString();
+            unit.token.set("tooltip",persistant);
+            unit.token.set(SM.fatigue,false);
+            unit.token.set("aura1_color","#00ff00");
+
+        })
+
+
+    }
 
 
 
@@ -1805,7 +1859,7 @@ log(hex)
 
 
 
-    
+
     const CheckLOS = (msg) => {
         let Tag = msg.content.split(";");
         let shooterID = Tag[1];
@@ -2883,6 +2937,11 @@ log(defenderAuras)
             case '!SetTT':
                 SetTT(msg);
                 break;
+            case '!StartGame':
+                StartGame();
+                break;
+
+
         }
     };
 
