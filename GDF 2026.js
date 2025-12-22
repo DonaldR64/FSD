@@ -1805,12 +1805,7 @@ log(hex)
 
 
 
-
-
-
-
-
-
+    
     const CheckLOS = (msg) => {
         let Tag = msg.content.split(";");
         let shooterID = Tag[1];
