@@ -100,6 +100,7 @@ const GDF3 = (() => {
     const Factions = {
         "Neutral": {
             "image": "",
+            "dice": "Neutral",
             "backgroundColour": "#FFFFFF",
             "titlefont": "Arial",
             "fontColour": "#000000",
@@ -950,7 +951,7 @@ log(keywords)
         }
 
         if (!outputCard.side || !Factions[outputCard.side]) {
-            outputCard.side = "Allied";
+            outputCard.side = "Neutral";
         }
 
         //start of card
@@ -1199,7 +1200,6 @@ log(keywords)
 
      
     const AddTokens = () => {
-        ModelArray = {};
         UnitArray = {};
         //create an array of all tokens
         let start = Date.now();
@@ -1240,26 +1240,41 @@ log(keywords)
         SetupCard("Start New Game","Turn 1","Neutral");
         outputCard.body.push("Players Roll for Deployment/Initiative");
         PrintCard();
+        ClearMarkers();
         state.GDF3.turn = 1;
     }
 
-    const EndTurn = () => {
-        //RemoveDead();
-        //check if any units havent activted
-        _.each(UnitArray,unit => {
+    const NextTurn = () => {
+        RemoveDead();
+        if (state.GDF3.turn === 0) {
+            StartGame();
+            return;
+        }
+
+        //check if any units havent activated
+        let keys = Object.keys(UnitArray);
+
+        let remaining = false;
+
+        for (let i=0;i<keys.length;i++) {
+            let unit = UnitArray[keys[i]];
             let token = unit.token;
-            if (token) {
-                if (token.get("aura1_color") === "#00ff00") {
-                    sendPing(token.get("left"),token.get("top"), Campaign().get('playerpageid'), null, true); 
-                    SetupCard(unit.name,"",unit.faction);
-                    outputCard.body.push("Unit has not been activated");
-                    PrintCard();
-                    return;
-                }
+            if (token && token.get("aura1_color") === "#00ff00") {
+                sendPing(token.get("left"),token.get("top"), Campaign().get('playerpageid'), null, true); 
+                SetupCard(unit.name,"",unit.faction);
+                outputCard.body.push("Unit has not been activated");
+                PrintCard();
+                remaining = true;
+                break;
             }
-        });
+        }
+        if (remaining === true) {return};
+
+
         state.GDF3.turn += 1;
         let gameContinues = true;
+        SetupCard("Turn " + state.GDF3.turn,"","Neutral");
+
         if (state.GDF3.turn > 6) {
             let roll = randomInteger(6);
             let needed = Math.min(state.GDF3.turn - 3,6);
@@ -1293,6 +1308,7 @@ log(keywords)
 
         //reset fatigue, activation, tooltips
         _.each(UnitArray,unit => {
+            if (!unit.token) {return};
             unit.moved = false; 
             let tt = TTip(unit);
             let persistant = tt.filter((e) => persistantTT.includes(e));
@@ -1300,7 +1316,9 @@ log(keywords)
             unit.token.set("tooltip",persistant);
             unit.token.set(SM.fatigue,false);
             unit.token.set("aura1_color","#00ff00");
-
+            if (unit.type === "Hero") {
+                toFront(unit.token);
+            }
         })
 
 
@@ -1384,7 +1402,7 @@ log(hex)
     }
 
 
-    const RemoveDead = (info) => {
+    const RemoveDead = (info = "Dead") => {
         let tokens = findObjs({
             _pageid: Campaign().get("playerpageid"),
             _type: "graphic",
@@ -1483,7 +1501,7 @@ log(hex)
         let note = false;
         let ignoreDifficult = false;
 
-        //RemoveDead();
+        RemoveDead();
 
 //redo to have difMove === move if has strider etc
 
@@ -1505,7 +1523,7 @@ log(hex)
 
         activeID = id;
 
-        if (unit.token.get("tint_color") === "#ffff00") {
+        if (unit.token.get("tint_color") === "#ff0000") {
             //shaken
             order = "Rally";
         }
@@ -1560,12 +1578,12 @@ log(hex)
 
 
 
-        if (unit.keywords.includes("Strider")) {
+        if (unit.keywords.includes("Strider") && order !== "Hold" && order !== "Rally") {
             note = true;
             outputCard.body.push("Unit has Strider and may ignore the effects of Difficult Terrain");
             ignoreDifficult = true;
         }
-        if (unit.keywords.includes("Fly")) {
+        if (unit.keywords.includes("Fly") && order !== "Hold" && order !== "Rally") {
             note = true;
             outputCard.body.push("Unit has Flying and may Ignore Terrain and Units while Moving");
             ignoreDifficult = true;
@@ -1574,6 +1592,9 @@ log(hex)
             note = true;
             ignoreDifficult = true;
             outputCard.body.push("Unit is an Aircraft and Ignores Units and Terrain");
+
+
+
         }
 
         if (note === true) {
@@ -1589,6 +1610,7 @@ log(hex)
 
         if (unit.type === "Aircraft") {
             move = "15-18";
+            difMove = move;
         }
 
         let situation = 1; //open
@@ -1658,7 +1680,12 @@ log(hex)
                 }
                 break;
             case 'Rally':
-                outputCard.body.push("Unit Stays in Hex and Rallies");
+                if (unit.type !== "Aircraft") {
+                    outputCard.body.push("Unit Stays in Hex and Rallies");
+                } else {
+                    outputCard.body.push("Advance is " + move + " Hexes");
+                    outputCard.body.push("As the Aircraft is Rallying, it may not Fire");
+                }
                 unit.token.set("tint_color","transparent");
                 break;
         }
@@ -1669,11 +1696,11 @@ log(hex)
             let buttons = [];
             buttons.push({
                 phrase: "Choose +1 AP",
-                action: "!SetTT;vAAP",
+                action: "!SetTT;" + unit.tokenID + ";vAAP",
             })
             buttons.push({
                 phrase: "Choose +1 to Hit",
-                action: "!SetTT;vATH",
+                action: "!SetTT;" + unit.tokenID + ";vATH",
             })
             outputCard.body.push(InlineButtons(buttons));
         }
@@ -1682,11 +1709,11 @@ log(hex)
             let buttons = [];
             buttons.push({
                 phrase: "Choose +1 Defense",
-                action: "!SetTT;vDD",
+                action: "!SetTT;" + unit.tokenID + ";vDD",
             })
             buttons.push({
                 phrase: "Choose -1 to Hit",
-                action: "!SetTT;vDTH",
+                action: "!SetTT;" + unit.tokenID + ";vDTH",
             })
             outputCard.body.push(InlineButtons(buttons));
         }
@@ -1841,10 +1868,11 @@ log(hex)
 
 
     const SetTT = (msg) => {
-        let id = msg.selected[0]._id;
-        let unit = UnitArray[id];
         let Tag = msg.content.split(";");
-        let type = Tag[1];
+
+        let id = Tag[1];
+        let unit = UnitArray[id];
+        let type = Tag[2];
         let info = TT[type];
         let tooltip;
         if (unit) {
@@ -2800,9 +2828,6 @@ log(defenderAuras)
 
 
 
-
-
-
     const ZeroResults = () => {
         //zeros the results and creates the array
         results = {
@@ -2937,10 +2962,9 @@ log(defenderAuras)
             case '!SetTT':
                 SetTT(msg);
                 break;
-            case '!StartGame':
-                StartGame();
+            case '!NextTurn':
+                NextTurn();
                 break;
-
 
         }
     };
