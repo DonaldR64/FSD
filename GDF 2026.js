@@ -884,15 +884,13 @@ log(keywords)
 
         //keywords list 
 
-
+        let keywordText = "";
         _.each(keywordsList,keyword => {
             let text = Keywords[keyword];
-            
-
-
-
+            keywordText += "<br><b>" + keyword + ": </b>";
+            keywordText += text;
         })
-        
+        AttributeSet(unit.charID,"keywordText",keywordText);
 
 
 
