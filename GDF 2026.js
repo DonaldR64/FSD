@@ -778,7 +778,7 @@ log(keywords)
         Models() {
             //returns # of models remaining
             let currentHP = parseInt(this.token.get("bar1_value"));
-            let remaining = Math.ceiling(currentHP/this.toughness);
+            let remaining = Math.ceil(currentHP/this.toughness);
             return remaining;
         }
 
@@ -2358,7 +2358,7 @@ log(weaponArray)
                 needed -= 1;
                 neededTip += "<br>Precise +1 to Hit";
             }
-            if (attacker.token.get(SM.halfStr) && weapon.keywords.includes("Unstoppable") === false) {
+            if (attacker.token.get(SM.halfStr) && weapon.keywords.includes("Unstoppable") === false && attacker.models === 1 && attacker.type !== "Hero") {
                 needed ++;
                 neededTip += "<br>Damaged -1 to Hit";
             }
@@ -2367,15 +2367,16 @@ log(weaponArray)
 
 
             needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
-////// Adjust for models
+
             let wNum = weapon.number;
             if (attacker.models > 1) {
-                wNum = Math.ceiling(wNum * attacker.Models()/attacker.models);
+                //adjust for casualties in multi model unit, ceiling the #s
+                wNum = Math.ceil(wNum * attacker.Models()/attacker.models);
             }
 
             let dice = wNum * weapon.attacks;
 
-a
+
 
 
 ///? may be different if weapons have counter
