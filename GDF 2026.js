@@ -2355,7 +2355,7 @@ log(weaponArray)
             }
             if (attacker.token.get(SM.halfStr) && weapon.keywords.includes("Unstoppable") === false) {
                 needed ++;
-                neededTip += "<br>Wounded -1 to Hit";
+                neededTip += "<br>Damaged -1 to Hit";
             }
 
 
@@ -2364,6 +2364,8 @@ log(weaponArray)
             needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
 
             let dice = weapon.number * weapon.attacks;
+
+a
 
 
 ///? may be different if weapons have counter
