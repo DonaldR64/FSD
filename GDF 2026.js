@@ -817,7 +817,7 @@ log(keywords)
             size = 210;
         }
         
-        
+        let keywordList = unit.keywords;
 
         unit.token.set({
             width: size,
@@ -851,11 +851,14 @@ log(keywords)
             if (weapon.keywords.includes("Limited")) {
                 name += " (Limited)";
             }
+            keywordList = keywordList.concat(weapon.keywords);
             types[weapon.type].push(name); 
         }
         
         let keys = Object.keys(types);
         let weaponNum = 1;
+
+
         for (let i=0;i<keys.length;i++) {
             let names = types[keys[i]];
             if (names.length === 0) {continue};
@@ -876,6 +879,21 @@ log(keywords)
 
         action = "!Activate;@{selected|token_id}" + orders;
         AddAbility("Activate",action,unit.charID);
+
+
+
+        //keywords list 
+
+
+        _.each(keywordsList,keyword => {
+            let text = Keywords[keyword];
+            
+
+
+
+        })
+        
+
 
 
 
