@@ -1310,6 +1310,10 @@ log(keywords)
         for (let i=0;i<keys.length;i++) {
             let unit = UnitArray[keys[i]];
             let token = unit.token;
+            if (!token) {
+                delete UnitArray[keys[i]];
+                continue;
+            }
             if (token && token.get("aura1_color") === "#00ff00") {
                 sendPing(token.get("left"),token.get("top"), Campaign().get('playerpageid'), null, true); 
                 SetupCard(unit.name,"",unit.faction);
@@ -1321,10 +1325,43 @@ log(keywords)
         }
         if (remaining === true) {return};
 
+        //things at beginning of turn
+        let notes = [];
+        for (let i=0;i<keys.length;i++) {
+            let unit = UnitArray[keys[i]];
+            unitTT = TTip(unit);
+            unitAuras = Auras(unit);
+
+            //Steadfast
+            if ((unit.keywords.includes("Steadfast") || unitAuras.includes("Steadfast") || unitTT.includes("steadfast")) && (unit.token.get("tint_color") === "#ffff00")) {
+                let steadRoll = randomInteger(6);
+                if (steadRoll > 3) {
+                    unit.token.set("tint_color","transparent");
+                    if (unitTT.includes("steadfast")) {
+                        RemoveTip(unit,TT.steadfast);
+                        notes.push(unit.name + ": Rallies with Steadfast Buff");
+                    } else {
+                        notes.push(unit.name + ": Rallies with Steadfast");
+                    }
+                }
+            }
+
+
+        }
+
+
+
 
         state.GDF3.turn += 1;
         let gameContinues = true;
         SetupCard("Turn " + state.GDF3.turn,"","Neutral");
+        if (notes.length > 0) {
+            _.each(notes,note => {
+                outputCard.body.push(note);
+            })
+        }
+
+
 
         if (state.GDF3.turn > 6) {
             let roll = randomInteger(6);
@@ -1559,19 +1596,6 @@ log(hex)
 
 
         SetupCard("Activate " + unit.name,"",unit.faction);
-
-        if ((unit.keywords.includes("Steadfast") || unitAuras.includes("Steadfast") || unitTT.includes("steadfast")) && (unit.token.get("tint_color") === "#ffff00")) {
-            let steadRoll = randomInteger(6);
-            if (steadRoll > 3) {
-                unit.token.set("tint_color","transparent");
-                if (unitTT.includes("steadfast")) {
-                    RemoveTip(unit,TT.steadfast);
-                    outputCard.body.push("Steadfast Buff Used, Unit Rallies!");
-                } else {
-                    outputCard.body.push("Steadfast! Unit Rallies!");
-                }
-            }
-        }
 
         state.GDF3.activeID = id;
 
