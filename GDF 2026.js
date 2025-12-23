@@ -1614,16 +1614,16 @@ log(hex)
         if (unit.keywords.includes("Agile")) {
             charge += 1, rush+= 1;
             note = true;
-            outputCard.body.push("Unit has Agile and has +1 to Charge/Rush");
+            outputCard.body.push("Unit has Agile gets +1 Hex to Charge/Rush");
         }
         if (unit.keywords.includes("Rapid Charge") || unitAuras.includes("Rapid Charge")) {
             note = true;
-            outputCard.body.push("Unit has Rapid Charge and has +2 to Charge");
+            outputCard.body.push("Unit has Rapid Charge gets +2 Hexes to Charge");
             charge += 2;
         }
-        if (unit.keywords.includes("Rapid Rush")) {
+        if (unit.keywords.includes("Rapid Rush") || unitAuras.includes("Rapid Rush")) {
             note = true;
-            outputCard.body.push("Unit has Rapid Rush and has +3 to Rush");
+            outputCard.body.push("Unit has Rapid Rush and gets +3 Hexes to Rush");
             rush += 3;
         }
 
@@ -2899,16 +2899,13 @@ log(defenderAuras)
 
                 //add in any auras that would otherwise be recognized as keywords
                 let keywords = DeepCopy(defender.keywords);
-                if (defenderAuras.includes("Resistance")) {
-                    keywords.push("Resistance");
-                }
 
                 //Ignore Wound abilities
                 let ignoreReasons = [{reason: "Plaguebound", target: 6, verb: " ignored "},{reason: "Protected", target: 6, verb: " ignored "},{reason: "Resistance", target: 6, spellTarget: 2, verb: " ignored "}];
                 
 
                 for (let i=0;i<ignoreReasons.length;i++) {
-                    if (keywords.includes(ignoreReasons[i].reason)) {
+                    if (keywords.includes(ignoreReasons[i].reason) || defendersAura.includes(ignoreReasons[i]).reason) {
                         let reason = ignoreReasons[i].reason;
                         let ignore = 0;
                         let ignoreRolls = [];
