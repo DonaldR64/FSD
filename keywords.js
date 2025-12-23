@@ -2,6 +2,9 @@ const Keywords = {
     "Ambush Beacon": "Friendly Units using Ambush may ignore Distance restrictions if deployed within 3 hexes of this model",
 
     "Bounding": "When activated, the unit may 'bound' 1 - 2 Hexes away",
+    "Bounding Aura": "Aura - When activated, the unit may 'bound' 1 - 2 Hexes away",
+
+
 
     "Butcher": "Ignores Regeneration, and on unmodified results of 6 to hit, this weapon deals 1 extra hits (only the original hit counts as a 6 for special rules)",
 
@@ -18,6 +21,10 @@ const Keywords = {
 
     "Fortified": "Hits count as having AP -1 to a min of AP 0",
     "Fortified Aura": "Aura - Hits count as having AP -1 to a min of AP 0",
+
+    "Furious": "When charging, unmodified results of 6 to hit in melee deal 1 extra hit (only the original hit counts as a 6 for special rules).",
+    "Furious Aura": "Aura - When charging, unmodified results of 6 to hit in melee deal 1 extra hit (only the original hit counts as a 6 for special rules).",
+
 
     "Good Shot": "+1 to Hit when Shooting",
 
@@ -48,6 +55,8 @@ const Keywords = {
 
     "Plaguebound": "Wounds are ignored on a roll of 6",
     "Plaguebound Boost": "Wounds are ignored on a roll of 5+",
+    "Plaguebound Boost Aura": "Aura - Wounds are ignored on a roll of 5+",
+
 
     "Protected": "Wounds are ignored on a roll of 6",
 
@@ -66,7 +75,15 @@ const Keywords = {
     "Rapid Rush": "Unit moves +3 Hexes when Rushing",
     "Rapid Rush Aura": "Aura - Unit moves +3 Hexes when Rushing",
 
+    "Relentless": "When this model shoots at enemies over 4 hexes away, unmodified results of 6 to hit deal 1 extra hit (only the original hit counts as a 6 for special rules).",
+    "Relentless Aura": "Aura - When this model shoots at enemies over 4 hexes away, unmodified results of 6 to hit deal 1 extra hit (only the original hit counts as a 6 for special rules).",
+
     "Resistance": "Wounds are ignored on a roll of 6; if from a spell ignored on a 2+ instead",
+    "Resistance Aura": "Aura - Wounds are ignored on a roll of 6; if from a spell ignored on a 2+ instead",
+
+    "Scout": "May be set aside before deployment. After all other units are deployed, may be deployed anywhere fully within 6 hexes of their deployment zone. Players alternate in placing Scout units, starting with the player that activates next.",
+    "Scout Aura": "Aura - May be set aside before deployment. After all other units are deployed, may be deployed anywhere fully within 6 hexes of their deployment zone. Players alternate in placing Scout units, starting with the player that activates next.",
+
 
     "Shielded": "+1 Defense vs Hits that are not from Spells",
 
@@ -92,9 +109,13 @@ const Keywords = {
 
     "Targeting Visor": "Shooting at Enemies over 4 hexes away gets +1 to Hit",
 
+    "Unpredicatable": "When attacking, on a 1-3 the unit gets AP(+1), and on a 4-6 the unit gets +1 to hit rolls instead.",
+    "Unpredicatable Fighter": "When in melee, on a 1-3 the unit gets AP(+1), and on a 4-6 the unit gets +1 to hit rolls instead.",
 
-
-
+    "Versatile Attack": "When this unit is activated, pick one effect: +1 to Hit or +1 AP. Lasts until next Activation",
+    "Versatile Attack Aura": "Aura - When this unit is activated, pick one effect: +1 to Hit or +1 AP. Lasts until next Activation",
+    "Versatile Defense": "When this unit is activated, pick one effect: +1 to Defense or -1 to be Hit. Lasts until next Activation",
+    "Versatile Defense Aura": "Aura - When this unit is activated, pick one effect: +1 to Defense or -1 to be Hit. Lasts until next Activation",
 
 
 
