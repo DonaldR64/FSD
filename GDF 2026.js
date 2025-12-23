@@ -2380,9 +2380,9 @@ log(weaponArray)
             let dice = weapon.number * weapon.attacks;
 
 
-
-
 ///? may be different if weapons have counter
+
+
             if (weapon.name === "Impact" && defender.keywords.includes("Counter")) {
                 dice -= defender.models;
             }
