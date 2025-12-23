@@ -2358,23 +2358,26 @@ log(weaponArray)
                 needed -= 1;
                 neededTip += "<br>Precise +1 to Hit";
             }
-            if (attacker.token.get(SM.halfStr) && weapon.keywords.includes("Unstoppable") === false && attacker.models === 1 && attacker.type !== "Hero") {
-                needed ++;
-                neededTip += "<br>Damaged -1 to Hit";
+
+            if (weapon.keywords.includes("Unstoppable") === false) {
+                if (attacker.models > 1) {
+                    let ratio = attacker.Models()/attacker.models;
+                    if (ratio <= 1/3) {
+                        needed += 2;
+                        neededTip += "<br>Heavy Casualties -2 to Hit";
+                    } else if (ratio > 1/3 && ratio <= 2/3) {
+                        needed += 1;
+                        neededTip += "<br>Casualties -1 to Hit";
+                    }
+                } else if (attacker.models === 1 && attacker.type !== "Hero" && attacker.token.get(SM.halfStr)) {   
+                    needed++;
+                    neededTip += "<br>Damaged -1 to Hit";
+                }
             }
-
-
-
 
             needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
 
-            let wNum = weapon.number;
-            if (attacker.models > 1) {
-                //adjust for casualties in multi model unit, ceiling the #s
-                wNum = Math.ceil(wNum * attacker.Models()/attacker.models);
-            }
-
-            let dice = wNum * weapon.attacks;
+            let dice = weapon.number * weapon.attacks;
 
 
 
