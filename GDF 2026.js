@@ -775,7 +775,12 @@ log(keywords)
             return label;
         }
 
-
+        Models() {
+            //returns # of models remaining
+            let currentHP = parseInt(this.token.get("bar1_value"));
+            let remaining = Math.ceiling(currentHP/this.toughness);
+            return remaining;
+        }
 
 
 
@@ -2363,10 +2368,12 @@ log(weaponArray)
 
             needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
 ////// Adjust for models
+            let wNum = weapon.number;
+            if (attacker.models > 1) {
+                wNum = Math.ceiling(wNum * attacker.Models()/attacker.models);
+            }
 
-
-
-            let dice = weapon.number * weapon.attacks;
+            let dice = wNum * weapon.attacks;
 
 a
 
