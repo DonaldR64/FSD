@@ -182,7 +182,7 @@ const GDF3 = (() => {
         "Wood Building 2": {name: "Wood Building 2",cover: 2,los: true,height: 2, difficult: true, building: true},
         "Crops": {name: "Crops",cover: 1,los: false,height: 0, difficult: false, building: false},
         "Water": {name: "Water",cover: 1,los: false,height: 0, difficult: true, building: false},
-
+        "Craters": {name: "Craters",cover: 1,los: false,height: 0, difficult: true, building: false},
 
     }
 
@@ -803,7 +803,23 @@ log(keywords)
         if (!msg.selected) {return};
         let id = msg.selected[0]._id;
         let unit = UnitArray[id];  
+        if (!unit) {
+            unit = new Unit(id);
+        }
+        let size = 100;
+        if (unit.type === "Hero") {
+            size = 70;
+        } else if (unit.type === "Titan") {
+            size = 210;
+        }
+        
+        
 
+        unit.token.set({
+            width: size,
+            height: size,
+            disableSnapping: true,
+        })
 
         let abilityName,action;
         let abilArray = findObjs({_type: "ability", _characterid: unit.charID});
@@ -1217,7 +1233,15 @@ log(keywords)
         });
     }
 
+    const Naming = (unit) => {
+        let name = unit.name.replace(unit.faction + " ","");
+        if (name.includes("//")) {
+            name = name.split("//")[0];
+        }
 
+
+
+    }
 
 
 
@@ -1327,7 +1351,7 @@ log(keywords)
     const ClearMarkers = () => {
         //persists turn to turn
         let persistantTT = ["Steadfast Buff",];
-
+///Versatile should actually persist and clear on next activation
 
         //reset fatigue, activation, tooltips
         _.each(UnitArray,unit => {
