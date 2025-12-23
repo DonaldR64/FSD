@@ -1391,8 +1391,7 @@ log(keywords)
 
     const ClearMarkers = () => {
         //persists turn to turn
-        let persistantTT = ["Steadfast Buff",];
-///Versatile should actually persist and clear on next activation
+        let persistantTT = ["Steadfast Buff","Versatile Attack = +1 AP","Versatile Attack = +1 to Hit", "Versatile Defense = +1 to Defense","Versatile Defense = -1 to Be Hit",];
 
         //reset fatigue, activation, tooltips
         _.each(UnitArray,unit => {
