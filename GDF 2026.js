@@ -2362,6 +2362,9 @@ log(weaponArray)
 
 
             needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
+////// Adjust for models
+
+
 
             let dice = weapon.number * weapon.attacks;
 
