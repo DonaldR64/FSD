@@ -356,7 +356,6 @@ const GDF3 = (() => {
                 });            
             }
         }
-        return attributeobj.id;
     };
 
     const DeleteAttribute = (characterID,attributeName) => {
@@ -851,7 +850,7 @@ log(keywords)
             if (weapon.keywords.includes("Limited")) {
                 name += " (Limited)";
             }
-            keywordList = keywordList.concat(weapon.keywords);
+            keywordList = keywordList.concat(weapon.keywords)
             types[weapon.type].push(name); 
         }
         
@@ -880,25 +879,36 @@ log(keywords)
         action = "!Activate;@{selected|token_id}" + orders;
         AddAbility("Activate",action,unit.charID);
 
-
+log(keywordList)
 
         //keywords list 
-
-        let keywordText = "";
-        _.each(keywordsList,keyword => {
-            let text = Keywords[keyword];
-            keywordText += "<br><b>" + keyword + ": </b>";
-            keywordText += text;
+        keywordList = [...new Set(keywordList)];
+        keywordList = keywordList.filter(Boolean);
+        keywordList = keywordList.map((e) => {
+            let item = {
+                name: e,
+                text: Keywords[e] || "Not in Database",
+            }
+            return item;
         })
-        AttributeSet(unit.charID,"keywordText",keywordText);
+        
+        keywordList = keywordList.sort((a,b) => a.name.localeCompare(b.name))
+log(keywordList)
+        for (let i=0;i<12;i++) {
+            let abName = "spec" + i + "Name";
+            let abTextName = "spec" + i + "Text";
+            let name = " ";
+            let text = " ";
+            if (i < keywordList.length) {
+                name = keywordList[i].name;
+                text = keywordList[i].text;
+            }
+log(abName + ": " + name)
+log(abTextName + ": " + text)
 
-
-
-
-
-
-
-
+            AttributeSet(unit.charID,abName,name);
+            AttributeSet(unit.charID,abTextName,text);
+        }
 
 
         sendChat("","Abilities Added")
