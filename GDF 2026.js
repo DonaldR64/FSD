@@ -6,7 +6,6 @@ const GDF3 = (() => {
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
     let HexSize, HexInfo, DIRECTIONS;
-    let activeID;
 
     //math constants
     const M = {
@@ -143,7 +142,7 @@ const GDF3 = (() => {
         vDD: "Versatile Defense = +1 to Defense",
         vDTH: "Versatile Defense = -1 to Be Hit",
         steadfast: "Steadfast Buff",
-
+        piercing: "Piercing Shooting Mark +1 to AP",
 
     }
 
@@ -1340,7 +1339,7 @@ log(keywords)
             outputCard.body.push("[hr]");
         } 
         if (gameContinues === true) {
-            let lastUnit = UnitArray[activeID];
+            let lastUnit = UnitArray[state.GDF3.activeID];
             if (lastUnit) {
                 outputCard.body.push(lastUnit.faction + " has the First Activation");
             } else {
@@ -1447,6 +1446,7 @@ log(hex)
             playerIDs: [],
             factions: [],
             turn: 0,
+            activeID: "",
 
         }
 
@@ -1573,7 +1573,7 @@ log(hex)
             }
         }
 
-        activeID = id;
+        state.GDF3.activeID = id;
 
         if (unit.token.get("tint_color") === "#ff0000") {
             //shaken
@@ -1727,9 +1727,19 @@ log(hex)
 
 
                 }
-                if (unit.keywords.includes("Hit and Run Fighter")) {
+
+                if ((unit.keywords.includes("Hit & Run Shooter")) || unitAuras.includes("Hit & Run Shooter")) {
+                    outputCard.body.push("The Unit may move up to 2 Hexes after Shooting");
+                }
+                if ((unit.keywords.includes("Hit & Run Fighter")) || unitAuras.includes("Hit & Run Fighter")) {
                     outputCard.body.push("The Unit may move up to 2 Hexes after Melee");
                 }
+                if ((unit.keywords.includes("Hit & Run")) || unitAuras.includes("Hit & Run")) {
+                    outputCard.body.push("The Unit may move up to 2 Hexes after Shooting or Melee");
+                }
+
+
+
                 break;
             case 'Rally':
                 if (unit.type !== "Aircraft") {
@@ -2189,14 +2199,14 @@ log(label)
 
         let losResult = LOS(attacker,defender);
 
-        let upTH = 0,upAP = 0;
         if (attacker.keywords.includes("Unpredictable") || (attacker.keywords.includes("Unpredictable Fighter") && combatType === "Melee")) {
             let roll = randomInteger(6);
             if (roll < 4) {
-                upAP = 1;
+                attacker.upAP = true;
+                attacker.upTH = false;
             } else {
-                upTH = 1;
-            }
+                attacker.upAP = false;
+                attacker.upTH = true;            }
         }
 
 
@@ -2210,7 +2220,7 @@ log(label)
         for (let i=0;i<attacker.weapons.length;i++) {
             let weapon = DeepCopy(attacker.weapons[i]);
             if (weapon.type !== weaponType) {continue};
-            if (weapon.name === "Impact" && (attacker.token.get(SM.fatigue) === true || attacker.id !== activeID)) {
+            if (weapon.name === "Impact" && (attacker.token.get(SM.fatigue) === true || attacker.id !== state.GDF3.activeID)) {
                 continue;
             }
             if (losResult.los === false && weapon.keywords.includes("Indirect") === false) {
@@ -2247,6 +2257,21 @@ log(label)
             PrintCard();
             return;
         }
+
+
+        //clear a few debuffs that only lasted one activate
+        if (attacker.tokenID !== state.GDF3.activeID) {
+            _.each(defenders,defender => {
+                let list = ["piercing"]
+                _.each(list,tip => {
+                    RemoveTTip(defender,tip);
+                })
+            })
+        }
+
+
+
+
 
         //run through weapons, roll to hit/save any hits
         let quality = attacker.quality;
@@ -2294,7 +2319,7 @@ log(weaponArray)
             let hitTip = "", tip;
             //modifiers here
             //cover
-            let ignoreCover = ["Unstoppable","Blast","Slam"];
+            let ignoreCover = ["Unstoppable","Blast","Slam","Decimate"];
             if (weapon.keywords.includes("Indirect")) {
                 cover = losResult.targetHexCover;
             } else {
@@ -2312,68 +2337,108 @@ log(weaponArray)
                 }  
             }
 
-            if (cover > 0 && weapon.type !== "CCW") {
-                needed += 1;
-                neededTip += "<br>Cover -1 to Hit";
-            }
+            //Positive To Hits
             if (attacker.keywords.includes("Artillery") && losResult.distance > 4) {
                 needed -= 1;
                 neededTip += "<br>Artillery at Range +1 to Hit";
             }
-            if (weapon.keywords.includes("Indirect") && attacker.moved === true && weapon.keywords.includes("Unstoppable") == false) {
-                needed += 1;
-                neededTip += "<br>Indirect and Moved -1 to Hit";
-            }
-            if (defender.keywords.includes("Stealth") && weapon.keywords.includes("Unstoppable") === false) {
-                needed += 1;
-                neededTip += "<br>Stealth -1 to Hit";
-            }
-            if (upTH === 1) {
+            if (attacker.upTH === true) {
                 needed -= 1;
                 neededTip += "<br>Unpredictable +1 to Hit";
-            }
-            if (upAP === 1) {
-                weapon.ap++;
-                notes.push("Unpredictable +1 to AP");
             }
             if (attackerTT.includes(TT.vATH)) {
                 needed -= 1;
                 neededTip += "<br>" + TT.vATH;
             }
-            if (attackerTT.includes(TT.vAAP)) {
-                weapon.ap++;
-                notes.push("<br>" + TT.vAAP);
-            }
-            if (attacker.id === activeID && combatType === "Melee" && weapon.keywords.includes("Thrust")) {
+            if (attacker.id === state.GDF3.activeID && combatType === "Melee" && weapon.keywords.includes("Thrust")) {
                 weapon.ap++;
                 notes.push("Thrust");
                 needed -= 1;
                 neededTip += "<br>Thrust/Charge +1 to Hit";
             }
-            if (defenderTT.includes(TT.vDTH) && weapon.keywords.includes("Unstoppable") === false) {
-                needed += 1;
-                neededTip += "<br>" + TT.vDTH;
-            }
             if (attacker.keywords.includes("Precise")) {
                 needed -= 1;
                 neededTip += "<br>Precise +1 to Hit";
             }
-
-            if (weapon.keywords.includes("Unstoppable") === false) {
-                if (attacker.models > 1) {
-                    let ratio = attacker.Models()/attacker.models;
-                    if (ratio <= 1/3) {
-                        needed += 2;
-                        neededTip += "<br>Heavy Casualties -2 to Hit";
-                    } else if (ratio > 1/3 && ratio <= 2/3) {
-                        needed += 1;
-                        neededTip += "<br>Casualties -1 to Hit";
-                    }
-                } else if (attacker.models === 1 && attacker.type !== "Hero" && attacker.token.get(SM.halfStr)) {   
-                    needed++;
-                    neededTip += "<br>Damaged -1 to Hit";
-                }
+            if (attacker.keywords.includes("Targeting Visor") && attacker.keywords.includes("Targeting Visor Boost") === false && losResult.distance > 4) {
+                needed -= 1;
+                neededTip += "<br>Targeting Visor +1 to Hit";
             }
+            if ((attacker.keywords.includes("Targeting Visor Boost") || attackerAuras.includes("Targeting Visor Boost")) && combatType === "Ranged") {
+                needed -= 1;
+                neededTip += "<br>Targeting Visor Boost +1 to Hit";
+            }
+
+
+            if (attacker.keywords.includes("Good Shot") && combatType === "Ranged") {
+                needed--;
+                neededTip += "<br>Good Shot +1 to Hit";
+            }
+            if (defender.token.get(SM.spotter) === true || defender.token.get(SM.spotter) > 0) {
+                let spotter = 1;
+                if (defender.token.get(SM.spotter) > 1) {
+                    spotter = parseInt(defender.token.get(SM.spotter));
+                }
+                needed -= spotter;
+                neededTip += "<br>Spotting Mark +" + spotter + " to Hit";
+                defender.token.set(SM.spotter,false); //used
+            }
+
+
+
+
+
+
+            //Negative To Hits - removed by Unstoppable
+            if (weapon.keywords.includes("Unstoppable") === false) {
+                if (cover > 0 && weapon.type !== "CCW") {
+                    needed += 1;
+                    neededTip += "<br>Cover -1 to Hit";
+                }
+                if (weapon.keywords.includes("Indirect") && attacker.moved === true) {
+                    needed += 1;
+                    neededTip += "<br>Indirect and Moved -1 to Hit";
+                }
+                if ((defender.keywords.includes("Stealth") || defenderAuras.includes("Stealth")) && losResult.distance > 4) {
+                    needed += 1;
+                    neededTip += "<br>Stealth -1 to Hit";
+                }
+                if (defenderTT.includes(TT.vDTH)) {
+                    needed += 1;
+                    neededTip += "<br>" + TT.vDTH;
+                }
+                if (attacker.keywords.includes("Evasive")) {
+                    needed++;
+                    neededTip += "<br>Evasive -1 to Hit";
+                }
+
+
+
+
+
+            }
+
+
+
+            if (attacker.models > 1) {
+                let ratio = attacker.Models()/attacker.models;
+                if (ratio <= 1/3) {
+                    needed += 2;
+                    neededTip += "<br>Heavy Casualties -2 to Hit";
+                } else if (ratio > 1/3 && ratio <= 2/3) {
+                    needed += 1;
+                    neededTip += "<br>Casualties -1 to Hit";
+                }
+            } else if (attacker.models === 1 && attacker.type !== "Hero" && attacker.token.get(SM.halfStr)) {   
+                needed++;
+                neededTip += "<br>Damaged -1 to Hit";
+            }
+
+
+
+
+
+
 
             needed = Math.min(6,Math.max(2,needed)); //1 is always a miss, 6 a hit
 
@@ -2501,7 +2566,7 @@ log(weaponArray)
 
         let active = true;
         if (weaponHits.length > 0) {
-            let results = ApplyDamage(weaponHits,defenders);
+            let results = ApplyDamage(weaponHits,defenders,attacker);
             totalWounds = results.totalWounds;
             active = results.active;
             if (weaponHits.length > 1) {
@@ -2571,12 +2636,22 @@ log(weaponArray)
             })
         }
 
+
+        
+
+
+
+
+
+
+
+
         PrintCard();
 
     }
 
 
-const ApplyDamage = (weaponHits,defenders) => {
+const ApplyDamage = (weaponHits,defenders,attacker) => {
     //crits is subset. of hits
     //if more than one defender (hero) then apply to 1st until dead etc.
 
@@ -2633,6 +2708,10 @@ const ApplyDamage = (weaponHits,defenders) => {
         output.push("[hr]");
     }
 
+    let attackerTT = TTip(attacker);
+    let attackerAuras = Auras(attacker);
+
+
     //sort weapon hits to put any deadly weapons first
     weaponHits = weaponHits.sort((a,b) => {
         let ad = a.weapon.keywords.find((e) => e.includes("Deadly")) ? true:false;
@@ -2656,7 +2735,7 @@ const ApplyDamage = (weaponHits,defenders) => {
         let cover = weaponHits[w].cover;
 
         let unitWounds = 0;
-        let results = ZeroResults();
+        let results = NewResults();
         results.hitOut = weaponHits[w].hitOut;
 
         let deadly = weapon.keywords.find((e) => e.includes("Deadly")) ||  "0";
@@ -2671,40 +2750,87 @@ const ApplyDamage = (weaponHits,defenders) => {
 log(defenderAuras)
         let hp = parseInt(defender.token.get("bar1_value"));
 
-        let needed = defender.defense;
-        results.neededTip = "<br>Defense: " + needed + "+";
+        //changes to weapon ap
+        let ap = weapon.ap;
+        let apTip = "<br>Base AP +" + ap;
 
-        if (weapon.ap > 0) {
-            needed += weapon.ap;
-            results.neededTip += "<br>AP +" + weapon.ap;
+        if (weapon.keywords.includes("Decimate") && (defender.defense === 2 || defender.defense === 3)) {
+            ap += 2;
+            apTip += "<br>AP +2 from Decimate";
         }
         if (weaponHits[w].notes.includes("Unpredictable +1 to AP")) {
-            needed++;
-            results.neededTip += "<br>Unpredictable +1 to AP";
+            ap++;
+            apTip += "<br>Unpredictable +1 to AP";
         }
         if (weaponHits[w].notes.includes("Versatile +1 to AP")) {
-            needed++;
-            results.neededTip += "<br>Versatile +1 to AP";
+            ap++;
+            apTip += "<br>Versatile +1 to AP";
         }
         if (weaponHits[w].notes.includes("Thrust")) {
-            needed++;
-            results.neededTip += "<br>Thrust/Charge +1 to AP";
+            ap++;
+            apTip += "<br>Thrust/Charge +1 to AP";
+        }
+        if (defenderTT.includes(TT.piercing)) {
+            ap++;
+            apTip += "<br>" + TT.piercing;
+        }   
+        if (attacker.upAP === true) {
+            weapon.ap++;
+            apTip += "<br>Unpredictable Attacker +1 to AP";
+        }
+        if (attackerTT.includes(TT.vAAP)) {
+            weapon.ap++;
+            apTip += "<br>" + TT.vAAP;
+        }
+        if ((attacker.keywords.includes("Ranged Slayer") || attackerAuras.includes("Ranged Slayer")) && defender.toughness > 2 && weapon.type !== "CCW") {
+            weapon.ap += 2;
+            apTip += "<br>Ranged Slayer +2 to AP"
+        }
+        if (attacker.keywords.includes("Slayer") && defender.toughness > 2) {
+            weapon.ap += 2;
+            apTip += "<br>Slayer +2 to AP"
+        }
+
+
+
+
+
+        //keep last as based on final AP
+        if ((defender.keywords.includes("Fortified") || defenderAuras.includes("Fortified")) && ap > 0) {
+            ap--;
+            apTip += "<br>Fortified -1 AP";
+        }
+
+        apTip = "<br>Net AP +" + ap + apTip;
+
+
+
+        //Defense
+        let defense = defender.defense;
+        let defenseTip = "<br>Defense: " + defense + "+";
+
+        if ((defender.keywords.includes("Shielded") || defenderAuras.includes("Shielded")) && weapon.spell !== true) {
+            defense--;
+            defenseTip += "<br>Shielded +1 Defense";
+        }
+        if (cover === 2 && weapon.type !== "CCW" && weapon.keywords.includes("Unstoppable") === false) {
+            defense--;
+            defenseTip += "<br>Hard Cover -1 Defense";
         }
         if (defenderTT.includes(TT.vDD) && weapon.keywords.includes("Unstoppable") === false) {
-            needed--;
-            results.neededTip += "<br>" + TT.vDD;
-        }
-        if ((defender.keywords.includes("Shielded") || defenderAuras.includes("Shielded")) && weapon.spell !== true) {
-            needed--;
-            results.neededTip += "<br>Shielded +1 Defense";
+            defense--;
+            defenseTip += "<br>" + TT.vDD;
         }
 
 
 
-        if (cover === 2 && weapon.type !== "CCW") {
-            needed--;
-            results.neededTip += "<br>Hard Cover -1";
-        }
+        //add together
+        let needed = defense + ap;
+        results.neededTip = defenseTip + apTip;
+
+
+
+
 
         results.needed = Math.min(6,Math.max(2,needed));
 
@@ -2741,14 +2867,25 @@ log(defenderAuras)
 
             if (defenseRoll < indivNeeded) {
                 let wounds = 1;
-                if (defenseRoll === 1 && weapon.keywords.includes("Slam")) {
-                    wounds++;
-                    results.slam++;
+                if (defenseRoll === 1) {
+                    if (weapon.keywords.includes("Slam")) {
+                        wounds++;
+                        results.slam++;
+                    }
+                    if (weapon.keywords.includes("Shred")) {
+                        wounds++;
+                        results.shred++;
+                    }
                 }
+
+
                 if (i < crits && weapon.keywords.includes("Rupture")) {
                     wounds++;
                     results.rupture++;
                 }
+
+
+
 
                 if (deadly > 0) {
                     max = hp - (Math.floor(hp/defender.toughness) * defender.toughness);
@@ -2891,7 +3028,7 @@ log(defenderAuras)
 
 
 
-    const ZeroResults = () => {
+    const NewResults = () => {
         //zeros the results and creates the array
         results = {
             rolls: [],
@@ -2901,6 +3038,7 @@ log(defenderAuras)
             bane: 0,
             rending: 0,
             slam: 0,
+            shred: 0,
             rupture: 0,
             needed: 6,
             neededTip: "",
