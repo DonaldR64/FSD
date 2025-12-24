@@ -893,7 +893,7 @@ log(flavours)
 
 
        //special ability macros
-        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9},{name: "Mend", targets: 1, range: 2},]
+        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9},{name: "Mend", targets: 1, range: 2},{name: "Piercing Shooting Mark", targets: 1, range: 9}]
 
         _.each(specials,special => {
             let t = "";
