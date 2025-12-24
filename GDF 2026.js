@@ -3167,21 +3167,27 @@ log(defenderAuras)
         let specialName = Tag[1];
         let unit = UnitArray[Tag[2]];
         let target = UnitArray[Tag[3]];
+        let targets = [target];
+        if (Associated(target) !== false) {
+            targets.push(target);
+        }
+        let flavour = unit.flavours(specialName) || specialName
+        SetupCard(unit.name,flavour,unit.faction);
 
-
-        if (special === "Dangerous Terrain Debuff") {
-            SetupCard(unit.name,unit.flavours["Dangerous Terrain Debuff"],unit.faction);
+        if (specialName === "Dangerous Terrain Debuff") {
             let distance = HexMap[unit.hexLabel()].cube.distance(HexMap[target.hexLabel()].cube);
             if (distance > 9) {
                 outputCard.body.push(target.name + " is beyond the range of 9 Hexes");
             } else {
-                Dangerous(unit)
+                _.each(targets,target => {
+                    Dangerous(target);
+                })
             }
-            PrintCard();
         }
 
 
 
+        PrintCard();
 
     }
 
@@ -3319,6 +3325,9 @@ log(defenderAuras)
                 break;
             case '!DangerousTest':
                 DangerousTest(msg);
+                break;
+            case '!Special':
+                Special(msg);
                 break;
         }
     };
