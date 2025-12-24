@@ -893,7 +893,7 @@ log(flavours)
 
 
        //special ability macros
-        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9}]
+        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9},{name: "Mend", targets: 1, range: 2},]
 
         _.each(specials,special => {
             let t = "";
@@ -909,10 +909,10 @@ log(flavours)
                         }
                     }
                 }
+                abilityName = unit.flavours[special.name];
+                action = "!Special;" + special.name + ";" + special.range + ";@{selected|token_id}" + t;
+                AddAbility(abilityName,action,unit.charID);
             }
-            abilityName = unit.flavours[special.name];
-            action = "!Special;" + special.name + ";" + special.range + ";@{selected|token_id}" + t;
-            AddAbility(abilityName,action,unit.charID);
         })
 
 
@@ -2850,7 +2850,7 @@ const ApplyDamage = (weaponHits,defenders,attacker) => {
         let defenderTT = TTip(defender);
 log(defenderAuras)
         let hp = parseInt(defender.token.get("bar1_value"));
-
+log("HP: " + hp)
         //changes to weapon ap
         let ap = weapon.ap;
         let apTip = "<br>Base AP +" + ap;
@@ -2901,8 +2901,8 @@ log(defenderAuras)
             ap--;
             apTip += "<br>Fortified -1 AP";
         }
-
-        apTip = "<br>Net AP +" + ap + apTip;
+        apTip = "<br>-----------------" +apTip 
+        apTip = "<br>Total AP +" + ap + apTip;
 
 
 
@@ -3081,7 +3081,8 @@ log(defenderAuras)
                 }
 
                 unitWounds += wounds;
-                
+log("Wounds: " + wounds)
+log("unit wounds: " + unitWounds)
                 if (unitWounds >= hp) {
                     totalWounds += unitWounds;
                     //defender is dead, check if another to apply next hit(s) to, or stop if none
@@ -3230,6 +3231,15 @@ log(defenderAuras)
 //squelch sound
             })
         }
+        if (specialName === "Mend") {
+            let roll = randomInteger(3);
+            let s = (roll === 1) ? "":"s";
+            targets[0].Damage(-roll);
+            outputCard.body.push(targets[0].name + " is healed/repaired for " + roll + " Wound" + s);
+        }
+
+
+
 
 
 

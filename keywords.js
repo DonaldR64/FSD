@@ -7,7 +7,7 @@ const Keywords = {
 
     "Artillery": "May only use Hold actions. When this model shoots at enemies over 4 hexes away, it gets +1 to hit rolls. When enemy units shoot at this model from over 4 hexes away, they get -2 to hit rolls.",
 
-    "Bane": "Ignores Regeneration, and when attacking the target must re-roll unmodified Defense results of 6. Note that a die roll may only be re-rolled once, so if another 6 is rolled after re-rolling Defense, then the hit is blocked.",
+    "Bane": "Ignores Regeneration, and the target must re-roll unmodified Defense results of 6. Note that a die roll may only be re-rolled once, so if another 6 is rolled after re-rolling Defense, then the hit is blocked.",
 
     "Blast(X)": "Ignores cover, and after resolving other special rules, each hit is multiplied by X, where X is up to as many hits as models in the target unit.",
 
@@ -74,7 +74,7 @@ const Keywords = {
     "Melee Shrouding": "Enemies have -2 Hex Movement when charging this Unit",
     "Melee Shrouding Aura": "[Aura] - Enemies have -2 Hex Movement when charging this Unit",
 
-    "Mend": "Once per activation, pick one friendly model within 2 Hexes with Toughness > 1, and remove D3 wounds from it.",
+    "Mend": "Once per activation, pick one friendly unit within 2 Hexes and heal D3 wounds",
 
 
 
@@ -87,7 +87,7 @@ const Keywords = {
 
 
     "Protected": "Wounds are ignored on a roll of 6",
-
+a
     "Precision Spotter": "Once per activation, pick one enemy unit within 18 hexes. On a 4+ a Spotting Marker is placed. The next shot against that unit get +1 to hit per marker",
 
 
