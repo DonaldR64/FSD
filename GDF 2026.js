@@ -1350,15 +1350,29 @@ log(flavours)
 
     }
 
-    const HeroNames = (faction) => {
-        
+    const HeroNames = (unit) => {
+        let name = "";
+        let charName = getObj("character", unit.token.get("represents")).get("name");
+
+        let factionNames = {
+            "Plague Disciples": ["Blight","Pustus","Bilegore","Cachexis","Clotticus","Colathrax","Corpulux","Poxmaw","Dragan","Festardius","Fethius","Fugaris","Gangrous","Rotheart","Glauw","Leprus","Kholerus","Malarrus","Necrosius","Phage"],
 
 
+        }
 
 
+        if (charName.includes("Champion")) {
+            name = "Champion ";
+        }
+        if (charName.includes("Lord")) {
+            name = "Lord ";
+        }
 
+        let number = factionNames[unit.faction].length - 1
+        let factionName = factionNames[unit.faction][randomInteger(number)];
+        name += factionName;
 
-
+        return name;
 
     }
 
@@ -1580,7 +1594,7 @@ log(hex)
                 }
             }
             if (unit.type === "Hero") {
-                let name = HeroNames(unit.faction);
+                let name = HeroNames(unit);
                 unit.name = name;
                 unit.token.set("name",name);
             } else {
@@ -2338,7 +2352,6 @@ log(label)
         }
 
         let defenderHex = HexMap[defender.hexLabel()];
-
 
         let attackers = [attacker];
         let defenders = [defender];

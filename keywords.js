@@ -146,6 +146,8 @@ const Keywords = {
 
     "Surge": "On unmodified results of 6 to hit, this weapon deals 1 extra hit (only the original hit counts as a 6 for special rules).",
 
+    "Takedown": "This allows Heroes to be targetted independantly of units. Takedown attacks should be done before other attacks",
+
     "Targeting Visor Boost": "Shooting at Enemies gets +1 to Hit",
     "Targeting Visor Boost Aura": "[Aura] - Shooting at Enemies gets +1 to Hit",
 
