@@ -87,7 +87,7 @@ const Keywords = {
 
 
     "Protected": "Wounds are ignored on a roll of 6",
-a
+
     "Precision Spotter": "Once per activation, pick one enemy unit within 18 hexes. On a 4+ a Spotting Marker is placed. The next shot against that unit get +1 to hit per marker",
 
 

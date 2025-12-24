@@ -2034,14 +2034,18 @@ log(hex)
         let unit = UnitArray[id];
         let type = Tag[2];
         let info = TT[type];
-        let tooltip;
         if (unit) {
-            tooltip = unit.token.get("tooltip");
-            tooltip += "," + info;
-            unit.token.set("tooltip",tooltip);
+            SetTT2(unit,info);
             sendChat("",info + " Set");
         }
     }
+
+    const SetTT2 = (unit,info) => {
+        let tooltip = unit.token.get("tooltip");
+        tooltip += "," + info;
+        unit.token.set("tooltip",tooltip);
+    }
+
 
 
 
@@ -3236,8 +3240,12 @@ log("unit wounds: " + unitWounds)
             let s = (roll === 1) ? "":"s";
             targets[0].Damage(-roll);
             outputCard.body.push(targets[0].name + " is healed/repaired for " + roll + " Wound" + s);
+//holy sound
         }
-
+        if (specialName === "Piercing Shooting Mark") {
+            SetTT2(targets[0],TT.piercing);
+            outputCard.body.push("Piercing Shooting Mark placed on " + targets[0].name);
+        }
 
 
 
