@@ -893,7 +893,7 @@ log(flavours)
 
 
        //special ability macros
-        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9},{name: "Mend", targets: 1, range: 2},{name: "Piercing Shooting Mark", targets: 1, range: 9},{name: "Precision Spotter", targets: 1, range: 18}]
+        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9},{name: "Mend", targets: 1, range: 2},{name: "Piercing Shooting Mark", targets: 1, range: 9},{name: "Precision Spotter", targets: 1, range: 18},{name: "Steadfast Buff", targets: 1, range: 6}];
 
         _.each(specials,special => {
             let t = "";
@@ -1404,7 +1404,7 @@ log(flavours)
         let notes = [];
         for (let i=0;i<keys.length;i++) {
             let unit = UnitArray[keys[i]];
-            unitTT = TTip(unit);
+            let unitTT = TTip(unit);
             unitAuras = Auras(unit);
 
             //Steadfast
@@ -3213,7 +3213,7 @@ log("unit wounds: " + unitWounds)
             targets.push(target);
             let associated = Associated(target);
             if (associated !== false) {
-                targets.push(associate);
+                targets.push(associated);
             }
         }
 
@@ -3249,9 +3249,20 @@ log("unit wounds: " + unitWounds)
             SetTT2(targets[0],TT.piercing);
             outputCard.body.push("Piercing Shooting Mark placed on " + targets[0].name);
         }
-
-
-
+        if (specialName === "Precision Spotter") {
+            let token = targets[0].token;
+            if (token) {
+                let num = (token.get(SM.spotter) === false) ? 0:(parseInt(token.get(SM.spotter)) > 1) ? parseInt(token.get(SM.spotter)):0;
+                num = (num === 0) ? true:num+1;
+                token.set(SM.spotter,num);
+//sound
+            }
+        }
+        if (specialName === "Steadfast") {
+            SetTT2(targets[0],TT.steadfast);
+            outputCard.body.push("Steadfast Buff placed on " + targets[0].name);
+//sound
+        }
 
 
 
