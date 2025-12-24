@@ -885,6 +885,9 @@ log(keywordList)
         keywordList = [...new Set(keywordList)];
         keywordList = keywordList.filter(Boolean);
         keywordList = keywordList.map((e) => {
+            if (e.includes("(")) {
+                e = e.split("(")[0] + "(X)";
+            }
             let item = {
                 name: e,
                 text: Keywords[e] || "Not in Database",
@@ -2460,7 +2463,10 @@ log(weaponArray)
                     needed++;
                     neededTip += "<br>Evasive -1 to Hit";
                 }
-
+                if (defender.keywords.includes("Artillery") && losResult.distance > 4) {
+                    needed += 2;
+                    neededTip += "<br>Artillery being shot at > 4 hexes";
+                }
 
 
 
