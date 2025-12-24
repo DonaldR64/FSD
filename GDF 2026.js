@@ -2367,7 +2367,7 @@ log(label)
                 }
             })
         }
-        if (defender.type === "Hero") {
+        if (defender.type === "Hero" && weaponType !== "Sniper") {
             _.each(UnitArray,unit => {
                 if (unit.faction === defender.faction && unit.models > 1 & unit.hexLabel() === defenderHex.label) {
                     defenders.unshift(unit);
