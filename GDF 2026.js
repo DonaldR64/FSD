@@ -132,7 +132,7 @@ const GDF3 = (() => {
     const SM = {
         fatigue: "status_brown",
         halfStr: "status_Blood::2006465",
-
+        spotter: "status_Bullseye::2006535",
 
     }
 
@@ -2292,7 +2292,7 @@ log(label)
         if (attackers.length === 0 || defenders.length === 0) {sendChat("","Someones not in Array");return};
 
         defender = defenders[0]; //will shift to an assoc unit if hero was initially targeted
-        let defenderAura = Auras(defender);
+        let defenderAuras = Auras(defender);
         let defenderTT = TTip(defender);
 
         let losResult = LOS(attacker,defender);
@@ -3006,7 +3006,7 @@ log(defenderAuras)
                 
 
                 for (let i=0;i<ignoreReasons.length;i++) {
-                    if (keywords.includes(ignoreReasons[i].reason) || defendersAura.includes(ignoreReasons[i]).reason) {
+                    if (keywords.includes(ignoreReasons[i].reason) || defenderAuras.includes(ignoreReasons[i]).reason) {
                         let reason = ignoreReasons[i].reason;
                         let ignore = 0;
                         let ignoreRolls = [];
