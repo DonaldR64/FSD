@@ -666,24 +666,31 @@ const GDF3 = (() => {
 
             //upgrades, which may be in [ ] with flavour text before
             let keywordDisplay = "";
+            let flavours = {};
             for (let i=1;i<11;i++) {
                 let eq = "key" + i + "equipped";
                 let k = "key" + i + "name";
                 if (aa[eq] === "Equipped") {
                     let keyword = aa[k].trim();
+                    let flavour;
                     if (!keyword) {continue};
                     if (i > 1) {keywordDisplay += "<br>"};
                     keywordDisplay += keyword;
                     if (keyword.includes("[")) {
                         let i1 = keyword.indexOf("[");
                         let i2 = keyword.indexOf("]");
+                        flavour = keyword.substring(0,i1);
                         keyword = keyword.substring(i1 + 1,i2);
                     }
                     keyword = keyword.trim();
                     keywords.push(keyword);
+                    if (flavour !== "") {
+                        flavours[keyword] = flavour;
+                    }
                 }
             }
             this.keywords = keywords;
+            this.flavours = flavours;
 log(keywords)
             let weapons = [];
             for (let i=1;i<11;i++) {
@@ -879,7 +886,25 @@ log(keywords)
         action = "!Activate;@{selected|token_id}" + orders;
         AddAbility("Activate",action,unit.charID);
 
-log(keywordList)
+
+       //special ability macros
+
+        if (unit.keywords.includes("Dangerous Terrain Debuff")) {
+            abilityName = unit.flavours["Dangerous Terrain Debuff"];
+            action = "!Special;DTDebuff;@{selected|token_id};@target|token_id}";
+            AddAbility(abilityName,action,unit.charID);
+        }
+
+
+
+
+
+
+
+
+
+
+
 
         //keywords list 
         keywordList = [...new Set(keywordList)];
@@ -896,7 +921,6 @@ log(keywordList)
         })
         
         keywordList = keywordList.sort((a,b) => a.name.localeCompare(b.name))
-log(keywordList)
         for (let i=0;i<12;i++) {
             let abName = "spec" + i + "Name";
             let abTextName = "spec" + i + "Text";
@@ -906,13 +930,11 @@ log(keywordList)
                 name = keywordList[i].name;
                 text = keywordList[i].text;
             }
-log(abName + ": " + name)
-log(abTextName + ": " + text)
+
 
             AttributeSet(unit.charID,abName,name);
             AttributeSet(unit.charID,abTextName,text);
         }
-
 
         sendChat("","Abilities Added")
     }
@@ -3104,6 +3126,75 @@ log(defenderAuras)
 
 
 
+    const Dangerous = (unit) => {
+        let token = unit.token;
+        if (!token) {return}
+        let hp = parseInt(token.get("bar1_value"));
+        let rolls = [];
+        let wounds = 0;
+        for (let i=0;i<hp,i++) {
+            let roll = randomInteger(6);
+            rolls.push(roll);
+            if (roll === 1) {wounds++};
+        }
+        rolls = rolls.sort((a,b)=> a-b);
+        let tip = "Rolls: " + rolls + " vs. 2+";
+        if (wounds === 0) {wounds = "No"};
+        let s = (wounds === 1) ? "":"s";
+        tip = '[' + wounds + '](#" class="showtip" title="' + tip + ')';
+        outputCard.body.push("Unit takes " + tip + " Wound" +s);
+    }
+
+    const DangerousTest = (msg) => {
+        if (!msg.selected) {
+            sendChat("","Select a Unit");
+            return;
+        }
+        let id = msg.selected[0]._id;
+        let unit = UnitArray[id];
+        if (unit) {
+            SetupCard(unit.name,"Dangerous Terrain Test",unit.faction);
+            Dangerous(unit);
+            PrintCard();
+        } else {
+            sendChat("","Not in Unit Array")
+        }
+
+    }
+
+    const Special = (msg) => {
+        let Tag = msg.content.split(";");
+        let specialName = Tag[1];
+        let unit = UnitArray[Tag[2]];
+        let target = UnitArray[Tag[3]];
+
+
+        if (special === "Dangerous Terrain Debuff") {
+            SetupCard(unit.name,unit.flavours["Dangerous Terrain Debuff"],unit.faction);
+            let distance = HexMap[unit.hexLabel()].cube.distance(HexMap[target.hexLabel()].cube);
+            if (distance > 9) {
+                outputCard.body.push(target.name + " is beyond the range of 9 Hexes");
+            } else {
+                Dangerous(unit)
+            }
+            PrintCard();
+        }
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
     const changeGraphic = (tok,prev) => {
         let unit = UnitArray[tok.get("id")];
         if (!unit) {return};
@@ -3142,9 +3233,6 @@ log(defenderAuras)
 
 
     }
-
-
-
 
 
 
@@ -3229,7 +3317,9 @@ log(defenderAuras)
             case '!NextTurn':
                 NextTurn();
                 break;
-
+            case '!DangerousTest':
+                DangerousTest(msg);
+                break;
         }
     };
 
