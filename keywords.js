@@ -158,7 +158,7 @@ const Keywords = {
 
 
     "Unpredicatable": "When attacking, on a 1-3 the unit gets AP(+1), and on a 4-6 the unit gets +1 to hit rolls instead.",
-    "Unpredicatable Fighter": "When in melee, on a 1-3 the unit gets AP(+1), and on a 4-6 the unit gets +1 to hit rolls instead.",
+    "Unpredictable Fighter": "When in melee, on a 1-3 the unit gets AP(+1), and on a 4-6 the unit gets +1 to hit rolls instead.",
 
     "Unstoppable": "Ignores Regeneration, and ignores all negative modifiers to this weapon.",
 

@@ -692,6 +692,7 @@ const GDF3 = (() => {
             this.keywords = keywords;
             this.flavours = flavours;
 log(keywords)
+log(flavours)
             let weapons = [];
             for (let i=1;i<11;i++) {
                 if (aa["weapon" + i + "equipped"] === "Equipped") {
@@ -888,12 +889,31 @@ log(keywords)
 
 
        //special ability macros
+        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9}]
 
-        if (unit.keywords.includes("Dangerous Terrain Debuff")) {
-            abilityName = unit.flavours["Dangerous Terrain Debuff"];
-            action = "!Special;DTDebuff;@{selected|token_id};@target|token_id}";
+        _.each(specials,special => {
+            let t = "";
+            if (unit.keywords.includes(special.name)) {
+                if (special.targets === "Self") {
+                    t = ";@{selected|token_id}";
+                } else {
+                    if (special.targets === 1) {
+                        t = ";@{target|token_id}";
+                    } else {
+                        for (let i=1;i<=special.targets;i++) {
+                            t += ";@{target|Target " + i + "|token_id}";
+                        }
+                    }
+                }
+            }
+            abilityName = unit.flavours[special.name];
+            action = "!Special;" + special.name + ";" + special.range + ";@{selected|token_id}" + t;
             AddAbility(abilityName,action,unit.charID);
-        }
+        })
+
+
+
+
 
 
 
@@ -3132,7 +3152,7 @@ log(defenderAuras)
         let hp = parseInt(token.get("bar1_value"));
         let rolls = [];
         let wounds = 0;
-        for (let i=0;i<hp,i++) {
+        for (let i=0;i<hp;i++) {
             let roll = randomInteger(6);
             rolls.push(roll);
             if (roll === 1) {wounds++};
@@ -3165,24 +3185,46 @@ log(defenderAuras)
     const Special = (msg) => {
         let Tag = msg.content.split(";");
         let specialName = Tag[1];
-        let unit = UnitArray[Tag[2]];
-        let target = UnitArray[Tag[3]];
-        let targets = [target];
-        if (Associated(target) !== false) {
+        let range = Tag[2]
+        let unit = UnitArray[Tag[3]];
+        let unitHex = HexMap[unit.hexLabel()];
+        let targets = [];
+        let errorMsg = [];
+        for (let i=4;i<Tag.length;i++) {
+            let target = UnitArray[Tag[i]];
+            if (!target) {continue};
+            let distance = unitHex.distance(HexMap[target.hexLabel()]);
+            if (distance > range) {
+                errorMsg.push(target.name + " Is Out of Range");
+            }
             targets.push(target);
+            let associated = Associated(target);
+            if (associated !== false) {
+                targets.push(associate);
+            }
         }
-        let flavour = unit.flavours(specialName) || specialName
+
+
+        let flavour = unit.flavours[specialName] || specialName;
         SetupCard(unit.name,flavour,unit.faction);
+        if (errorMsg.length > 0) {
+            _.each(errorMsg,error => {
+                outputCard.body.push(error);
+            })
+            PrintCard();
+            return;
+        }
+
+
+
 
         if (specialName === "Dangerous Terrain Debuff") {
-            let distance = HexMap[unit.hexLabel()].cube.distance(HexMap[target.hexLabel()].cube);
-            if (distance > 9) {
-                outputCard.body.push(target.name + " is beyond the range of 9 Hexes");
-            } else {
-                _.each(targets,target => {
-                    Dangerous(target);
-                })
-            }
+            _.each(targets,target => {
+                Dangerous(target);
+                FX()
+
+
+            })
         }
 
 
