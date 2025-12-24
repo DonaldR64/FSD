@@ -25,7 +25,7 @@ const Keywords = {
     "Counter-Attack": "Strikes first when charged",
     "Counter-Attack Aura": "[Aura] = Strikes first when charged",
 
-    "Dangerous Terrain Debuff": "Once per activation, before attacking, pick one enemy unit within 9 Hexes, which must immediately take a Dangerous Terrain test.",
+    "Dangerous Terrain Debuff": "Once per activation, before attacking, pick one enemy unit within 9 Hexes in LOS, which must immediately take a Dangerous Terrain test.",
 
     "Deadly(X)": "Assign each wound to one model, and multiply it by X. Hits from Deadly must be resolved first, and these wounds don’t carry over to other models if the original target is killed.",
 
@@ -74,12 +74,12 @@ const Keywords = {
     "Melee Shrouding": "Enemies have -2 Hex Movement when charging this Unit",
     "Melee Shrouding Aura": "[Aura] - Enemies have -2 Hex Movement when charging this Unit",
 
-    "Mend": "Once per activation, pick one friendly unit within 2 Hexes and heal D3 wounds",
+    "Mend": "Once per activation, pick one friendly unit within 2 Hexes in LOS and heal D3 wounds",
 
 
 
 
-    "Piercing Shooting Mark": 'Once per activation, pick one enemy unit within 9 Hexes. The next shot against that unit gets AP +1',
+    "Piercing Shooting Mark": 'Once per activation, pick one enemy unit within 9 Hexes and in LOS. The next shot against that unit gets AP +1',
 
     "Plaguebound": "Wounds are ignored on a roll of 6",
     "Plaguebound Boost": "Wounds are ignored on a roll of 5+",
@@ -88,7 +88,7 @@ const Keywords = {
 
     "Protected": "Wounds are ignored on a roll of 6",
 
-    "Precision Spotter": "Once per activation, pick one enemy unit within 18 hexes. On a 4+ a Spotting Marker is placed. The next shot against that unit get +1 to hit per marker",
+    "Precision Spotter": "Once per activation, pick one enemy unit within 18 hexes and in LOS. On a 4+ a Spotting Marker is placed. The next shot against that unit get +1 to hit per marker",
 
 
 
@@ -133,7 +133,7 @@ const Keywords = {
 
 
     "Steadfast": "If the unit is Shaken, at the beginning of the round, on a 4+ it stops being Shaken",
-    "Steadfast Buff": "Once per activation, before attacking, pick one friendly unit within 6 hexes, which gets Steadfast once (next time the effect would apply)",
+    "Steadfast Buff": "Once per activation, before attacking, pick one friendly unit within 6 hexes and in LOS, which gets Steadfast once (next time the effect would apply)",
 
 
     "Stealth": "When shot at from over 4 hexes away, enemy units get -1 to hit",

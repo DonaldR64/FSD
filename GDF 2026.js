@@ -893,7 +893,7 @@ log(flavours)
 
 
        //special ability macros
-        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9},{name: "Mend", targets: 1, range: 2},{name: "Piercing Shooting Mark", targets: 1, range: 9}]
+        let specials = [{name: "Dangerous Terrain Debuff", targets: 1, range: 9},{name: "Mend", targets: 1, range: 2},{name: "Piercing Shooting Mark", targets: 1, range: 9},{name: "Precision Spotter", targets: 1, range: 18}]
 
         _.each(specials,special => {
             let t = "";
@@ -3203,9 +3203,12 @@ log("unit wounds: " + unitWounds)
         for (let i=4;i<Tag.length;i++) {
             let target = UnitArray[Tag[i]];
             if (!target) {continue};
-            let distance = unitHex.distance(HexMap[target.hexLabel()]);
-            if (distance > range) {
+            let losResult = LOS(unit,target);
+            if (losResult.distance > range) {
                 errorMsg.push(target.name + " Is Out of Range");
+            }
+            if (losResult.los === false) {
+                errorMsg.push(target.name + " is not in LOS");
             }
             targets.push(target);
             let associated = Associated(target);
@@ -3246,6 +3249,7 @@ log("unit wounds: " + unitWounds)
             SetTT2(targets[0],TT.piercing);
             outputCard.body.push("Piercing Shooting Mark placed on " + targets[0].name);
         }
+
 
 
 
