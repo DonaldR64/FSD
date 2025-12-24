@@ -1541,6 +1541,54 @@ log(hex)
         sendChat("player|" + playerID,res);
     }
 
+    const Army = (msg) => {
+        //resets all tokens to base levels, makes sure theyre in arrays etc
+        //renames also
+        if (!msg.selected) {
+            return
+        }
+
+        let names = {};
+
+        for (let i=0;i<msg.selected.length;i++) {
+            let id = msg.selected[i]._id;
+            let unit = UnitArray[id];
+            if (!unit) {
+                unit = new Unit(id);
+            }
+            if (unit.type === "Hero") {
+                let name = HeroNames(unit.faction);
+                unit.name = name;
+                unit.token.set("name",name);
+            } else {
+                if (names[unit.name]) {
+                    names[unit.name]++;
+                    unit.name = unit.name + " " + names[unit.name];
+                    unit.token.set("name",unit.name); 
+                } else {
+                    names[unit.name] = 1;
+                }
+            }
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+    }
+
+
+
+
+
 
 
 
@@ -3158,10 +3206,9 @@ log("unit wounds: " + unitWounds)
     const Dangerous = (unit) => {
         let token = unit.token;
         if (!token) {return}
-        let hp = parseInt(token.get("bar1_value"));
         let rolls = [];
         let wounds = 0;
-        for (let i=0;i<hp;i++) {
+        for (let i=0;i<unit.woundsMax;i++) {
             let roll = randomInteger(6);
             rolls.push(roll);
             if (roll === 1) {wounds++};
@@ -3408,6 +3455,11 @@ log("unit wounds: " + unitWounds)
             case '!Special':
                 Special(msg);
                 break;
+            case '!Army':
+                Army(msg);
+                break;
+
+
         }
     };
 
