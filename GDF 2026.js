@@ -236,19 +236,23 @@ const GDF3 = (() => {
     const FX = (fxname,model1,model2) => {
         //model2 is target, model1 is shooter
         //if its an area effect, model1 isnt used
-        if (fxname.includes("System")) {
-            //system fx
-            fxname = fxname.replace("System-","");
-            if (fxname.includes("Blast")) {
-                fxname = fxname.replace("Blast-","");
-                spawnFx(model2.token.get("left"),model2.token.get("top"), fxname);
-            } else {
-                spawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxname);
-            }
-        } else {
+        if (!fxname) {return};
+        let pt1 = new Point(model1.token.get("left"),model1.token.get("top"))
+        let pt2 =  new Point(model2.token.get("left"),model2.token.get("top"))
+
+        if (fxname.includes("Custom")) {
+            fxname = fxname.replace("Custom-","");
             let fxType =  findObjs({type: "custfx", name: fxname})[0];
             if (fxType) {
                 spawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxType.id);
+            }
+        } else {
+            let directed = ["breath","beam","missile","rocket"];
+            let points = directed.some(element => fxname.includes(element));
+            if (points === true) {
+                spawnFxBetweenPoints(new Point(model1.token.get("left"),model1.token.get("top")), new Point(model2.token.get("left"),model2.token.get("top")), fxname);
+            } else {
+                spawnFx(model2.token.get("left"),model2.token.get("top"), fxname);
             }
         }
     }
@@ -3159,7 +3163,8 @@ log(defenderAuras)
         }
         rolls = rolls.sort((a,b)=> a-b);
         let tip = "Rolls: " + rolls + " vs. 2+";
-        if (wounds === 0) {wounds = "No"};
+        if (wounds === 0) {wounds = "No"}; 
+        unit.Damage(wounds);
         let s = (wounds === 1) ? "":"s";
         tip = '[' + wounds + '](#" class="showtip" title="' + tip + ')';
         outputCard.body.push("Unit takes " + tip + " Wound" +s);
@@ -3221,9 +3226,8 @@ log(defenderAuras)
         if (specialName === "Dangerous Terrain Debuff") {
             _.each(targets,target => {
                 Dangerous(target);
-                FX()
-
-
+                FX("burst-slime",unit,target);
+//squelch sound
             })
         }
 
