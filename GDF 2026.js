@@ -1350,6 +1350,20 @@ log(flavours)
 
     }
 
+    const HeroNames = (faction) => {
+        
+
+
+
+
+
+
+
+
+    }
+
+
+
     
 
     const stringGen = () => {
@@ -1541,37 +1555,63 @@ log(hex)
         sendChat("player|" + playerID,res);
     }
 
-    const Army = (msg) => {
+    const SetArmies = () => {
         //resets all tokens to base levels, makes sure theyre in arrays etc
         //renames also
-        if (!msg.selected) {
-            return
-        }
+        let tokens = findObjs({
+            _pageid: Campaign().get("playerpageid"),
+            _type: "graphic",
+            _subtype: "token",
+            layer: "objects",
+        });
 
         let names = {};
 
-        for (let i=0;i<msg.selected.length;i++) {
-            let id = msg.selected[i]._id;
-            let unit = UnitArray[id];
+        for (let i=0;i<tokens.length;i++) {
+            let token = tokens[i];
+            let unit = UnitArray[token];
+            let character = getObj("character", token.get("represents"));   
+            let name = character.get("name");
             if (!unit) {
-                unit = new Unit(id);
+                unit = new Unit(token);
+                if (!unit.faction) {
+                    unit.faction === "Neutral";
+                    continue;
+                }
             }
             if (unit.type === "Hero") {
                 let name = HeroNames(unit.faction);
                 unit.name = name;
                 unit.token.set("name",name);
             } else {
-                if (names[unit.name]) {
-                    names[unit.name]++;
-                    unit.name = unit.name + " " + names[unit.name];
+                if (names[name]) {
+                    names[name]++;
+                    unit.name = name + " " + names[name];
                     unit.token.set("name",unit.name); 
                 } else {
-                    names[unit.name] = 1;
+                    names[name] = 1;
                 }
             }
-
-
-
+            unit.token.set({
+                bar1_value: unit.woundsMax,
+                bar1_max: unit.woundsMax,
+                showplayers_bar1: true,
+                aura1_color: "#00ff00",
+                aura1_radius: 0.05,
+                showplayers_aura1: true,
+                tooltip: "",
+                show_tooltip: true,
+                showplayers_tooltip: true,
+                showplayers_name: true,
+                statusmarkers: "",
+            })
+            if (unit.keywords.includes("Melee Shrouding") || unit.keywords.includes("Melee Shrouding Aura")) {
+                unit.token.set({
+                    aura2_color: "#ffffff",
+                    aura2_radius: 2,
+                    showplayers_aura2: true,
+                })
+            }
 
 
 
@@ -3371,19 +3411,6 @@ log("unit wounds: " + unitWounds)
 
     const addGraphic = (obj) => {
         let unit = new Unit(obj);
-        unit.token.set({
-            bar1_value: unit.woundsMax,
-            bar1_max: unit.woundsMax,
-            showplayers_bar1: true,
-            aura1_color: "#00ff00",
-            aura1_radius: 0.05,
-            showplayers_aura1: true,
-            tooltip: "",
-            show_tooltip: true,
-            showplayers_tooltip: true,
-            showplayers_name: true,
-            statusmarkers: "",
-        })
 
 
 
@@ -3455,8 +3482,8 @@ log("unit wounds: " + unitWounds)
             case '!Special':
                 Special(msg);
                 break;
-            case '!Army':
-                Army(msg);
+            case '!SetArmies':
+                SetArmies();
                 break;
 
 
