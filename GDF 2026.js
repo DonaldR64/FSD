@@ -2003,8 +2003,9 @@ log(hex)
         let melee = unit.melee;
 
         let associated = Associated(unit);
+log(associated.quality)
         if (associated !== false) {
-            if (associated.quality > target.quality) {
+            if (associated.quality < target) {
                 tip = "Hero's Quality: " + associated.quality;
                 target = associated.quality;
             }
