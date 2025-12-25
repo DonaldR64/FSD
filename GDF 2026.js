@@ -1618,6 +1618,7 @@ log(hex)
                 showplayers_tooltip: true,
                 showplayers_name: true,
                 statusmarkers: "",
+                tint_color: "transparent",
             })
             if (unit.keywords.includes("Melee Shrouding") || unit.keywords.includes("Melee Shrouding Aura")) {
                 unit.token.set({
@@ -1999,6 +2000,8 @@ log(hex)
         let target = unit.quality;
         let tip = "Quality: " + target;
 
+        let melee = unit.melee;
+
         let associated = Associated(unit);
         if (associated !== false) {
             if (associated.quality > target.quality) {
@@ -2015,12 +2018,12 @@ log(hex)
             target--;
             tip += "<br>Hive Bond";
         }
-        if (keywords.includes("Hive Bond Boost") || auras.includes("Hive Bond Boost")) {
+        if (unit.keywords.includes("Hive Bond Boost") || auras.includes("Hive Bond Boost")) {
             target -= 2;
             tip += "<br>Hive Bond Boost";
         }
 
-        let success = (roll >= target) ? true:false;
+        let success = (moraleRoll >= target) ? true:false;
         let subtitle = "Needing " + target + "+";
 
         let fearless = false;
@@ -2074,18 +2077,13 @@ log(hex)
             outputCard.body.push(fearless);
         }
 
-            let dd = DisplayDice(roll,Factions[unit.faction].dice,32);
-            tip = '[' + dd + '](#" class="showtip" title="' + tip + ')';
-            outputCard.body.push("Morale Roll: " + tip);
-
-
         outputCard.body.push("[hr]");
         if (success === "Auto") {
             _.each(auto,line => {
                 outputCard.body.push(line);
             })
         } else {
-            let dd = DisplayDice(roll,Factions[unit.faction].dice,32);
+            let dd = DisplayDice(moraleRoll,Factions[unit.faction].dice,32);
             tip = '[' + dd + '](#" class="showtip" title="' + tip + ')';
             outputCard.body.push("Morale Roll: " + tip);
             if (success === true) {
@@ -2096,7 +2094,6 @@ log(hex)
                     unit.Destroyed();
                     outputCard.body.push("Consolidation Moves may be taken");
                 } else if (shaken === false) {
-                    outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
                     outputCard.body.push("Failure! Unit is Shaken");
                     unit.token.set("tint_color","#ff0000");
                 } else if (shaken === true) {
