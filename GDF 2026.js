@@ -1496,12 +1496,17 @@ log(flavours)
         //persists turn to turn
         let persistantTT = ["Steadfast Buff","Versatile Attack = +1 AP","Versatile Attack = +1 to Hit", "Versatile Defense = +1 to Defense","Versatile Defense = -1 to Be Hit",];
 
+
+
+
         //reset fatigue, activation, tooltips
         _.each(UnitArray,unit => {
             if (!unit.token) {return};
             unit.moved = false; 
             let tt = TTip(unit);
             let persistant = tt.filter((e) => persistantTT.includes(e));
+            let limited = tt.filter((e) => e.includes("Fired "));
+            persistent = persistent.concat(limited);
             persistant = persistant.toString();
             unit.token.set("tooltip",persistant);
             unit.token.set(SM.fatigue,false);
@@ -2412,6 +2417,12 @@ log(label)
                     no.push(weapon.name + " - no LOS");
                     continue;
                 }
+                if (attackerTT.includes("Fired " + weapon.name)) {
+                    no.push(weapon.name + " Limited and Fired");
+                    continue;
+                }
+
+
                 let range = (defender.type === "Aircraft" && weapon.keywords.includes("Unstoppable") === false) ? weapon.range - 6:weapon.range;
                 if (attacker.keywords.includes("Increased Shooting Range") || attackerAuras.includes("Increased Shooting Range")) {
                     range += 3;
@@ -2744,7 +2755,9 @@ log(label)
 
 
 
-
+                if (weapon.keywords.includes("Limited")) {
+                    SetTT2(attacker,"Fired + weapon.name");
+                }
                 
 
 
