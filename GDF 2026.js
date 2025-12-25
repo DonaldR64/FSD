@@ -733,7 +733,7 @@ log(flavours)
             }
 
             this.weapons = weapons;
-
+log(weapons)
             this.moved = false;
 
 
@@ -2402,7 +2402,8 @@ log(label)
             for (let i=0;i<attacker.weapons.length;i++) {
                 let weapon = DeepCopy(attacker.weapons[i]);
                 if (weapon.type !== weaponType) {continue};
-                if (weapon.name === "Impact" && (attacker.token.get(SM.fatigue) === true || attacker.id !== state.GDF3.activeID)) {
+                if (weapon.name === "Impact" && (attacker.token.get(SM.fatigue) === true || attacker.tokenID !== state.GDF3.activeID)) {
+                    no.push(weapon.name + " not eligible");
                     continue;
                 }
                 if (losResult.los === false && weapon.keywords.includes("Indirect") === false) {
