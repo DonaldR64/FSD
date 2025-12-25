@@ -821,18 +821,10 @@ log(flavours)
         if (!unit) {
             unit = new Unit(id);
         }
-        let size = 100;
-        if (unit.type === "Hero") {
-            size = 70;
-        } else if (unit.type === "Titan") {
-            size = 210;
-        }
         
         let keywordList = unit.keywords;
 
         unit.token.set({
-            width: size,
-            height: size,
             disableSnapping: true,
         })
 
@@ -2756,7 +2748,7 @@ log(label)
 
 
                 if (weapon.keywords.includes("Limited")) {
-                    SetTT2(attacker,"Fired + weapon.name");
+                    SetTT2(attacker,"Fired " + weapon.name);
                 }
                 
 
