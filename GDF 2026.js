@@ -2010,12 +2010,16 @@ log(hex)
         }
 
 
+//just use main unit (so make sure if 2 units is not the hero) keywords and auras
+//use quality of leader if any
+
+
+
+
         let target = Math.max(associated.quality,unit.quality);
         let melee = (unit.melee === true || associated.melee === true) ? true:false; 
-        let auras = Auras(unit).concat(Auras(associated));
-        auras = [...new Set(auras)];
-        let keywords = unit.keywords.concat(associated.keywords);
-        keywords = [...new Set(keywords)];
+        let auras = Auras(unit);
+
 
         let moraleRoll = randomInteger(6);
 
@@ -2031,7 +2035,8 @@ log(hex)
 
 
 
-
+//just use main unit (so make sure if 2 units is not the hero) keywords and auras
+//use quality of leader if any
 
 
 
