@@ -2539,7 +2539,7 @@ log(label)
                     needed -= 1;
                     neededTip += "<br>" + TT.vATH;
                 }
-                if (attacker.id === state.GDF3.activeID && combatType === "Melee" && weapon.keywords.includes("Thrust")) {
+                if (attacker.tokenID === state.GDF3.activeID && combatType === "Melee" && weapon.keywords.includes("Thrust")) {
                     weapon.ap++;
                     notes.push("Thrust");
                     needed -= 1;
