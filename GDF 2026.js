@@ -1996,34 +1996,17 @@ log(hex)
         let units = [];
         let unit = UnitArray[Tag[1]];
         if (!unit) {return};
-        units.push(unit);
-
+        let target = unit.quality;
 
         let associated = Associated(unit);
         if (associated !== false) {
-            if (associated.melee === true) {
-                melee = true;
-            }
-            units.push(associated);
-        } else {
-            associated = unit;
+            target = Math.max(associated.quality,unit.quality);
         }
 
-
-//just use main unit (so make sure if 2 units is not the hero) keywords and auras
-//use quality of leader if any
-
-
-
-
-        let target = Math.max(associated.quality,unit.quality);
-        let melee = (unit.melee === true || associated.melee === true) ? true:false; 
         let auras = Auras(unit);
-
-
         let moraleRoll = randomInteger(6);
 
-        if (keywords.includes("Hive Bond") || auras.includes("Hive Bond")) {
+        if (unit.keywords.includes("Hive Bond") || auras.includes("Hive Bond")) {
             target--;
         }
         if (keywords.includes("Hive Bond Boost") || auras.includes("Hive Bond Boost")) {
@@ -2033,130 +2016,81 @@ log(hex)
         let success = (roll >= target) ? true:false;
         let subtitle = "Needing " + target + "+";
 
+        let fearless = false;
+        let shaken = false;
 
-
-//just use main unit (so make sure if 2 units is not the hero) keywords and auras
-//use quality of leader if any
-
-
-
-
-
-        for (let i=0;i<units.length;i++) {
-            let unit = units[i];
-            if (!unit) {return};
-
-            let unitAuras = Auras(unit);
-            let roll = randomInteger(6);
-            let target = unit.quality;
-            let fearless = false;
-            let shaken = false;
-            //mods
-            if (unit.keywords.includes("Hive Bond") || unitAuras.includes("Hive Bond")) {
-                target--;
-            }
-            if (unit.keywords.includes("Hive Bond Boost") || unitAuras.includes("Hive Bond Boost")) {
-                target -= 2;
-            }
-
-            let success = (roll >= target) ? true:false;
-            let subtitle = "Needing " + target + "+";
-
-            //Shaken
-            if (unit.token.get("tint_color") === "#ff0000") {
-                //shaken
-                success = false;
-                shaken = true;
-                subtitle = "Shaken";
-            }
-
-
-
-            //fearless
-            if (unit.keywords.includes("Fearless") && success === false) {
-                //can overcome shaken
-                subtitle += " & Fearless";
-                let fearlessRoll = randomInteger(6);
-                if (fearlessRoll > 3) {
-                    success = true;
-                    shaken = false;
-                }
-                fearless = "Fearless: " + DisplayDice(fearlessRoll,Factions[unit.faction].dice,32) + " vs. 4+";
-            }
-
-
-
-            //after failure changes - automatic
-            auto = [];
-            if (unit.keywords.includes("No Retreat") && success === false) {
-                success = "Auto";
-                auto.push("The Test is Passed due to No Retreat");
-                let hp = parseInt(unit.token.get("bar1_value"));
-                let wounds = 0;
-                let noRRolls = [];
-                _.each(hp,e => {
-                    let roll = randomInteger(6);
-                    noRRolls.push(roll);
-                    if (roll < 4) {wounds++};
-                })
-                noRRolls = noRRolls.sort((a,b) => b-a);
-                let tip = "Rolls: " + noRRolls + " vs. 4+";
-                tip = '[' + wounds + '](#" class="showtip" title="' + hitTip + ')';
-                auto.push("No Retreat causes " + tip + " Wounds");
-                let destroyed = unit.Damage(wounds);
-                if (destroyed === true) {
-                    auto.push(unit.name + " is Destroyed!");
-                }
-            }
-
-
-
-
-
-
-
-
-            SetupCard(unit.name,subtitle,unit.faction);
-            if (fearless !== false) {
-                outputCard.body.push(fearless);
-            }
-            outputCard.body.push("[hr]");
-            if (success === "Auto") {
-                _.each(auto,line => {
-                    outputCard.body.push(line);
-                })
-            } else if (success === true) {
-                outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
-                outputCard.body.push("Success!");
-            } else if (success === false) {
-                if (melee === true && unit.token.get(SM.halfStr)) {
-                    outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
-                    outputCard.body.push("Failure! Unit Routs from Melee!");
-                    unit.Destroyed();
-                    outputCard.body.push("Consolidation Moves may be taken");
-                } else if (shaken === false) {
-                    outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
-                    outputCard.body.push("Failure! Unit is Shaken");
-                    unit.token.set("tint_color","#ff0000");
-                } else if (shaken === true) {
-                    outputCard.body.push("Shaken Unit Routs!");
-                    unit.Destroyed();
-                }
-
-
-            }
-
-
-
-
-
-
-            PrintCard();
-
+        //Shaken
+        if (unit.token.get("tint_color") === "#ff0000") {
+            //shaken
+            success = false;
+            shaken = true;
+            subtitle = "Shaken";
         }
 
+        //fearless
+        if (unit.keywords.includes("Fearless") && success === false) {
+            //can overcome shaken
+            subtitle += " & Fearless";
+            let fearlessRoll = randomInteger(6);
+            if (fearlessRoll > 3) {
+                success = true;
+                shaken = false;
+            }
+            fearless = "Fearless: " + DisplayDice(fearlessRoll,Factions[unit.faction].dice,32) + " vs. 4+";
+        }
 
+        //after failure changes - automatic
+        auto = [];
+        if (unit.keywords.includes("No Retreat") && success === false) {
+            success = "Auto";
+            auto.push("The Test is Passed due to No Retreat");
+            let hp = parseInt(unit.token.get("bar1_value"));
+            let wounds = 0;
+            let noRRolls = [];
+            _.each(hp,e => {
+                let roll = randomInteger(6);
+                noRRolls.push(roll);
+                if (roll < 4) {wounds++};
+            })
+            noRRolls = noRRolls.sort((a,b) => b-a);
+            let tip = "Rolls: " + noRRolls + " vs. 4+";
+            tip = '[' + wounds + '](#" class="showtip" title="' + hitTip + ')';
+            auto.push("No Retreat causes " + tip + " Wounds");
+            let destroyed = unit.Damage(wounds);
+            if (destroyed === true) {
+                auto.push(unit.name + " is Destroyed!");
+            }
+        }
 
+        SetupCard(unit.name,subtitle,unit.faction);
+        if (fearless !== false) {
+            outputCard.body.push(fearless);
+        }
+        outputCard.body.push("[hr]");
+        if (success === "Auto") {
+            _.each(auto,line => {
+                outputCard.body.push(line);
+            })
+        } else if (success === true) {
+            outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
+            outputCard.body.push("Success!");
+        } else if (success === false) {
+            if (melee === true && unit.token.get(SM.halfStr)) {
+                outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
+                outputCard.body.push("Failure! Unit Routs from Melee!");
+                unit.Destroyed();
+                outputCard.body.push("Consolidation Moves may be taken");
+            } else if (shaken === false) {
+                outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
+                outputCard.body.push("Failure! Unit is Shaken");
+                unit.token.set("tint_color","#ff0000");
+            } else if (shaken === true) {
+                outputCard.body.push("Shaken Unit Routs!");
+                unit.Destroyed();
+            }
+        }
+
+        PrintCard();
     }
 
 
