@@ -1997,20 +1997,27 @@ log(hex)
         let unit = UnitArray[Tag[1]];
         if (!unit) {return};
         let target = unit.quality;
+        let tip = "Quality: " + target;
 
         let associated = Associated(unit);
         if (associated !== false) {
-            target = Math.max(associated.quality,unit.quality);
+            if (associated.quality > target.quality) {
+                tip = "Hero's Quality: " + associated.quality;
+                target = associated.quality;
+            }
+
         }
 
-        let auras = Auras(unit);
+        let auras = Auras(unit); //incl leaders auras
         let moraleRoll = randomInteger(6);
 
         if (unit.keywords.includes("Hive Bond") || auras.includes("Hive Bond")) {
             target--;
+            tip += "<br>Hive Bond";
         }
         if (keywords.includes("Hive Bond Boost") || auras.includes("Hive Bond Boost")) {
             target -= 2;
+            tip += "<br>Hive Bond Boost";
         }
 
         let success = (roll >= target) ? true:false;
@@ -2066,30 +2073,39 @@ log(hex)
         if (fearless !== false) {
             outputCard.body.push(fearless);
         }
+
+            let dd = DisplayDice(roll,Factions[unit.faction].dice,32);
+            tip = '[' + dd + '](#" class="showtip" title="' + tip + ')';
+            outputCard.body.push("Morale Roll: " + tip);
+
+
         outputCard.body.push("[hr]");
         if (success === "Auto") {
             _.each(auto,line => {
                 outputCard.body.push(line);
             })
-        } else if (success === true) {
-            outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
-            outputCard.body.push("Success!");
-        } else if (success === false) {
-            if (melee === true && unit.token.get(SM.halfStr)) {
-                outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
-                outputCard.body.push("Failure! Unit Routs from Melee!");
-                unit.Destroyed();
-                outputCard.body.push("Consolidation Moves may be taken");
-            } else if (shaken === false) {
-                outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
-                outputCard.body.push("Failure! Unit is Shaken");
-                unit.token.set("tint_color","#ff0000");
-            } else if (shaken === true) {
-                outputCard.body.push("Shaken Unit Routs!");
-                unit.Destroyed();
+        } else {
+            let dd = DisplayDice(roll,Factions[unit.faction].dice,32);
+            tip = '[' + dd + '](#" class="showtip" title="' + tip + ')';
+            outputCard.body.push("Morale Roll: " + tip);
+            if (success === true) {
+                outputCard.body.push("Success!");
+            } else if (success === false) {
+                if (melee === true && unit.token.get(SM.halfStr)) {
+                    outputCard.body.push("Failure! Unit Routs from Melee!");
+                    unit.Destroyed();
+                    outputCard.body.push("Consolidation Moves may be taken");
+                } else if (shaken === false) {
+                    outputCard.body.push("Morale Roll: " + DisplayDice(roll,Factions[unit.faction].dice,32));
+                    outputCard.body.push("Failure! Unit is Shaken");
+                    unit.token.set("tint_color","#ff0000");
+                } else if (shaken === true) {
+                    outputCard.body.push("Shaken Unit Routs!");
+                    unit.Destroyed();
+                }
             }
         }
-
+            
         PrintCard();
     }
 
