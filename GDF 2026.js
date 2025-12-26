@@ -2500,6 +2500,7 @@ log(label)
 
 
             let weaponHits = [];
+            let weaponMiss = [];
     log(weaponArray)
             _.each(weaponArray,weapon => {
                 let weaponOut;
@@ -2707,10 +2708,15 @@ log(label)
 
                         }
                         
-
-
-
-
+                    } else {
+                        if (weapon.type.includes("Heavy")) {
+                            //50% of misses by heavy weapons could cause collateral
+                            let roll = randomInteger(6);
+roll = 6
+                            if (roll > 3) {
+                                weaponMiss.push(weapon);
+                            }
+                        }
                     }
                     
                     dice--;
@@ -2785,7 +2791,6 @@ log(label)
 
             })
 
-
             let active = true;
             if (weaponHits.length > 0) {
                 let results = ApplyDamage(weaponHits,defenders,attacker);
@@ -2829,6 +2834,11 @@ log(label)
                 outputCard.body.push("[hr]");
                 outputCard.body.push(attacker.name + " can make a Consolidation Move of 2 hexes");
             }
+
+            //misses vs terrain
+            Collateral(weaponMiss,defenderHex);
+
+
 
 
 
@@ -3273,6 +3283,95 @@ log("unit wounds: " + unitWounds)
         }
         return results;
     }
+
+
+    const Collateral = (misses,hex) => {
+        if (misses.length === 0) {return};
+        let midArray = [];
+        _.each(misses,miss => {
+            let obj = midArray.find((e) => e.weapon.name === miss.name);
+            if (obj) {
+                obj.number++;
+            } else {
+                let info = {
+                    weapon: miss,
+                    number: 1,
+                }
+                midArray.push(info);
+            }
+        })
+
+log(midArray)
+log(hex)
+        //Open, Crops - craters from indirect
+        //Woods - damage and if 0 -> burning woods
+        //Building - damage and if 0 -> ruined building/concrete
+
+
+        if (hex.terrain === "Open" || hex.terrain === "Crops") {
+            _.each(midArray,miss => {
+                if (miss.weapon.keywords.includes("Indirect")) {
+                    //craters
+                    //TerrainChange(hex,"Craters");
+                }
+            })
+        }
+
+        if (hex.terrain === "Woods") {
+            let hp = hex.hp;
+            let damage = 0;
+            _.each(midArray,miss => {
+                for (let i=0;i<miss.number;i++) {
+                    let dRoll = randomInteger(6);
+                    if (dRoll < 4) {damage++};
+                }
+            })
+            hp = Math.max(0,(hp-damage));
+            if (hp === 0) {
+                outputCard.body.push("Woods Set on Fire");
+                //TerrainChange(hex,"Burning Woods");
+            } else if (hp > 0 && damage > 0) {
+                outputCard.body.push("Woods Terrain takes " + damage + " Damage");
+                hex.hp = hp;
+
+            }
+        }
+
+        if (hex.terrain.includes("Building") && hex.terrain.includes("Ruined") === false) {
+            let hp = hex.hp;
+            let damage = 0;
+            _.each(midArray,miss => {
+                for (let i=0;i<miss.number;i++) {
+                    let dRoll = randomInteger(6);
+log("Droll: " + dRoll)
+                    if (dRoll < (2 + miss.weapon.ap)) {damage++};
+                }
+            })
+            hp = Math.max(0,(hp-damage));
+            if (hp === 0) {
+                outputCard.body.push("Building Destroyed");
+                //TerrainChange(hex,"Ruins");
+            } else if (hp > 0 && damage > 0) {
+                outputCard.body.push("Building takes " + damage + " Damage");
+                hex.hp;
+
+            }
+
+        }
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+
 
 
 
