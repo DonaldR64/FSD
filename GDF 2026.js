@@ -5,7 +5,7 @@ const GDF3 = (() => {
     const pageInfo = {};
     const rowLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI"];
 
-    let HexSize, HexInfo, DIRECTIONS;
+    let HexSize, HexInfo, DIRECTIONS, mapEdge;
 
     //math constants
     const M = {
@@ -29,8 +29,8 @@ const GDF3 = (() => {
                     x: 35 * pageInfo.scale,
                     y: HexSize,
                 },
-                width: 70  * pageInfo.scale,
-                height: pageInfo.scale*HexSize,
+                width: M.f0 * HexSize,
+                height: 2*HexSize,
                 xSpacing: 70 * pageInfo.scale,
                 ySpacing: 3/2 * HexSize,
                 directions: {
@@ -53,8 +53,8 @@ const GDF3 = (() => {
                     x: HexSize,
                     y: 35 * pageInfo.scale,
                 },
-                width: pageInfo.scale*HexSize,
-                height: 70  * pageInfo.scale,
+                width: 2*HexSize,
+                height: M.f0 * HexSize,
                 xSpacing: 3/2 * HexSize,
                 ySpacing: 70 * pageInfo.scale,
                 directions: {
@@ -1268,6 +1268,11 @@ log(weapons)
         let tokens = findObjs({_pageid: Campaign().get("playerpageid"),_type: "graphic",_subtype: "token",layer: "map",});
         _.each(tokens,token => {
             let name = token.get("name");
+            if (name === "Map") {
+                mapEdge = Math.round(token.get("left") + (token.get("width")/2));
+                return;
+            }
+
             let terrain = TerrainInfo[name];
             let buildingTypes = ["Wood","Brick","Concrete"];
             if (terrain) {
@@ -1677,6 +1682,8 @@ log(hex)
     const ClearState = (msg) => {
         LoadPage();
         BuildMap();
+        RemoveDepLines();
+        RemoveDead();
 
         //clear arrays
         UnitArray = {};
@@ -1686,7 +1693,7 @@ log(hex)
             factions: [],
             turn: 0,
             activeID: "",
-
+            deployLines: [],
         }
 
         sendChat("","Cleared State/Arrays");
@@ -2836,7 +2843,7 @@ roll = 6
             }
 
             //misses vs terrain
-            Collateral(weaponMiss,defenderHex);
+            //Collateral(weaponMiss,defenderHex);
 
 
 
@@ -3371,6 +3378,200 @@ log("Droll: " + dRoll)
     }
 
 
+    const SetupGame = (msg) => {
+        let Tag = msg.content.split(";");
+        let deployment = Tag[1];
+        let mission = Tag[2];
+        SetupCard("Game Info","","Neutral");
+        RemoveDepLines();
+        outputCard.body.push("[hr]");
+        outputCard.body.push("[B]Deployment Info[/b]");
+        DeploymentZones(deployment);
+        outputCard.body.push("[hr]");
+        outputCard.body.push("[B]Mission Info[/b]");
+        MissionInfo(mission);  
+        PrintCard();
+    }
+
+    const RemoveDepLines = () => {
+        for (let i=0;i<state.GDF3.deployLines.length;i++) {
+            let id = state.GDF3.deployLines[i];
+            let path = findObjs({_type: "pathv2", id: id})[0];
+            if (path) {
+                path.remove();
+            }
+        }
+    }
+
+    const DrawDepLine = (set) => {
+        let a = set[0],b = set[1];
+        //define centre, then a and b change into points
+        let left = Math.min(a[0],b[0]);
+        let right = Math.max(a[0],b[0]);
+        let bottom = Math.min(a[1],b[1]);
+        let top = Math.max(a[1],b[1]);
+        let x = Math.abs(a[0] - b[0])/2 + left;
+        let y = Math.abs(a[1] - b[1])/2 + bottom;
+        let pt2 = [right - left,top - bottom];
+
+        let points = [];
+        points.push([a[0] - left,a[1] - bottom]);
+        points.push([b[0] - left,b[1] - bottom]);
+
+
+        points = JSON.stringify(points);
+
+        let page = getObj('page',Campaign().get('playerpageid'));
+        if(page) {
+            let line = createObj('pathv2',{
+                layer: "objects",
+                pageid: page.id,
+                shape: "pol",
+                stroke: '#ff0000',
+                stroke_width: 7,
+                x: x,
+                y: y,
+                points: points,
+            });
+            if (line) {
+                state.GDF3.deployLines.push(line.get("id"));
+            }
+        }
+    }
+
+
+    const DeploymentZones = (random = "No") => {
+
+//set for flat hexes
+        let styles = ["Frontline","Frontline","Frontline","Ground War","Ground War","Side Battle","Side Battle","Disordered","Spearhead","Opposing Forces","No Man's Land","No Man's Land","Long Haul","Long Haul","Flank Assault","Meeting Engagement"];
+
+        let roll = (random === "Yes") ? randomInteger(styles.length):0;
+        let style = styles[roll];
+        let styleInfo;
+
+        let pH = pageInfo.height;
+        let pts = [];
+        let hW = HexInfo.width;
+        let xS = HexInfo.xSpacing;
+        let hH = HexInfo.height;
+        //vertical - use hex height hH
+        //horizontal - is 1  * hex width + (distance - 1) * xSpacing
+
+        switch (style) {
+            case 'Frontline': 
+                styleInfo = "Top or Bottom";
+                pts.push([[0,6*hH],[mapEdge,6*hH]])
+                pts.push([[0,pH-(6*hH)],[mapEdge,pH-(6*hH)]]);
+                break;
+            case 'Ground War':
+                styleInfo = "Left or Right";
+                pts.push([[(hW + (11*xS)),0],[(hW + (11*xS)),pH]]);
+                pts.push([[mapEdge - (hW + (11*xS)),0], [mapEdge - (hW + (11*xS)),pH]])
+                break;
+            case 'Side Battle':
+                styleInfo = "Bottom or Top Corner";
+                pts.push([[0,pH - (14.5 * hH)],[(27*xS),pH]]);
+                pts.push([[mapEdge - (27*xS),0],[mapEdge,14.5*hH]]);
+                break;
+            case 'Disordered':
+                styleInfo = "Top or Bottom Corners";
+                pts.push([[0,pH/2],[mapEdge/2,0]]);
+                pts.push([[0,pH/2],[mapEdge/2,pH]]);
+                pts.push([[mapEdge/2,0],[mapEdge,pH/2]]);
+                pts.push([[mapEdge/2,pH],[mapEdge,pH/2]]);
+                break;
+            case 'Spearhead': 
+                styleInfo = "Left or Right";
+                pts.push([[0,0],[hW + (11*xS),pH/2]]);
+                pts.push([[0,pH],[hW + (11*xS),pH/2]]);
+                pts.push([[mapEdge - hW -(11*xS),pH/2],[mapEdge,0]]);
+                pts.push([[mapEdge - hW -(11*xS),pH/2],[mapEdge,pH]]);
+                break;
+            case 'Opposing Forces':
+                styleInfo = "Left or Right";
+                pts.push([[0,pH/2],[hW + (11*xS),pH/2]]);
+                pts.push([[hW + (11*xS),pH/2],[hW + (11*xS),0]]);
+                pts.push([[mapEdge - hW - (11*xS),pH],[mapEdge - hW - (11*xS),pH/2]]);
+                pts.push([[mapEdge - hW - (11*xS),pH/2],[mapEdge,pH/2]]);
+                break;
+            case "No Man's Land":
+                styleInfo = "Top or Bottom";
+                pts.push([[0,3*hH],[mapEdge,3*hH]])
+                pts.push([[0,pH-(3*hH)],[mapEdge,pH-(3*hH)]]);
+                break;
+            case 'Long Haul':
+                styleInfo = "Left or Right";
+                pts.push([[(hW + (5*xS)),0],[(hW + (5*xS)),pH]]);
+                pts.push([[mapEdge - (hW + (5*xS)),0], [mapEdge - (hW + (5*xS)),pH]])
+                break;
+            case 'Flank Assault':
+                styleInfo = "Top or Bottom";
+                pts.push([[0,pH/2],[hW + (5*xS),pH/2]]);
+                pts.push([[hW + (5*xS),pH/2],[hW + (5*xS),pH - (6*hH)]]);
+                pts.push([[hW + (5*xS),pH - (6*hH)],[mapEdge,pH - (6*hH)]]);
+                pts.push([[0,6*hH],[mapEdge - hW - (5*xS),6*hH]]);                
+                pts.push([[mapEdge - hW - (5*xS),6*hH],[mapEdge - hW - (5*xS),pH/2]]);
+                pts.push([[mapEdge - hW - (5*xS),pH/2],[mapEdge,pH/2]]);
+                break;
+            case 'Meeting Engagement':
+                styleInfo = "Top or Bottom";
+                pts.push([[0,6*hH],[hW + (11*xS),6*hH]]);
+                pts.push([[hW + (11*xS),6*hH],[hW + (11*xS),0]]);
+                pts.push([[0,pH - (6*hH)],[hW + (11*xS),pH - (6*hH)]]);
+                pts.push([[hW + (11*xS),pH - (6*hH)],[hW + (11*xS),pH]]);
+                pts.push([[mapEdge - hW - (11*xS),0],[mapEdge - hW - (11*xS),6*hH]]);
+                pts.push([[mapEdge - hW - (11*xS),6*hH],[mapEdge,6*hH]]);
+                pts.push([[mapEdge - hW - (11*xS),pH],[mapEdge - hW - (11*xS),pH - (6*hH)]]);
+                pts.push([[mapEdge - hW - (11*xS),pH - (6*hH)],[mapEdge,pH - (6*hH)]]);
+                break;
+        }
+
+        _.each(pts,set => {
+            DrawDepLine(set);
+        })
+
+        outputCard.body.push("Deployment: " + style);
+        outputCard.body.push("Dice Roll, winner picks " + styleInfo + " and Deploys First");
+
+    }
+
+    const MissionInfo = (random = "No") => {
+        let missions = ["Duel","Duel","Duel","Duel","Seize Ground","Relic Hunt","Pitched Battle","Capture and Hold"];
+        let roll = (random === "Yes") ? randomInteger(missions.length):0;
+        let mission = missions[roll];
+        let missionInfo,number;
+
+        switch (mission) {
+            case "Duel":
+                number = randomInteger(3) + 2;
+                missionInfo = "After the game ends, the player that controls the most markers wins";
+                break;
+            case 'Seize Ground':
+                number = 4;
+                missionInfo = "Divide the non-deployment area into 4 equal quarters, placing one objective at the centre of each. After the game ends, the player that controls the most markers wins";
+                break;
+            case 'Relic Hunt':
+                number = 3;
+                missionInfo = "The Objectives represent highly important Relics of some kind. If a unit seizes a Objective, remove it from the table, and it counts as being carried by the unit. If the unit is shaken or destroyed at any point, the marker is dropped within 1” (placed by the opponent). When the game ends, the player that controls most markers wins."
+                break;
+            case 'Pitched Battle':
+                number = randomInteger(3) + 2;
+                missionInfo = "At the end of EACH round, players get 1VP for each objective they control, and at the end they get an additional 1 VP if they control more markers than their opponent.";
+                break;
+            case 'Capture and Hold':
+                number = 3;
+                missionInfo = "The Objectives represent important Information or Personnel. If a unit seizes a Objective, remove it from the table, and it counts as being carried by the unit. If the unit is shaken or destroyed at any point, the marker is dropped within 1” (placed by the opponent). At the end of EACH round, players get 1VP for each objective they control, and at the end they get an additional 1 VP if they control more markers than their opponent."
+                break;
+        }
+
+        outputCard.body.push("Mission: " + mission);
+        outputCard.body.push("Place " + number + " Objectives");
+        outputCard.body.push(missionInfo);
+
+    }
+
+
+
 
 
 
@@ -3617,6 +3818,9 @@ log("Droll: " + dRoll)
                 break;
             case '!SetArmies':
                 SetArmies();
+                break;
+            case '!SetupGame':
+                SetupGame(msg);
                 break;
 
 
