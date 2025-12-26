@@ -182,6 +182,13 @@ const GDF3 = (() => {
         "Crops": {name: "Crops",cover: 1,los: false,height: 0, difficult: false, building: false},
         "Water": {name: "Water",cover: 1,los: false,height: 0, difficult: true, building: false},
         "Craters": {name: "Craters",cover: 1,los: false,height: 0, difficult: true, building: false},
+        "craters": {name: "Craters",cover: 1,los: false,height: 0, difficult: true, building: false}, //used for temp craters
+        "Burning Woods": {name: "Burning Woods",cover: 1,los: true,height: 1,difficult: true, dangerous: true},
+        "Ruined Building": {name: "Ruined Building",cover: 1,los: true,height: 0,difficult: true, building: false},
+        "Ruined Concrete": {name: "Ruined Concrete",cover: 1,los: true,height: 0,difficult: true, building: false},
+
+
+
 
     }
 
@@ -1267,8 +1274,18 @@ log(weapons)
                 let centre = new Point(token.get("left"),token.get('top'));
                 let centreLabel = centre.toCube().label();
                 let hex = HexMap[centreLabel];
+                if (hex.terrain !== "Open") {
+                    //check if found the 2nd terrain before original terrain
+                    if (name === "Woods" && hex.terrain === "Burning Woods") {
+                        return;
+                    }
+                    if (name.includes("Building") && hex.terrain.includes("Ruined")) {
+                        return;
+                    }
+                }
+
                 hex.terrain = name;
-                if (name.includes("Building")) {
+                if (name.includes("Building") && name.includes("Ruined") === false) {
                     for (let i=0;i<buildingTypes.length;i++) {
                         if (name.includes(buildingTypes[i])) {
                             hex.hp = 3 * (i+2);
@@ -1276,12 +1293,23 @@ log(weapons)
                         }
                     }
                 }
+                if (name === "Woods") {
+                    hex.hp = 3;
+                }
                 hex.cover = terrain.cover;
                 hex.los = terrain.los;
                 hex.terrainHeight = terrain.height;
                 if (terrain.difficult) {hex.difficult = terrain.difficult};
                 if (terrain.building) {hex.building = terrain.building};
+          
+
             }
+
+
+
+
+
+
         })
 
     }
