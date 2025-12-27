@@ -37,7 +37,7 @@ input[type="hidden"][name="attr_faction"][value="Plague Disciples"] ~ .mysheet {
 input[type="hidden"][name="attr_faction"][value="Blood Angels"] ~ .mysheet {
     background-color: #be0b07;
 }
-input[type="hidden"][name="attr_faction"][value="Tau"] ~ .mysheet {
+input[type="hidden"][name="attr_faction"][value="Dao Union"] ~ .mysheet {
   background-color: #be0b07;
 }
 input[type="hidden"][name="attr_faction"]:is([value="Imperial Guard"],[value="Inquisition"]) ~ .mysheet {
