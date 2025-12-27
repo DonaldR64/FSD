@@ -1,5 +1,5 @@
 const GDF3 = (() => {
-    const version = '2025.12.18';
+    const version = '2025.12.26';
     if (!state.GDF3) {state.GDF3 = {}};
 
     const pageInfo = {};
@@ -666,6 +666,12 @@ const GDF3 = (() => {
             this.woundsMax = this.models * this.toughness;
 
             this.type = aa.type;
+            this.size = 1;
+            if (this.type === "Light Vehicle/Small Monster") {this.size = 2};
+            if (this.type === "Vehicle/Monster" || this.type === "Artillery") {this.size = 3};
+            if (this.type === "Titan") {this.size = 4};
+log("Size")
+log(this.size)
             let keywords = [];
 
             //Unit Keywords, separated by a comma
@@ -1531,7 +1537,7 @@ log(weapons)
             let tt = TTip(unit);
             let persistant = tt.filter((e) => persistantTT.includes(e));
             let limited = tt.filter((e) => e.includes("Fired "));
-            persistent = persistent.concat(limited);
+            persistant = persistant.concat(limited);
             persistant = persistant.toString();
             unit.token.set("tooltip",persistant);
             unit.token.set(SM.fatigue,false);
@@ -3721,6 +3727,19 @@ log("Droll: " + dRoll)
                 let tokPt = new Point(tok.get("left"),tok.get("top"));
                 let tokCube = tokPt.toCube();
                 let tokLabel = tokCube.label();
+                let newHex = HexMap[tokLabel];
+                if (newHex.building === true) {
+                    if ((unit.size > 2) || unit.size === 2 && newHex.terrain.includes("Concrete") === false) {
+                        sendChat("","Cannot Enter Building");
+                        tok.set({
+                            left: prev.left,
+                            top: prev.top,
+                        })
+                        return;
+                    }
+                }
+
+
                 let prevPt = new Point(prev.left,prev.top);
                 let prevCube = prevPt.toCube();
                 let prevLabel = prevCube.label();
