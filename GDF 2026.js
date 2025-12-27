@@ -124,7 +124,15 @@ const GDF3 = (() => {
             "borderColour": "#f9b822",
             "borderStyle": "5px ridge",
         },
-
+        "Dao Union": {
+            "image": "https://s3.amazonaws.com/files.d20.io/images/354348305/k_izI31oM8lRsHHma1xfag/thumb.png?1691855991",
+            "dice": "Tau",
+            "backgroundColour": "#ffffff",
+            "titlefont": "Arial",
+            "fontColour": "#000000",
+            "borderColour": "#be0b07",
+            "borderStyle": "5px groove",
+        },
 
     };
 
@@ -1387,17 +1395,18 @@ log(weapons)
 
         let factionNames = {
             "Plague Disciples": ["Blight","Pustus","Bilegore","Cachexis","Clotticus","Colathrax","Corpulux","Poxmaw","Dragan","Festardius","Fethius","Fugaris","Gangrous","Rotheart","Glauw","Leprus","Kholerus","Malarrus","Necrosius","Phage"],
+            "Dao Union": ["Shi'ur","Por'o","Kai","Vor","Shi","Ru","Ni","Chi-Ha","Tor-lak"],
 
 
         }
 
 
-        if (charName.includes("Champion")) {
-            name = "Champion ";
-        }
-        if (charName.includes("Lord")) {
-            name = "Lord ";
-        }
+        if (charName.includes("Champion")) {name = "Champion "};
+        if (charName.includes("Lord")) {name = "Lord "};
+        if (unit.faction === "Dao Union") {name = "Commander "};
+        if (unit.keywords.includes("Ethereal Elder")) {name = "Ethereal "};
+
+
 
         let number = factionNames[unit.faction].length - 1
         let factionName = factionNames[unit.faction][randomInteger(number)];
