@@ -3737,15 +3737,13 @@ log("Droll: " + dRoll)
                 let tokCube = tokPt.toCube();
                 let tokLabel = tokCube.label();
                 let newHex = HexMap[tokLabel];
-                if (newHex.building === true) {
-                    if ((unit.size > 2) || unit.size === 2 && newHex.terrain.includes("Concrete") === false) {
-                        sendChat("","Cannot Enter Building");
-                        tok.set({
-                            left: prev.left,
-                            top: prev.top,
-                        })
-                        return;
-                    }
+                if (newHex.building === true && unit.size > 1) {
+                    sendChat("","Cannot Enter Building");
+                    tok.set({
+                        left: prev.left,
+                        top: prev.top,
+                    })
+                    return;       
                 }
 
 
