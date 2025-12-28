@@ -123,6 +123,7 @@ const Keywords = {
     "Shielded": "+1 Defense vs Hits that are not from Spells",
 
     "Shred": "On unmodified results of 1 to block hits, the weapon deals 1 extra wound",
+    "Shred when Shooting": "On unmodified results of 1 to block hits, the ranged weapon deals 1 extra wound",
 
     "Slam": "Ignores Cover, and on unmodified results of 1 to block hits, the weapon deals 1 extra wound",
 
