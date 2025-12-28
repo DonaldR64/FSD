@@ -1405,6 +1405,7 @@ log(weapons)
         if (charName.includes("Lord")) {name = "Lord "};
         if (unit.faction === "Dao Union") {name = "Commander "};
         if (unit.keywords.includes("Ethereal Elder")) {name = "Ethereal "};
+        if (charName.includes("Captain")) {name = "Captain "};
 
 
 
