@@ -3132,7 +3132,7 @@ log("HP: " + hp)
                         wounds++;
                         results.slam++;
                     }
-                    if (weapon.keywords.includes("Shred")) {
+                    if (weapon.keywords.includes("Shred") || (attacker.keywords.includes("Shred when Shooting") && weapon.type !== "CCW")) {
                         wounds++;
                         results.shred++;
                     }
