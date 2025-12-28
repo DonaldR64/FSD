@@ -842,7 +842,10 @@ log(weapons)
         if (!unit) {
             unit = new Unit(id);
         }
+        AddAbilities2(unit)
+    }
         
+    const AddAbilities2 = (unit) => {
         let keywordList = unit.keywords;
 
         unit.token.set({
@@ -1433,7 +1436,12 @@ log(weapons)
 
     const StartGame = () => {
         SetupCard("Start New Game","Turn 1","Neutral");
-        outputCard.body.push("Players Roll for Deployment/Initiative");
+        _.each(UnitArray,unit => {
+            if (unit.name.includes("Objective")) {
+                unit.token.set("layer","foreground");
+                unit.token.set("aura1_color","#ffffff");
+            }
+        })
         PrintCard();
         ClearMarkers();
         state.GDF3.turn = 1;
@@ -1543,6 +1551,7 @@ log(weapons)
         //reset fatigue, activation, tooltips
         _.each(UnitArray,unit => {
             if (!unit.token) {return};
+            if (unit.name.includes("Objective")) {return};
             unit.moved = false; 
             let tt = TTip(unit);
             let persistant = tt.filter((e) => persistantTT.includes(e));
@@ -1632,6 +1641,7 @@ log(hex)
             let unit = UnitArray[token];
             let character = getObj("character", token.get("represents"));   
             let name = character.get("name");
+            if (name.includes("Objective")) {continue}
             if (!unit) {
                 unit = new Unit(token);
                 if (!unit.faction) {
@@ -1673,7 +1683,7 @@ log(hex)
                     showplayers_aura2: true,
                 })
             }
-
+            AddAbilities2(unit)
 
 
         }
@@ -2324,10 +2334,7 @@ log(label)
             if (shooterElevation === targetElevation) {
                 //check for intervening models using intercubes
                 _.each(UnitArray,unit => {
-log(unit.name + " : " + unit.tokenID)
                     let label = unit.hexLabel();
-log(label)
-
                     if (unit.tokenID !== shooter.tokenID && unit.tokenID !== target.tokenID && unit.type !== "Hero" && interLabels.includes(label) && unit.type !== "Aircraft") {
                         los = false;
                         losReason = "Blocked by Unit at " + label;
@@ -2732,14 +2739,7 @@ log(label)
                         }
                         
                     } else {
-                        if (weapon.type.includes("Heavy")) {
-                            //50% of misses by heavy weapons could cause collateral
-                            let roll = randomInteger(6);
-roll = 6
-                            if (roll > 3) {
-                                weaponMiss.push(weapon);
-                            }
-                        }
+                        //misses hit terrain here
                     }
                     
                     dice--;
@@ -2813,7 +2813,8 @@ roll = 6
 
 
             })
-
+log("Weapon Hits")
+log(weaponHits)
             let active = true;
             if (weaponHits.length > 0) {
                 let results = ApplyDamage(weaponHits,defenders,attacker);
@@ -2859,7 +2860,6 @@ roll = 6
             }
 
             //misses vs terrain
-            //Collateral(weaponMiss,defenderHex);
 
 
 
@@ -3440,7 +3440,7 @@ log("Droll: " + dRoll)
         let page = getObj('page',Campaign().get('playerpageid'));
         if(page) {
             let line = createObj('pathv2',{
-                layer: "objects",
+                layer: "map",
                 pageid: page.id,
                 shape: "pol",
                 stroke: '#ff0000',
@@ -3450,6 +3450,7 @@ log("Droll: " + dRoll)
                 points: points,
             });
             if (line) {
+                toFront(line);
                 state.GDF3.deployLines.push(line.get("id"));
             }
         }
@@ -3461,7 +3462,7 @@ log("Droll: " + dRoll)
 //set for flat hexes
         let styles = ["Frontline","Frontline","Frontline","Ground War","Ground War","Side Battle","Side Battle","Disordered","Spearhead","Opposing Forces","No Man's Land","No Man's Land","Long Haul","Long Haul","Flank Assault","Meeting Engagement"];
 
-        let roll = (random === "Yes") ? randomInteger(styles.length):0;
+        let roll = (random === "Yes") ? randomInteger(styles.length) - 1:0;
         let style = styles[roll];
         let styleInfo;
 
@@ -3553,7 +3554,7 @@ log("Droll: " + dRoll)
 
     const MissionInfo = (random = "No") => {
         let missions = ["Duel","Duel","Duel","Duel","Seize Ground","Relic Hunt","Pitched Battle","Capture and Hold"];
-        let roll = (random === "Yes") ? randomInteger(missions.length):0;
+        let roll = (random === "Yes") ? randomInteger(missions.length) - 1 :0;
         let mission = missions[roll];
         let missionInfo,number;
 
