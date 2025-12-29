@@ -1919,7 +1919,7 @@ log(hex)
             outputCard.body.push("Unit has Strider and may ignore the effects of Difficult Terrain");
             ignoreDifficult = true;
         }
-        if (unit.keywords.includes("Fly") && order !== "Hold" && order !== "Rally") {
+        if ((unit.keywords.includes("Flying") || unit.keywords.includes("Fly")) && order !== "Hold" && order !== "Rally") {
             note = true;
             outputCard.body.push("Unit has Flying and may Ignore Terrain and Units while Moving");
             ignoreDifficult = true;
@@ -3771,7 +3771,7 @@ log(which)
 //sound
             }
         }
-        if (specialName === "Steadfast") {
+        if (specialName === "Steadfast Buff") {
             SetTT2(targets[0],TT.steadfast);
             outputCard.body.push("Steadfast Buff placed on " + targets[0].name);
 //sound
