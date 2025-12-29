@@ -1438,10 +1438,14 @@ log(weapons)
         SetupCard("Start New Game","Turn 1","Neutral");
         _.each(UnitArray,unit => {
             if (unit.name.includes("Objective")) {
-                unit.token.set("layer","foreground");
-                unit.token.set("aura1_color","#ffffff");
+                unit.token.set({
+                    layer: 'foreground',
+                    aura1_color: "ffffff",
+                    aura1_radius: 1,
+                })
             }
         })
+        RemoveLines(["Deploy"]);
         PrintCard();
         ClearMarkers();
         state.GDF3.turn = 1;
@@ -1706,10 +1710,30 @@ log(hex)
 
 
     const ClearState = (msg) => {
+        let Tag = msg.content.split(";");
+        let tokens;
+
         LoadPage();
         BuildMap();
-        RemoveDepLines();
+        RemoveLines(["Deploy","LOS"]);
         RemoveDead();
+        if (Tag[1] === "All") {
+            tokens = findObjs({
+                _pageid: Campaign().get("playerpageid"),
+                _type: "graphic",
+                _subtype: "token",
+                layer: "objects",
+            });
+            _.each(tokens,token => token.remove());
+            tokens = findObjs({
+                _pageid: Campaign().get("playerpageid"),
+                _type: "graphic",
+                _subtype: "token",
+                layer: "foreground",
+            });
+            _.each(tokens,token => token.remove());
+        }
+
 
         //clear arrays
         UnitArray = {};
@@ -1720,6 +1744,7 @@ log(hex)
             turn: 0,
             activeID: "",
             deployLines: [],
+            losLines: [],
         }
 
         sendChat("","Cleared State/Arrays");
@@ -2191,6 +2216,7 @@ log(hex)
 
 
     const CheckLOS = (msg) => {
+        RemoveLines(["LOS"])
         let Tag = msg.content.split(";");
         let shooterID = Tag[1];
         let targetID = Tag[2];
@@ -2206,27 +2232,51 @@ log(hex)
         }
 
         let losResult = LOS(shooter,target);
+        let a = HexMap[shooter.hexLabel()].centre
+        a = [a.x,a.y];
+        let b = HexMap[target.hexLabel()].centre
+        b = [b.x,b.y];
+        let set = [a,b];
+
+
 
         SetupCard(shooter.name,"LOS",shooter.faction);
         outputCard.body.push("Distance: " + losResult.distance);
         let wlos = [];
+        let direct = false;
+        let indirect = false
+
         _.each(shooter.weapons,weapon => {
             let range = (target.type === "Aircraft" && weapon.keywords.includes("Unstoppable") === false) ? weapon.range - 6:weapon.range;
             if (losResult.distance <= range) {
-                if (losResult.los === true || weapon.keywords.includes("Indirect")) {
+                if (losResult.los === true) {
+                    direct = true;
+                    wlos.push(weapon.name);
+                } else if (losResult.los === false && weapon.keywords.includes("Indirect")) {
+                    indirect = true;
                     wlos.push(weapon.name);
                 }
             } 
         })
 
+
         if (wlos.length === 0) {
             if (losResult.los === false) {
                 outputCard.body.push("No LOS To Target");
                 outputCard.body.push(losResult.losReason);
+                b = HexMap[losResult.losEndLabel].centre
+                b = [b.x,b.y];
+                set = [a,b];
+                DrawLine(set,"#000000","LOS");
             } else {
                 outputCard.body.push("LOS to target, but no Weapons in Range");
             }
         } else {
+            if (direct === true) {
+                DrawLine(set, "#00ff00","LOS");
+            } else if (direct === false && indirect === true) {
+                DrawLine(set, "#ff0000","LOS");
+            }
             outputCard.body.push("LOS to Target");
             _.each(wlos,name => {
                 outputCard.body.push(name + " has Range");
@@ -2235,6 +2285,7 @@ log(hex)
             cover = cover[Math.max(losResult.targetHexCover,losResult.interveningCover)];
             outputCard.body.push("Target has " + cover);
         }
+
         PrintCard();
     }
 
@@ -2262,6 +2313,7 @@ log("Elevation: " + targetElevation)
         if (target.type === "Titan") {distance -= 1};
         let los = true;
         let losReason = "";
+        let losEndLabel = targetHex.label;
 
         let interveningCover = 0;
 
@@ -2285,6 +2337,7 @@ log(label)
                 if (pt5 && label !== targetHex.label) {
                     los = false;
                     losReason = "Blocked by Elevation at " + label;
+                    losEndLabel = label;
                     break;
                 }
 
@@ -2297,6 +2350,7 @@ log(label)
                     if (interHex.los === true) {
                         los = false;
                         losReason = "Blocked by Terrain at " + label;
+                        losEndLabel = label;
                         break;
                     } 
                     interveningCover = Math.max(interveningCover,hex.cover);
@@ -2338,6 +2392,7 @@ log(label)
                     if (unit.tokenID !== shooter.tokenID && unit.tokenID !== target.tokenID && unit.type !== "Hero" && interLabels.includes(label) && unit.type !== "Aircraft") {
                         los = false;
                         losReason = "Blocked by Unit at " + label;
+                        losEndLabel = label;
                     }
                 })
             }
@@ -2354,6 +2409,7 @@ log(label)
             interveningCover: interveningCover,
             distance: distance,
             losReason: losReason,
+            losEndLabel: losEndLabel,
         }
 
         return result;
@@ -3399,7 +3455,7 @@ log("Droll: " + dRoll)
         let deployment = Tag[1];
         let mission = Tag[2];
         SetupCard("Game Info","","Neutral");
-        RemoveDepLines();
+        RemoveLines(["Deploy","LOS"]);
         outputCard.body.push("[hr]");
         outputCard.body.push("[B]Deployment Info[/b]");
         DeploymentZones(deployment);
@@ -3409,41 +3465,52 @@ log("Droll: " + dRoll)
         PrintCard();
     }
 
-    const RemoveDepLines = () => {
-        for (let i=0;i<state.GDF3.deployLines.length;i++) {
-            let id = state.GDF3.deployLines[i];
-            let path = findObjs({_type: "pathv2", id: id})[0];
-            if (path) {
-                path.remove();
+    const RemoveLines = (which) => {
+log(which)
+        _.each(which,lines => {
+            let array;
+            if (lines === "LOS") {
+                array = state.GDF3.losLines;
             }
-        }
+            if (lines === "Deploy") {
+                array = state.GDF3.deployLines;
+            }
+            if (array) {
+                for (let i=0;i<array.length;i++) {
+                    let id = array[i];
+    log(id)
+                    let path = findObjs({_type: "pathv2", id: id})[0];
+                    if (path) {
+                        path.remove();
+                    }
+                }
+                array = [];
+            }
+        })
     }
 
-    const DrawDepLine = (set) => {
+
+    const DrawLine = (set,colour = "#ff0000",type = "Deploy") => {
         let a = set[0],b = set[1];
         //define centre, then a and b change into points
         let left = Math.min(a[0],b[0]);
-        let right = Math.max(a[0],b[0]);
         let bottom = Math.min(a[1],b[1]);
-        let top = Math.max(a[1],b[1]);
         let x = Math.abs(a[0] - b[0])/2 + left;
         let y = Math.abs(a[1] - b[1])/2 + bottom;
-        let pt2 = [right - left,top - bottom];
-
         let points = [];
         points.push([a[0] - left,a[1] - bottom]);
         points.push([b[0] - left,b[1] - bottom]);
-
-
         points = JSON.stringify(points);
+
+        let layer = (type === "LOS") ? "foreground":"map";
 
         let page = getObj('page',Campaign().get('playerpageid'));
         if(page) {
             let line = createObj('pathv2',{
-                layer: "map",
+                layer: layer,
                 pageid: page.id,
                 shape: "pol",
-                stroke: '#ff0000',
+                stroke: colour,
                 stroke_width: 7,
                 x: x,
                 y: y,
@@ -3451,10 +3518,18 @@ log("Droll: " + dRoll)
             });
             if (line) {
                 toFront(line);
-                state.GDF3.deployLines.push(line.get("id"));
+                if (type === "LOS") {
+                    state.GDF3.losLines.push(line.get("id"))
+                } else {
+                    state.GDF3.deployLines.push(line.get("id"));
+                }
             }
         }
     }
+
+
+
+
 
 
     const DeploymentZones = (random = "No") => {
@@ -3544,7 +3619,7 @@ log("Droll: " + dRoll)
         }
 
         _.each(pts,set => {
-            DrawDepLine(set);
+            DrawLine(set);
         })
 
         outputCard.body.push("Deployment: " + style);
@@ -3761,6 +3836,7 @@ log("Droll: " + dRoll)
                         tok.set("rotation",angle);
                     }
                 }
+                RemoveLines(["LOS"]);
             }
         }
 
