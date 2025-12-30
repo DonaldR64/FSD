@@ -660,7 +660,7 @@ const GDF3 = (() => {
             this.tokenID = token.get("id");
             this.name = token.get("name");
 
-            this.faction = aa.faction;
+            this.faction = aa.faction || "Neutral";
 
 
 
@@ -1481,6 +1481,8 @@ log(weapons)
         }
         if (remaining === true) {return};
 
+
+
         //things at beginning of turn
         let notes = [];
         for (let i=0;i<keys.length;i++) {
@@ -1502,6 +1504,9 @@ log(weapons)
                 }
             }
 
+            if (unit.name.includes("Objective")) {
+                ObjectiveCheck(unit);
+            }
 
         }
 
@@ -3466,7 +3471,6 @@ log("Droll: " + dRoll)
     }
 
     const RemoveLines = (which) => {
-log(which)
         _.each(which,lines => {
             let array;
             if (lines === "LOS") {
@@ -3478,7 +3482,6 @@ log(which)
             if (array) {
                 for (let i=0;i<array.length;i++) {
                     let id = array[i];
-    log(id)
                     let path = findObjs({_type: "pathv2", id: id})[0];
                     if (path) {
                         path.remove();
@@ -3843,6 +3846,30 @@ log(which)
 
 
     }
+
+    const ObjectiveCheck = (objective) => {
+        let faction = [false,false];
+        let objHex = HexMap[objective.hexLabel()];
+        _.each(UnitArray, unit => {
+            let distance = objHex.distance(HexMap[unit.hexLabel()]);
+            if (distance <= 2) {
+                let f = state.GDF3.factions.indexOf(unit.faction);
+                if (f > -1 && f < 2) {
+                    faction[f] = true;
+                }
+            }
+        })
+        if (faction[0] === true && faction[1] === false) {
+            unit.token.set("aura1_color",Factions[state.GDF3.factions[0]].backgroundColour);
+        } else if (faction[1] === true && faction[0] === false) {
+            unit.token.set("aura1_color",Factions[state.GDF3.factions[1]].backgroundColour);
+        } else if (faction[1] === true && faction[0] === true) {
+            unit.token.set("aura1_color","#ffffff");
+        }
+    }
+
+
+
 
 
 
