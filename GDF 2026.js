@@ -660,11 +660,22 @@ const GDF3 = (() => {
             this.tokenID = token.get("id");
             this.name = token.get("name");
 
-            this.faction = aa.faction || "Neutral";
+            let faction = aa.faction || "Neutral";
+            this.faction = faction;
 
-
-
-
+            let player = (state.GDF3.factions.indexOf(faction));
+            if (player === -1) {
+                if (faction === "Neutral") {
+                    player = 2
+                } else {
+                    state.GDF3.factions.push(faction);
+                    player = state.GDF3.factions.length - 1;
+                }
+            }
+            this.player = player;
+log(this.name)
+log(this.faction)
+log(this.player)
 
             this.models = parseInt(aa.models) || 1;
             this.quality = parseInt(aa.quality);
@@ -1378,6 +1389,14 @@ log(weapons)
             layer: "objects",
         });
 
+        tokens = tokens.concat(findObjs({
+            _pageid: Campaign().get("playerpageid"),
+            _type: "graphic",
+            _subtype: "token",
+            layer: "foreground",
+        }));
+
+
         let c = tokens.length;
         let s = (1===c?'':'s');     
         
@@ -1440,8 +1459,9 @@ log(weapons)
             if (unit.name.includes("Objective")) {
                 unit.token.set({
                     layer: 'foreground',
-                    aura1_color: "ffffff",
-                    aura1_radius: 1,
+                    aura1_color: "#ffffff",
+                    aura1_radius: 2,
+
                 })
             }
         })
@@ -1487,6 +1507,7 @@ log(weapons)
         let notes = [];
         for (let i=0;i<keys.length;i++) {
             let unit = UnitArray[keys[i]];
+log(unit.name)
             let unitTT = TTip(unit);
             unitAuras = Auras(unit);
 
@@ -1650,9 +1671,9 @@ log(hex)
             let unit = UnitArray[token];
             let character = getObj("character", token.get("represents"));   
             let name = character.get("name");
-            if (name.includes("Objective")) {continue}
             if (!unit) {
                 unit = new Unit(token);
+    log("new Unit")
                 if (!unit.faction) {
                     unit.faction === "Neutral";
                     continue;
@@ -3848,24 +3869,29 @@ log("Droll: " + dRoll)
     }
 
     const ObjectiveCheck = (objective) => {
-        let faction = [false,false];
+log("Objective Check");
+log(objective.name)
+        let factions = [];
         let objHex = HexMap[objective.hexLabel()];
         _.each(UnitArray, unit => {
-            let distance = objHex.distance(HexMap[unit.hexLabel()]);
-            if (distance <= 2) {
-                let f = state.GDF3.factions.indexOf(unit.faction);
-                if (f > -1 && f < 2) {
-                    faction[f] = true;
+            if (unit.tokenID !== objective.tokenID) {
+    log(unit.name)
+    log(unit.faction)
+                let distance = objHex.distance(HexMap[unit.hexLabel()]);
+    log("D: "  + distance)
+                if (distance <= 2 && factions.includes(unit.faction) === false) {
+                    factions.push(unit.faction)
                 }
             }
         })
-        if (faction[0] === true && faction[1] === false) {
-            unit.token.set("aura1_color",Factions[state.GDF3.factions[0]].backgroundColour);
-        } else if (faction[1] === true && faction[0] === false) {
-            unit.token.set("aura1_color",Factions[state.GDF3.factions[1]].backgroundColour);
-        } else if (faction[1] === true && faction[0] === true) {
-            unit.token.set("aura1_color","#ffffff");
+log("Factions: ")
+log(factions)
+        if (factions.length === 1) {
+            objective.token.set("aura1_color",Factions[factions[0]].backgroundColour);
         }
+        if (factions.length === 2) {
+            objective.token.set("aura1_color","#ffffff");
+        }    
     }
 
 
