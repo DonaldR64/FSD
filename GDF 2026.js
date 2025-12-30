@@ -110,6 +110,7 @@ const GDF3 = (() => {
             "image": "https://s3.amazonaws.com/files.d20.io/images/353239057/GIITPAhD-JdRRD2D6BREWw/thumb.png?1691112406",
             "dice": "Deathguard",
             "backgroundColour": "#B3CF99",
+            "objColour": "#00ff00",
             "titlefont": "Anton",
             "fontColour": "#000000",
             "borderColour": "#000000",
@@ -119,6 +120,7 @@ const GDF3 = (() => {
             "image": "https://s3.amazonaws.com/files.d20.io/images/362007142/CjTYql17F5VDkqGlW_yorg/thumb.png?1696555948",
             "dice": "Tyranids",
             "backgroundColour": "#800080",
+            "objColour": "#8000809d",
             "titlefont": "Goblin One",
             "fontColour": "#f9b822",
             "borderColour": "#f9b822",
@@ -128,6 +130,7 @@ const GDF3 = (() => {
             "image": "https://s3.amazonaws.com/files.d20.io/images/354348305/k_izI31oM8lRsHHma1xfag/thumb.png?1691855991",
             "dice": "Tau",
             "backgroundColour": "#ffffff",
+            "objColour": "#be0b07",
             "titlefont": "Arial",
             "fontColour": "#000000",
             "borderColour": "#be0b07",
@@ -3887,7 +3890,9 @@ log(objective.name)
 log("Factions: ")
 log(factions)
         if (factions.length === 1) {
-            objective.token.set("aura1_color",Factions[factions[0]].backgroundColour);
+            let c = Factions[factions[0]].objColour;
+log(c)
+            objective.token.set("aura1_color",c);
         }
         if (factions.length === 2) {
             objective.token.set("aura1_color","#ffffff");
